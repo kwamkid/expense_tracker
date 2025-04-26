@@ -1,5 +1,5 @@
 # app/__init__.py
-from flask import Flask
+from flask import Flask, render_template
 from app.config import Config
 from app.extensions import db, migrate, login_manager, csrf
 import os
@@ -33,6 +33,9 @@ def create_app(config_class=Config):
     # Register error handlers
     register_error_handlers(app)
 
+    # Register context processors
+    register_context_processors(app)
+
     return app
 
 
@@ -63,7 +66,6 @@ def register_blueprints(app):
     from app.views.reports import reports_bp
     from app.views.api import api_bp  # เพิ่มบรรทัดนี้
 
-
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(accounts_bp)
@@ -71,7 +73,6 @@ def register_blueprints(app):
     app.register_blueprint(transactions_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(api_bp)  # เพิ่มบรรทัดนี้
-
 
 
 def register_error_handlers(app):
@@ -84,3 +85,13 @@ def register_error_handlers(app):
     @app.errorhandler(500)
     def internal_server_error(e):
         return render_template('errors/500.html'), 500
+
+
+def register_context_processors(app):
+    """Register context processors"""
+
+    @app.context_processor
+    def inject_now():
+        """Make 'now' variable available in all templates"""
+        from datetime import datetime
+        return {'now': datetime.now()}
