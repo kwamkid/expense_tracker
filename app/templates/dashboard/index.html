@@ -1,0 +1,328 @@
+{# app/templates/dashboard/index.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-3">
+            <i class="fas fa-chart-line text-primary me-2"></i>Dashboard
+        </h1>
+        <p class="lead">ยินดีต้อนรับ, {{ current_user.username }}! นี่คือสรุปรายรับรายจ่ายของคุณ</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('transactions.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> เพิ่มธุรกรรมใหม่
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <!-- รายรับเดือนนี้ -->
+    <div class="col-md-4 mb-3">
+        <div class="card bg-success bg-opacity-10 h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-hand-holding-usd me-2"></i>รายรับเดือนนี้
+                </h5>
+                <h2 class="text-success">{{ "{:,.2f}".format(monthly_summary['income']) }} ฿</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- รายจ่ายเดือนนี้ -->
+    <div class="col-md-4 mb-3">
+        <div class="card bg-danger bg-opacity-10 h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-shopping-cart me-2"></i>รายจ่ายเดือนนี้
+                </h5>
+                <h2 class="text-danger">{{ "{:,.2f}".format(monthly_summary['expense']) }} ฿</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- คงเหลือเดือนนี้ -->
+    <div class="col-md-4 mb-3">
+        <div class="card bg-info bg-opacity-10 h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-wallet me-2"></i>คงเหลือเดือนนี้
+                </h5>
+                <h2 class="{{ 'text-success' if monthly_summary['balance'] >= 0 else 'text-danger' }}">
+                    {{ "{:,.2f}".format(monthly_summary['balance']) }} ฿
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- แนวโน้มรายรับรายจ่าย 6 เดือนล่าสุด -->
+    <div class="col-lg-8 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>แนวโน้มรายรับรายจ่าย 6 เดือนล่าสุด</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyTrendChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- หมวดหมู่รายจ่าย -->
+    <div class="col-lg-4 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>หมวดหมู่รายจ่าย</h5>
+            </div>
+            <div class="card-body">
+                {% if category_summary|length > 0 %}
+                <canvas id="expenseCategoryChart" height="300"></canvas>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="text-muted">ยังไม่มีข้อมูลหมวดหมู่รายจ่าย</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- ธุรกรรมล่าสุด -->
+    <div class="col-lg-8 mb-3">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>ธุรกรรมล่าสุด</h5>
+                <a href="{{ url_for('transactions.index') }}" class="btn btn-sm btn-outline-primary">ดูทั้งหมด</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_transactions|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover m-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>วันที่</th>
+                                <th>ประเภท</th>
+                                <th>หมวดหมู่</th>
+                                <th>รายละเอียด</th>
+                                <th class="text-end">จำนวนเงิน</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_transactions %}
+                            <tr>
+                                <td>{{ transaction.transaction_date.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    {% if transaction.type == 'income' %}
+                                    <span class="badge bg-success">รายรับ</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">รายจ่าย</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge" style="background-color: {{ transaction.category.color }}">
+                                        {% if transaction.category.icon %}
+                                        <i class="fas fa-{{ transaction.category.icon }} me-1"></i>
+                                        {% endif %}
+                                        {{ transaction.category.name }}
+                                    </span>
+                                </td>
+                                <td>{{ transaction.description|truncate(30) or '-' }}</td>
+                                <td class="text-end fw-bold {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
+                                    {{ "{:,.2f}".format(transaction.amount) }} ฿
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="text-muted">ยังไม่มีธุรกรรม</p>
+                    <a href="{{ url_for('transactions.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> เพิ่มธุรกรรมใหม่
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- บัญชีของฉัน -->
+    <div class="col-lg-4 mb-3">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-wallet me-2"></i>บัญชีของฉัน</h5>
+                <a href="{{ url_for('accounts.index') }}" class="btn btn-sm btn-outline-primary">จัดการบัญชี</a>
+            </div>
+            <div class="card-body p-0">
+                {% if account_balances|length > 0 %}
+                <div class="list-group list-group-flush">
+                    {% for account in account_balances %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">{{ account.name }}</h6>
+                            {% if account.is_active %}
+                            <small class="text-success"><i class="fas fa-check-circle me-1"></i>ใช้งาน</small>
+                            {% else %}
+                            <small class="text-secondary"><i class="fas fa-times-circle me-1"></i>ไม่ใช้งาน</small>
+                            {% endif %}
+                        </div>
+                        <span class="fw-bold {{ 'text-success' if account.balance >= 0 else 'text-danger' }}">
+                            {{ "{:,.2f}".format(account.balance) }} ฿
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="text-muted">ยังไม่มีบัญชี</p>
+                    <a href="{{ url_for('accounts.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> เพิ่มบัญชีใหม่
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // แนวโน้มรายรับรายจ่าย 6 เดือนล่าสุด
+    const trendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+    const trendChart = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: [
+                {% for month in monthly_trend %}
+                '{{ month["month_name"] }}',
+                {% endfor %}
+            ],
+            datasets: [
+                {
+                    label: 'รายรับ',
+                    data: [
+                        {% for month in monthly_trend %}
+                        {{ month["income"] }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 2,
+                    tension: 0.3
+                },
+                {
+                    label: 'รายจ่าย',
+                    data: [
+                        {% for month in monthly_trend %}
+                        {{ month["expense"] }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    borderWidth: 2,
+                    tension: 0.3
+                },
+                {
+                    label: 'คงเหลือ',
+                    data: [
+                        {% for month in monthly_trend %}
+                        {{ month["balance"] }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(23, 162, 184, 0.2)',
+                    borderColor: 'rgba(23, 162, 184, 1)',
+                    borderWidth: 2,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return new Intl.NumberFormat('th-TH', {
+                                style: 'currency',
+                                currency: 'THB',
+                                maximumFractionDigits: 0
+                            }).format(value);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + new Intl.NumberFormat('th-TH', {
+                                style: 'currency',
+                                currency: 'THB'
+                            }).format(context.raw);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // หมวดหมู่รายจ่าย
+    {% if category_summary|length > 0 %}
+    const categoryCtx = document.getElementById('expenseCategoryChart').getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                {% for category in category_summary %}
+                '{{ category["name"] }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for category in category_summary %}
+                    {{ category["total"] }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    {% for category in category_summary %}
+                    '{{ category["color"] }}',
+                    {% endfor %}
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+
+                            return label + ': ' + new Intl.NumberFormat('th-TH', {
+                                style: 'currency',
+                                currency: 'THB'
+                            }).format(value) + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

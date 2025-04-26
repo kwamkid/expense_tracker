@@ -1,0 +1,365 @@
+{# app/templates/transactions/index.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-3">
+            <i class="fas fa-exchange-alt text-primary me-2"></i>รายการธุรกรรม
+        </h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('transactions.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> เพิ่มธุรกรรมใหม่
+        </a>
+    </div>
+</div>
+
+<!-- ตัวกรอง -->
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">
+            <i class="fas fa-filter me-2"></i>กรองข้อมูล
+        </h5>
+    </div>
+    <div class="card-body">
+        <form id="filter-form" method="GET" action="{{ url_for('transactions.index') }}">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="date-range" class="form-label">ช่วงวันที่</label>
+                    <input type="text" id="date-range" class="form-control" placeholder="เลือกช่วงวันที่" readonly>
+                    <input type="hidden" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+                    <input type="hidden" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label for="type" class="form-label">ประเภท</label>
+                    <select id="type" name="type" class="form-select">
+                        <option value="">ทั้งหมด</option>
+                        <option value="income" {{ 'selected' if request.args.get('type') == 'income' }}>รายรับ</option>
+                        <option value="expense" {{ 'selected' if request.args.get('type') == 'expense' }}>รายจ่าย</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="category_id" class="form-label">หมวดหมู่</label>
+                    <select id="category_id" name="category_id" class="form-select">
+                        <option value="">ทั้งหมด</option>
+                        {% if categories %}
+                            <optgroup label="รายรับ">
+                                {% for category in categories if category.type == 'income' %}
+                                <option value="{{ category.id }}" {{ 'selected' if request.args.get('category_id')|int == category.id }}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="รายจ่าย">
+                                {% for category in categories if category.type == 'expense' %}
+                                <option value="{{ category.id }}" {{ 'selected' if request.args.get('category_id')|int == category.id }}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endif %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="account_id" class="form-label">บัญชี</label>
+                    <select id="account_id" name="account_id" class="form-select">
+                        <option value="">ทั้งหมด</option>
+                        {% if accounts %}
+                            {% for account in accounts %}
+                            <option value="{{ account.id }}" {{ 'selected' if request.args.get('account_id')|int == account.id }}>
+                                {{ account.name }}
+                            </option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-redo me-1"></i> รีเซ็ต
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i> ค้นหา
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- รายการธุรกรรม -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>รายการธุรกรรม
+        </h5>
+
+        {% if transactions.items %}
+        <div>
+            <span class="text-muted">{{ transactions.total }} รายการ</span>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        {% if transactions.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 120px;">วันที่</th>
+                        <th style="width: 100px;">ประเภท</th>
+                        <th>รายละเอียด</th>
+                        <th>หมวดหมู่</th>
+                        <th>บัญชี</th>
+                        <th style="width: 130px;" class="text-end">จำนวนเงิน</th>
+                        <th style="width: 80px;">ใบเสร็จ</th>
+                        <th style="width: 120px;">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions.items %}
+                    <tr>
+                        <td>{{ transaction.transaction_date.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if transaction.type == 'income' %}
+                            <span class="badge bg-success">รายรับ</span>
+                            {% else %}
+                            <span class="badge bg-danger">รายจ่าย</span>
+                            {% endif %}
+
+                            {% if transaction.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">รอดำเนินการ</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ transaction.description or '-' }}</td>
+                        <td>
+                            <span class="badge" style="background-color: {{ transaction.category.color }}">
+                                {% if transaction.category.icon %}
+                                <i class="fas fa-{{ transaction.category.icon }} me-1"></i>
+                                {% endif %}
+                                {{ transaction.category.name }}
+                            </span>
+                        </td>
+                        <td>{{ transaction.account.name }}</td>
+                        <td class="text-end fw-bold {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
+                            {{ "{:,.2f}".format(transaction.amount) }} ฿
+                        </td>
+                        <td class="text-center">
+                            {% if transaction.receipt_path %}
+                            <a href="#" class="view-receipt" data-bs-toggle="modal" data-bs-target="#receiptModal"
+                               data-img-url="{{ url_for('static', filename='uploads/receipts/' + transaction.receipt_path) }}">
+                                <i class="fas fa-receipt fa-lg text-primary"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                <a href="{{ url_for('transactions.view', id=transaction.id) }}" class="btn btn-sm btn-outline-info me-1" title="ดูรายละเอียด">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('transactions.edit', id=transaction.id) }}" class="btn btn-sm btn-outline-primary me-1" title="แก้ไข">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="ลบ"
+                                        data-bs-toggle="modal" data-bs-target="#deleteTransaction{{ transaction.id }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Modal for deletion confirmation -->
+                    <div class="modal fade" id="deleteTransaction{{ transaction.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">ยืนยันการลบธุรกรรม</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>คุณต้องการลบธุรกรรมนี้ใช่หรือไม่?</p>
+                                    <div class="alert alert-info">
+                                        <div><strong>วันที่:</strong> {{ transaction.transaction_date.strftime('%d/%m/%Y') }}</div>
+                                        <div><strong>ประเภท:</strong> {{ 'รายรับ' if transaction.type == 'income' else 'รายจ่าย' }}</div>
+                                        <div><strong>หมวดหมู่:</strong> {{ transaction.category.name }}</div>
+                                        <div><strong>จำนวนเงิน:</strong> {{ "{:,.2f}".format(transaction.amount) }} ฿</div>
+                                    </div>
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        การลบธุรกรรมเป็นการดำเนินการที่ไม่สามารถเรียกคืนได้ และจะมีผลต่อยอดเงินในบัญชี
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                                    <form action="{{ url_for('transactions.delete', id=transaction.id) }}" method="post">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-danger">
+                                            ยืนยันการลบ
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if transactions.pages > 1 %}
+        <div class="px-3 py-2">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if transactions.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('transactions.index', page=transactions.prev_num, **request.args) }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for page_num in transactions.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == transactions.page %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                            {% else %}
+                            <li class="page-item"><a class="page-link" href="{{ url_for('transactions.index', page=page_num, **request.args) }}">{{ page_num }}</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if transactions.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('transactions.index', page=transactions.next_num, **request.args) }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-receipt text-muted" style="font-size: 4rem;"></i>
+            </div>
+            <h4>ยังไม่มีธุรกรรม</h4>
+            {% if request.args %}
+            <p class="text-muted">ไม่พบธุรกรรมที่ตรงกับเงื่อนไขการค้นหา</p>
+            <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-redo me-1"></i> รีเซ็ตตัวกรอง
+            </a>
+            {% else %}
+            <p class="text-muted">คุณยังไม่มีธุรกรรมใดๆ กรุณาเพิ่มธุรกรรมเพื่อเริ่มบันทึกรายรับรายจ่าย</p>
+            <a href="{{ url_for('transactions.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> เพิ่มธุรกรรมใหม่
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal for receipt viewing -->
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="receiptModalLabel">ใบเสร็จ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="receiptModalImage" src="" class="img-fluid receipt-modal-image" alt="ใบเสร็จ">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <a id="downloadReceiptBtn" href="" download class="btn btn-primary">
+                    <i class="fas fa-download me-1"></i> ดาวน์โหลดใบเสร็จ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Date range picker
+        $(function() {
+            var start = moment('{{ request.args.get("start_date") }}' || moment().subtract(30, 'days'));
+            var end = moment('{{ request.args.get("end_date") }}' || moment());
+
+            function cb(start, end) {
+                $('#date-range').val(start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY'));
+                $('#start_date').val(start.format('YYYY-MM-DD'));
+                $('#end_date').val(end.format('YYYY-MM-DD'));
+            }
+
+            $('#date-range').daterangepicker({
+                startDate: start,
+                endDate: end,
+                opens: 'left',
+                autoApply: true,
+                ranges: {
+                    'วันนี้': [moment(), moment()],
+                    'เมื่อวาน': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    '7 วันที่ผ่านมา': [moment().subtract(6, 'days'), moment()],
+                    '30 วันที่ผ่านมา': [moment().subtract(29, 'days'), moment()],
+                    'เดือนนี้': [moment().startOf('month'), moment().endOf('month')],
+                    'เดือนที่แล้ว': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                },
+                locale: {
+                    format: 'DD/MM/YYYY',
+                    applyLabel: 'ตกลง',
+                    cancelLabel: 'ยกเลิก',
+                    customRangeLabel: 'กำหนดเอง',
+                    daysOfWeek: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
+                    monthNames: [
+                        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+                    ]
+                }
+            }, cb);
+
+            cb(start, end);
+        });
+
+        // Receipt modal
+        const viewReceiptLinks = document.querySelectorAll('.view-receipt');
+        const receiptModalImage = document.getElementById('receiptModalImage');
+        const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
+
+        viewReceiptLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                const imageUrl = this.getAttribute('data-img-url');
+                receiptModalImage.src = imageUrl;
+                downloadReceiptBtn.href = imageUrl;
+            });
+        });
+    });
+</script>
+{% endblock %}

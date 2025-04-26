@@ -1,0 +1,81 @@
+# app/views/categories.py
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_required, current_user
+from app.forms.category import CategoryForm
+from app.models import Category
+from app.extensions import db
+
+categories_bp = Blueprint('categories', __name__, url_prefix='/categories')
+
+
+@categories_bp.route('/')
+@login_required
+def index():
+    # แยกหมวดหมู่ตามประเภท
+    income_categories = Category.query.filter_by(user_id=current_user.id, type='income').all()
+    expense_categories = Category.query.filter_by(user_id=current_user.id, type='expense').all()
+
+    return render_template(
+        'categories/index.html',
+        income_categories=income_categories,
+        expense_categories=expense_categories,
+        title='หมวดหมู่'
+    )
+
+
+@categories_bp.route('/create', methods=['GET', 'POST'])
+@login_required
+def create():
+    form = CategoryForm()
+
+    if form.validate_on_submit():
+        category = Category(
+            name=form.name.data,
+            type=form.type.data,
+            color=form.color.data,
+            icon=form.icon.data,
+            user_id=current_user.id
+        )
+        db.session.add(category)
+        db.session.commit()
+
+        flash('เพิ่มหมวดหมู่สำเร็จ!', 'success')
+        return redirect(url_for('categories.index'))
+
+    return render_template('categories/create.html', form=form, title='เพิ่มหมวดหมู่')
+
+
+@categories_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit(id):
+    category = Category.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    form = CategoryForm(obj=category)
+
+    if form.validate_on_submit():
+        category.name = form.name.data
+        category.type = form.type.data
+        category.color = form.color.data
+        category.icon = form.icon.data
+
+        db.session.commit()
+        flash('แก้ไขหมวดหมู่สำเร็จ!', 'success')
+        return redirect(url_for('categories.index'))
+
+    return render_template('categories/edit.html', form=form, category=category, title='แก้ไขหมวดหมู่')
+
+
+@categories_bp.route('/delete/<int:id>', methods=['POST'])
+@login_required
+def delete(id):
+    category = Category.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+
+    # ตรวจสอบว่ามีธุรกรรมในหมวดหมู่หรือไม่
+    if category.transactions.count() > 0:
+        flash('ไม่สามารถลบหมวดหมู่ที่มีธุรกรรมได้', 'danger')
+        return redirect(url_for('categories.index'))
+
+    db.session.delete(category)
+    db.session.commit()
+
+    flash('ลบหมวดหมู่สำเร็จ!', 'success')
+    return redirect(url_for('categories.index'))

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% from "macros.html" import render_field, render_submit_button %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus me-2"></i>เพิ่มธุรกรรมใหม่</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.csrf_token }}
+
+                    <!-- เพิ่มส่วน OCR -->
+                    <div class="mb-4 border p-3 rounded bg-light">
+                        <h6><i class="fas fa-magic me-2"></i>สแกนใบเสร็จอัตโนมัติ</h6>
+                        <p class="text-muted small">อัพโหลดรูปภาพใบเสร็จเพื่อดึงข้อมูลโดยอัตโนมัติ</p>
+
+                        <div class="d-flex gap-3 align-items-center mb-3">
+                            <button id="ocr-upload-btn" class="btn btn-outline-primary">
+                                <i class="fas fa-file-image me-1"></i> เลือกรูปภาพใบเสร็จ
+                            </button>
+                            <div id="ocr-loading" style="display: none;">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">กำลังประมวลผล...</span>
+                                </div>
+                                <span class="ms-2">กำลังวิเคราะห์ใบเสร็จ...</span>
+                            </div>
+                        </div>
+
+                        <div id="ocr-results" class="mb-3" style="display: none;"></div>
+
+                        <div class="text-center mb-3" style="display: none;">
+                            <img id="receipt-preview" class="img-fluid border rounded" style="max-height: 200px;">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ render_field(form.type) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ render_field(form.transaction_date) }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ render_field(form.category_id) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ render_field(form.account_id) }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ render_field(form.amount) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ render_field(form.status) }}
+                        </div>
+                    </div>
+
+                    {{ render_field(form.description) }}
+                    {{ render_field(form.receipt) }}
+
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class='btn btn-primary btn-lg') }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>คำแนะนำ</h5>
+            </div>
+            <div class="card-body">
+                <h6>วิธีการสแกนใบเสร็จ:</h6>
+                <ol>
+                    <li>ถ่ายรูปใบเสร็จให้ชัดเจน</li>
+                    <li>ตรวจสอบให้แน่ใจว่ารูปภาพมีความสว่างเพียงพอ</li>
+                    <li>ข้อความในใบเสร็จควรอ่านง่ายและไม่มีเงาบัง</li>
+                    <li>คลิกปุ่ม "เลือกรูปภาพใบเสร็จ" เพื่ออัพโหลด</li>
+                    <li>ตรวจสอบข้อมูลที่ดึงได้และแก้ไขหากจำเป็น</li>
+                </ol>
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i> ระบบสามารถดึงข้อมูลวันที่, จำนวนเงิน และชื่อร้านค้าได้ดีที่สุดเมื่อรูปภาพชัดเจน
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/ocr.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,54 @@
+{# app/templates/macros.html #}
+{% macro render_field(field, label_class='') %}
+    <div class="mb-3">
+        {{ field.label(class='form-label ' + label_class) }}
+        {% if field.type == 'BooleanField' %}
+            <div class="form-check">
+                {{ field(class='form-check-input') }}
+            </div>
+        {% else %}
+            {{ field(class='form-control' + (' is-invalid' if field.errors else '')) }}
+        {% endif %}
+
+        {% if field.description %}
+            <div class="form-text">{{ field.description }}</div>
+        {% endif %}
+
+        {% if field.errors %}
+            <div class="invalid-feedback">
+                {% for error in field.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro render_submit_button(field) %}
+    <div class="mb-3">
+        {{ field(class='btn btn-primary') }}
+    </div>
+{% endmacro %}
+
+{% macro render_confirmation_modal(id, title, message, confirm_url, method='post') %}
+    <div class="modal fade" id="{{ id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{ message }}
+                </div>
+                <div class="modal-footer">
+                    <form action="{{ confirm_url }}" method="{{ method }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-danger">ยืนยัน</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}

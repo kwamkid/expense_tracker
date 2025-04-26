@@ -1,0 +1,159 @@
+{# app/templates/categories/edit.html #}
+{% extends "base.html" %}
+{% from "macros.html" import render_field, render_submit_button %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-edit me-2"></i>แก้ไขหมวดหมู่</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('categories.edit', id=category.id) }}">
+                    {{ form.csrf_token }}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ render_field(form.name) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ render_field(form.type) }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="color" class="form-label">สี</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color" id="color" name="color" value="{{ form.color.data }}">
+                                    <input type="text" class="form-control" id="color-text" value="{{ form.color.data }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="icon" class="form-label">ไอคอน</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i id="icon-preview" class="fas fa-{{ form.icon.data or 'tag' }} fa-lg"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="icon" name="icon" value="{{ form.icon.data or '' }}" placeholder="tag, money-bill, shopping-cart, etc.">
+                                    <button type="button" class="btn btn-outline-secondary" id="icon-picker-btn" data-bs-toggle="collapse" data-bs-target="#icon-selector">
+                                        เลือกไอคอน
+                                    </button>
+                                </div>
+                                <div class="form-text">ไอคอนจาก Font Awesome เช่น "money-bill", "shopping-cart"</div>
+                            </div>
+
+                            <!-- Icon Selector -->
+                            <div class="collapse mt-2 mb-3" id="icon-selector">
+                                <div class="card card-body">
+                                    <div class="icon-selector">
+                                        <!-- ไอคอนจะถูกเติมด้วย JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('categories.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> ยกเลิก
+                        </a>
+                        {{ form.submit(class='btn btn-primary') }}
+                    </div>
+                </form>
+            </div>
+
+            {% if category.transactions.count() > 0 %}
+            <div class="card-footer">
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    หมวดหมู่นี้มีธุรกรรมทั้งหมด {{ category.transactions.count() }} รายการ
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Color picker sync with text
+        const colorPicker = document.getElementById('color');
+        const colorText = document.getElementById('color-text');
+
+        colorPicker.addEventListener('input', function() {
+            colorText.value = this.value;
+        });
+
+        // Icon preview
+        const iconInput = document.getElementById('icon');
+        const iconPreview = document.getElementById('icon-preview');
+
+        iconInput.addEventListener('input', function() {
+            iconPreview.className = `fas fa-${this.value || 'tag'} fa-lg`;
+        });
+
+        // Icon selector
+        const iconSelector = document.querySelector('.icon-selector');
+        const commonIcons = [
+            'money-bill', 'coins', 'credit-card', 'wallet', 'piggy-bank',
+            'shopping-cart', 'store', 'utensils', 'coffee', 'wine-glass',
+            'tshirt', 'shoe-prints', 'socks', 'hat-cowboy', 'glasses',
+            'home', 'building', 'city', 'hotel', 'house',
+            'car', 'bus', 'train', 'plane', 'ship',
+            'graduation-cap', 'book', 'pen', 'pencil-alt', 'paint-brush',
+            'heartbeat', 'medkit', 'hospital', 'pills', 'thermometer',
+            'gamepad', 'film', 'music', 'headphones', 'ticket-alt',
+            'dumbbell', 'running', 'hiking', 'swimming-pool', 'bicycle',
+            'baby', 'child', 'dog', 'cat', 'bone',
+            'gift', 'gem', 'crown', 'award', 'trophy',
+            'tools', 'wrench', 'screwdriver', 'hammer', 'toolbox',
+            'mobile-alt', 'laptop', 'desktop', 'tv', 'camera',
+            'plane-departure', 'plane-arrival', 'map-marker-alt', 'globe', 'passport',
+            'birthday-cake', 'glass-cheers', 'beer', 'wine-bottle', 'cocktail',
+            'pizza-slice', 'hamburger', 'ice-cream', 'candy-cane', 'cookie',
+            'tags', 'tag', 'percentage', 'donate', 'hand-holding-usd',
+            'chart-line', 'chart-bar', 'chart-pie', 'chart-area', 'calculator'
+        ];
+
+        // Generate icon options
+        let iconsHtml = '';
+        commonIcons.forEach(icon => {
+            iconsHtml += `<div class="icon-option" data-icon="${icon}"><i class="fas fa-${icon}"></i></div>`;
+        });
+        iconSelector.innerHTML = iconsHtml;
+
+        // Handle icon selection
+        const iconOptions = iconSelector.querySelectorAll('.icon-option');
+        iconOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const icon = this.getAttribute('data-icon');
+
+                // Update input value
+                iconInput.value = icon;
+
+                // Update preview
+                iconPreview.className = `fas fa-${icon} fa-lg`;
+
+                // Update selected class
+                iconOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // Mark the selected icon if any
+        if (iconInput.value) {
+            const selectedOption = iconSelector.querySelector(`[data-icon="${iconInput.value}"]`);
+            if (selectedOption) {
+                selectedOption.classList.add('selected');
+            }
+        }
+    });
+</script>
+{% endblock %}

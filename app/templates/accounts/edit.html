@@ -1,0 +1,50 @@
+{# app/templates/accounts/edit.html #}
+{% extends "base.html" %}
+{% from "macros.html" import render_field, render_submit_button %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-edit me-2"></i>แก้ไขบัญชี</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('accounts.edit', id=account.id) }}">
+                    {{ form.csrf_token }}
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            {{ render_field(form.name) }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ render_field(form.balance) }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.is_active(class='form-check-input') }}
+                        {{ form.is_active.label(class='form-check-label') }}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('accounts.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> ยกเลิก
+                        </a>
+                        {{ form.submit(class='btn btn-primary') }}
+                    </div>
+                </form>
+            </div>
+
+            {% if account.transactions.count() > 0 %}
+            <div class="card-footer">
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    บัญชีนี้มีธุรกรรมทั้งหมด {{ account.transactions.count() }} รายการ
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

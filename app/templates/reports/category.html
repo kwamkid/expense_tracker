@@ -1,0 +1,379 @@
+{# app/templates/reports/category.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-3">
+            <i class="fas fa-chart-pie text-primary me-2"></i>รายงานตามหมวดหมู่
+        </h1>
+    </div>
+    <div class="col-auto">
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-file-export me-1"></i> ส่งออก
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                <li>
+                    <a class="dropdown-item export-report-btn" href="#" data-format="excel" data-report="category">
+                        <i class="fas fa-file-excel me-2 text-success"></i> Excel
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item export-report-btn" href="#" data-format="pdf" data-report="category">
+                        <i class="fas fa-file-pdf me-2 text-danger"></i> PDF
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" id="print-report-btn">
+                        <i class="fas fa-print me-2 text-primary"></i> พิมพ์
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ตัวเลือกเดือน/ปี/ประเภท -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="report-form" method="GET" action="{{ url_for('reports.category') }}" class="row g-3">
+            <div class="col-md-4">
+                <label for="type" class="form-label">ประเภท</label>
+                <select id="type" name="type" class="form-select">
+                    <option value="expense" {{ 'selected' if type == 'expense' }}>รายจ่าย</option>
+                    <option value="income" {{ 'selected' if type == 'income' }}>รายรับ</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="month" class="form-label">เดือน</label>
+                <select id="month" name="month" class="form-select">
+                    {% for month_num, month_name in months %}
+                    <option value="{{ month_num }}" {{ 'selected' if month_num == month }}>{{ month_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="year" class="form-label">ปี</label>
+                <select id="year" name="year" class="form-select">
+                    {% for year_option in years %}
+                    <option value="{{ year_option }}" {{ 'selected' if year_option == year }}>{{ year_option }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- กราฟแยกตามหมวดหมู่ -->
+    <div class="col-lg-6 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {% if type == 'expense' %}
+                    <i class="fas fa-chart-pie me-2"></i>รายจ่ายแยกตามหมวดหมู่
+                    {% else %}
+                    <i class="fas fa-chart-pie me-2"></i>รายรับแยกตามหมวดหมู่
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if category_summary|length > 0 %}
+                <canvas id="categoryChart" height="300"></canvas>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="text-muted">
+                        {% if type == 'expense' %}
+                        ยังไม่มีข้อมูลรายจ่าย
+                        {% else %}
+                        ยังไม่มีข้อมูลรายรับ
+                        {% endif %}
+
+                        {% if month > 0 %}
+                        ในเดือนที่เลือก
+                        {% else %}
+                        ในปีที่เลือก
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ตารางแยกตามหมวดหมู่ -->
+    <div class="col-lg-6 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list-alt me-2"></i>รายละเอียดตามหมวดหมู่</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if category_summary|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover m-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>หมวดหมู่</th>
+                                <th class="text-end">จำนวนเงิน</th>
+                                <th class="text-end">เปอร์เซ็นต์</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set total_amount = category_summary|sum(attribute='total') %}
+                            {% for category in category_summary %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="color-box me-2" style="background-color: {{ category.color }}; width: 16px; height: 16px; border-radius: 4px;"></div>
+                                        <span>{{ category.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-end">{{ "{:,.2f}".format(category.total) }} ฿</td>
+                                <td class="text-end">
+                                    {% if total_amount > 0 %}
+                                    {{ "{:.2f}".format((category.total / total_amount) * 100) }}%
+                                    {% else %}
+                                    0.00%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light fw-bold">
+                                <td>รวม</td>
+                                <td class="text-end">{{ "{:,.2f}".format(total_amount) }} ฿</td>
+                                <td class="text-end">100.00%</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="text-muted">
+                        {% if type == 'expense' %}
+                        ยังไม่มีข้อมูลรายจ่าย
+                        {% else %}
+                        ยังไม่มีข้อมูลรายรับ
+                        {% endif %}
+
+                        {% if month > 0 %}
+                        ในเดือนที่เลือก
+                        {% else %}
+                        ในปีที่เลือก
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- สรุปข้อมูล -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>สรุปข้อมูล
+            {% if month > 0 %}
+            เดือน {{ months[month][1] }}
+            {% endif %}
+            {{ year }}
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% if category_summary|length > 0 %}
+                {% set total_amount = category_summary|sum(attribute='total') %}
+                {% if type == 'expense' %}
+                <div class="col-md-6">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading"><i class="fas fa-shopping-cart me-2"></i>รายจ่ายทั้งหมด</h5>
+                        <h3>{{ "{:,.2f}".format(total_amount) }} ฿</h3>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">หมวดหมู่ที่มีค่าใช้จ่ายสูงสุด</h6>
+                            {% set max_category = category_summary|sort(attribute='total')|last %}
+                            <div class="d-flex align-items-center">
+                                <div class="color-box me-2" style="background-color: {{ max_category.color }}; width: 20px; height: 20px; border-radius: 4px;"></div>
+                                <h5 class="mb-0">{{ max_category.name }}: {{ "{:,.2f}".format(max_category.total) }} ฿</h5>
+                            </div>
+                            <div class="text-muted mt-2">
+                                คิดเป็น {{ "{:.2f}".format((max_category.total / total_amount) * 100) }}% ของรายจ่ายทั้งหมด
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">คำแนะนำในการบริหารค่าใช้จ่าย</h6>
+                            <p>
+                                หมวดหมู่ที่มีค่าใช้จ่ายสูงสุดคือ <strong>{{ max_category.name }}</strong>
+                                คิดเป็น {{ "{:.2f}".format((max_category.total / total_amount) * 100) }}% ของรายจ่ายทั้งหมด
+                                {% if (max_category.total / total_amount) > 0.5 %}
+                                ซึ่งมีสัดส่วนค่อนข้างสูง การพิจารณาลดค่าใช้จ่ายในหมวดนี้อาจช่วยให้บริหารการเงินได้ดีขึ้น
+                                {% elif (max_category.total / total_amount) > 0.3 %}
+                                ซึ่งมีสัดส่วนค่อนข้างมาก อาจพิจารณาดูรายละเอียดเพิ่มเติม
+                                {% else %}
+                                ซึ่งถือว่าอยู่ในสัดส่วนที่สมดุลกับหมวดหมู่อื่นๆ
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-md-6">
+                    <div class="alert alert-success">
+                        <h5 class="alert-heading"><i class="fas fa-hand-holding-usd me-2"></i>รายรับทั้งหมด</h5>
+                        <h3>{{ "{:,.2f}".format(total_amount) }} ฿</h3>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">หมวดหมู่ที่มีรายรับสูงสุด</h6>
+                            {% set max_category = category_summary|sort(attribute='total')|last %}
+                            <div class="d-flex align-items-center">
+                                <div class="color-box me-2" style="background-color: {{ max_category.color }}; width: 20px; height: 20px; border-radius: 4px;"></div>
+                                <h5 class="mb-0">{{ max_category.name }}: {{ "{:,.2f}".format(max_category.total) }} ฿</h5>
+                            </div>
+                            <div class="text-muted mt-2">
+                                คิดเป็น {{ "{:.2f}".format((max_category.total / total_amount) * 100) }}% ของรายรับทั้งหมด
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">คำแนะนำในการบริหารรายรับ</h6>
+                            <p>
+                                หมวดหมู่ที่มีรายรับสูงสุดคือ <strong>{{ max_category.name }}</strong>
+                                คิดเป็น {{ "{:.2f}".format((max_category.total / total_amount) * 100) }}% ของรายรับทั้งหมด
+                                {% if (max_category.total / total_amount) > 0.8 %}
+                                ซึ่งมีสัดส่วนสูงมาก อาจพิจารณาหาแหล่งรายรับเพิ่มเติมเพื่อลดความเสี่ยงจากการพึ่งพารายได้หลักเพียงแหล่งเดียว
+                                {% elif (max_category.total / total_amount) > 0.5 %}
+                                ซึ่งมีสัดส่วนค่อนข้างสูง การหารายได้เสริมอาจช่วยกระจายความเสี่ยงได้
+                                {% else %}
+                                ซึ่งถือว่ามีการกระจายรายได้จากหลายแหล่งที่ดีแล้ว
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <p class="mb-0">
+                        {% if type == 'expense' %}
+                        ยังไม่มีข้อมูลรายจ่าย
+                        {% else %}
+                        ยังไม่มีข้อมูลรายรับ
+                        {% endif %}
+
+                        {% if month > 0 %}
+                        ในเดือน {{ months[month][1] }} {{ year }}
+                        {% else %}
+                        ในปี {{ year }}
+                        {% endif %}
+
+                        กรุณาบันทึกธุรกรรมเพื่อดูรายงาน
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // กราฟแยกตามหมวดหมู่
+        {% if category_summary|length > 0 %}
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryChart = new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    {% for category in category_summary %}
+                    '{{ category["name"] }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for category in category_summary %}
+                        {{ category["total"] }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        {% for category in category_summary %}
+                        '{{ category["color"] }}',
+                        {% endfor %}
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+
+                                return label + ': ' + new Intl.NumberFormat('th-TH', {
+                                    style: 'currency',
+                                    currency: 'THB'
+                                }).format(value) + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endif %}
+
+        // Form auto-submit
+        document.getElementById('type').addEventListener('change', function() {
+            document.getElementById('report-form').submit();
+        });
+
+        document.getElementById('month').addEventListener('change', function() {
+            document.getElementById('report-form').submit();
+        });
+
+        document.getElementById('year').addEventListener('change', function() {
+            document.getElementById('report-form').submit();
+        });
+
+        // Export buttons
+        document.querySelectorAll('.export-report-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const format = this.getAttribute('data-format');
+                const reportType = this.getAttribute('data-report');
+
+                window.location.href = `/reports/export/${reportType}?format=${format}&year={{ year }}&month={{ month }}&type={{ type }}`;
+            });
+        });
+
+        // Print button
+        document.getElementById('print-report-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.print();
+        });
+    });
+</script>
+{% endblock %}
