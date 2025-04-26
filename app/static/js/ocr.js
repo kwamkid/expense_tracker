@@ -78,20 +78,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     if (data.data.vendor && descriptionInput) {
                         descriptionInput.value = data.data.vendor;
+
+                        // เพิ่มเลขที่ใบเสร็จถ้ามี
+                        if (data.data.receipt_no) {
+                            descriptionInput.value += ` (เลขที่: ${data.data.receipt_no})`;
+                        }
                     }
 
                     // Show OCR results
                     if (ocrResultsContainer) {
-                        ocrResultsContainer.innerHTML = `
-                            <div class="alert alert-success">
-                                <h5>ข้อมูลที่ดึงได้:</h5>
-                                <ul>
-                                    <li><strong>วันที่:</strong> ${data.data.date || 'ไม่พบ'}</li>
-                                    <li><strong>จำนวนเงิน:</strong> ${data.data.total_amount ? data.data.total_amount.toLocaleString('th-TH', {style: 'currency', currency: 'THB'}) : 'ไม่พบ'}</li>
-                                    <li><strong>ร้านค้า:</strong> ${data.data.vendor || 'ไม่พบ'}</li>
-                                </ul>
-                            </div>
-                        `;
+                        // สร้างผลลัพธ์ที่แสดงได้ชัดเจนว่าข้อมูลไหนถูกดึงได้บ้าง
+                        let resultHTML = '<div class="alert ';
+
+                        // ถ้ามี warning แสดงว่าไม่พบข้อมูล
+                        if (data.warning) {
+                            resultHTML += 'alert-warning"><i class="fas fa-exclamation-triangle me-2"></i><strong>ไม่พบข้อมูล:</strong> ' + data.warning;
+                        }
+                        // ถ้ามีข้อมูลอย่างน้อย 1 อย่าง ถือว่าสำเร็จบางส่วน
+                        else if (Object.values(data.data).some(val => val !== null)) {
+                            resultHTML += 'alert-success"><i class="fas fa-check-circle me-2"></i><strong>ดึงข้อมูลสำเร็จ</strong>';
+                        }
+                        // ถ้าไม่มีข้อมูลใดเลย แต่ยังถือว่าสำเร็จในการประมวลผล
+                        else {
+                            resultHTML += 'alert-info"><i class="fas fa-info-circle me-2"></i><strong>ประมวลผลสำเร็จ</strong> แต่ไม่พบข้อมูลจากใบเสร็จ กรุณากรอกข้อมูลด้วยตนเอง';
+                        }
+
+                        resultHTML += '</div>';
+
+                        // แสดงรายละเอียดข้อมูลที่ดึงได้
+                        if (Object.values(data.data).some(val => val !== null)) {
+                            resultHTML += '<div class="card mb-3"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-file-invoice me-2"></i>ข้อมูลที่ดึงได้จากใบเสร็จ</h6></div><div class="card-body">';
+                            resultHTML += '<table class="table table-sm">';
+                            resultHTML += '<tr><th style="width: 40%;">วันที่:</th><td>' + (data.data.date || '<span class="text-muted">ไม่พบ</span>') + '</td></tr>';
+                            resultHTML += '<tr><th>จำนวนเงิน:</th><td>' + (data.data.total_amount ? data.data.total_amount.toLocaleString('th-TH', {style: 'currency', currency: 'THB'}) : '<span class="text-muted">ไม่พบ</span>') + '</td></tr>';
+                            resultHTML += '<tr><th>ชื่อร้านค้า:</th><td>' + (data.data.vendor || '<span class="text-muted">ไม่พบ</span>') + '</td></tr>';
+                            resultHTML += '<tr><th>เลขที่ใบเสร็จ:</th><td>' + (data.data.receipt_no || '<span class="text-muted">ไม่พบ</span>') + '</td></tr>';
+                            resultHTML += '</table>';
+                            resultHTML += '</div></div>';
+
+                            // คำแนะนำการแก้ไขข้อมูล
+                            resultHTML += '<div class="alert alert-info"><i class="fas fa-lightbulb me-2"></i><strong>คำแนะนำ:</strong> คุณสามารถแก้ไขข้อมูลที่ดึงได้หากพบว่าไม่ถูกต้อง</div>';
+                        }
+
+                        ocrResultsContainer.innerHTML = resultHTML;
                         ocrResultsContainer.style.display = 'block';
                     }
                 } else {

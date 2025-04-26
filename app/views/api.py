@@ -17,19 +17,20 @@ def ocr_receipt():
     Returns:
         JSON response ที่มีข้อมูลที่ดึงได้จากใบเสร็จ
     """
-    if 'receipt' not in request.files:
-        return jsonify({'error': 'No file provided'}), 400
-
-    file = request.files['receipt']
-
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-
     try:
+        if 'receipt' not in request.files:
+            return jsonify({'success': False, 'error': 'ไม่พบไฟล์รูปภาพ กรุณาอัพโหลดไฟล์'}), 400
+
+        file = request.files['receipt']
+
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'ไม่ได้เลือกไฟล์ กรุณาเลือกไฟล์ก่อนอัพโหลด'}), 400
+
         # บันทึกไฟล์
         filename = save_receipt(file)
         if not filename:
-            return jsonify({'error': 'Invalid file type'}), 400
+            return jsonify({'success': False,
+                            'error': 'ประเภทไฟล์ไม่ถูกต้อง รองรับเฉพาะไฟล์รูปภาพ (jpg, jpeg, png, gif) เท่านั้น'}), 400
 
         # สร้างพาธเต็มของไฟล์
         file_path = os.path.join(
@@ -41,8 +42,22 @@ def ocr_receipt():
         # ประมวลผล OCR
         extracted_data = process_receipt_image(file_path)
 
-        if not extracted_data:
-            return jsonify({'error': 'Failed to extract data from receipt'}), 400
+        # เพิ่ม logs สำหรับการดีบัก
+        current_app.logger.info(f"OCR results for {filename}: {extracted_data}")
+
+        # ตรวจสอบว่าได้ข้อมูลหรือไม่
+        if not extracted_data or all(value is None for value in extracted_data.values()):
+            return jsonify({
+                'success': True,
+                'warning': 'ไม่สามารถดึงข้อมูลจากใบเสร็จได้ กรุณากรอกข้อมูลด้วยตนเอง',
+                'data': {
+                    'date': None,
+                    'total_amount': None,
+                    'vendor': None,
+                    'receipt_no': None
+                },
+                'filename': filename
+            })
 
         return jsonify({
             'success': True,
@@ -52,4 +67,40 @@ def ocr_receipt():
 
     except Exception as e:
         current_app.logger.error(f"Error in OCR processing: {str(e)}")
-        return jsonify({'error': f'OCR processing failed: {str(e)}'}), 500
+        return jsonify({'success': False, 'error': f'การประมวลผล OCR ล้มเหลว: {str(e)}'}), 500
+
+
+@api_bp.route('/categories', methods=['GET'])
+def get_categories():
+    """
+    API endpoint สำหรับดึงข้อมูลหมวดหมู่ตามประเภทธุรกรรม
+
+    Query parameters:
+        type: ประเภทหมวดหมู่ ('income' หรือ 'expense')
+
+    Returns:
+        JSON array ของหมวดหมู่
+    """
+    from app.models import Category
+    from flask_login import current_user
+
+    transaction_type = request.args.get('type', 'expense')
+
+    if transaction_type not in ['income', 'expense']:
+        return jsonify({'error': 'ประเภทไม่ถูกต้อง รองรับเฉพาะ income หรือ expense'}), 400
+
+    categories = Category.query.filter_by(
+        user_id=current_user.id,
+        type=transaction_type
+    ).all()
+
+    result = []
+    for category in categories:
+        result.append({
+            'id': category.id,
+            'name': category.name,
+            'color': category.color,
+            'icon': category.icon
+        })
+
+    return jsonify(result)

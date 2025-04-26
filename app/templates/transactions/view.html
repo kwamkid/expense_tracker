@@ -150,6 +150,7 @@
 </div>
 
 <!-- Modal for receipt viewing -->
+{% if transaction.receipt_path %}
 <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -169,4 +170,5 @@
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}
