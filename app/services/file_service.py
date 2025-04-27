@@ -7,11 +7,20 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 
 
+# app/services/file_service.py
+# แก้ไขฟังก์ชัน allowed_file
+
 def allowed_file(filename):
     """ตรวจสอบว่าไฟล์มีนามสกุลที่อนุญาตหรือไม่"""
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+    if not filename:
+        return False
 
+    # เพิ่มการตรวจสอบว่ามี . หรือไม่
+    if '.' not in filename:
+        return False
+
+    ext = filename.rsplit('.', 1)[1].lower()
+    return ext in current_app.config['ALLOWED_EXTENSIONS']
 
 def save_receipt(file_data):
     """บันทึกไฟล์ใบเสร็จ"""

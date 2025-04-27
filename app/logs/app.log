@@ -1,0 +1,79 @@
+2025-04-27 08:05:19,174 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 08:05:19,174 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 08:05:19,225 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 08:05:19,246 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 08:05:48,225 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 08:05:48,225 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 08:05:48,258 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 08:05:48,266 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 08:05:54,945 INFO: OCR API request received: ImmutableMultiDict([('receipt', <FileStorage: 'POS.png' ('image/png')>)]) [in /Users/ampstark/expense_tracker/app/views/api.py:25]
+2025-04-27 08:05:54,945 INFO: Request headers: Host: 127.0.0.1:5000
+Connection: keep-alive
+Content-Length: 96547
+Sec-Ch-Ua-Platform: "macOS"
+X-Csrftoken: ImU5MTQ5NTY0ZTRiMzRmMDlhNzVjYzUwNDgxY2U3MGJkM2Q2ZGU1YmQi.aA2C8A.cPVcpLL0jqLmuFus_DRIfnEZYfY
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36
+Sec-Ch-Ua: "Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryHtAyVGrzLX6k2z8X
+Sec-Ch-Ua-Mobile: ?0
+Accept: */*
+Origin: http://127.0.0.1:5000
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://127.0.0.1:5000/transactions/create
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9
+Cookie: session=.eJwlzjtqw0AUQNG9TJ1i3l_jzYiZ98EmkIBkVyF7t0jKW1w4P22vI897uz2PV360_RHt1nKkj0SdPSa5dEQ2dKMQJrbBEdDDjAGNK4aOTddCLwgJnprX5qpZhmJaZWIQatcl4AhECOaLgDtVr8lhW1n2xbUFktBsF-R15vGvgSv9PGp_fn_m1x8PeIhy8iKuPqaJX0rewNP6CgqNlBXt9w2tGj8d.aA1_kA.VAwjde5yHvCLVnvbD09YFef0zho
+
+ [in /Users/ampstark/expense_tracker/app/views/api.py:26]
+2025-04-27 08:05:54,946 INFO: Saved receipt image to: /Users/ampstark/expense_tracker/app/static/uploads/receipts/ddaf0dea6162471f8e93d86df3a8992e_20250427.jpg [in /Users/ampstark/expense_tracker/app/views/api.py:65]
+2025-04-27 08:05:54,946 INFO: Starting OCR processing [in /Users/ampstark/expense_tracker/app/views/api.py:68]
+2025-04-27 08:05:54,946 INFO: Starting OCR processing for image: /Users/ampstark/expense_tracker/app/static/uploads/receipts/ddaf0dea6162471f8e93d86df3a8992e_20250427.jpg [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:578]
+2025-04-27 08:05:54,978 INFO: Image preprocessing successful for /Users/ampstark/expense_tracker/app/static/uploads/receipts/ddaf0dea6162471f8e93d86df3a8992e_20250427.jpg [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:251]
+2025-04-27 08:05:54,986 INFO: OCR: Processing image with size 363x1024 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:273]
+2025-04-27 08:05:54,986 INFO: OCR: Tesseract path: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:274]
+2025-04-27 08:05:54,986 INFO: OCR: Attempting OCR with config: --oem 1 --psm 6 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:281]
+2025-04-27 08:05:55,923 INFO: OCR: First pass result length: 760 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:283]
+2025-04-27 08:05:55,924 INFO: OCR: Results saved to /Users/ampstark/expense_tracker/app/logs/ocr_result_20250427_080555.txt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:338]
+2025-04-27 08:05:55,924 INFO: Extracting all data from receipt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:528]
+2025-04-27 08:05:55,924 INFO: Full OCR text:
+บริษัท โฟลว์แอคเคาห์ จํากัด   : ล
+141/12 ขั้น 11ยูนิต %28อฮาคารชุด สกุลไทย สุรวงศ์
+ทาวเวอร์ ถนนสุรวงศ์ แขวงสุริยวงศ์ เขตบางรัก |
+'กรุงเทพมหานคร 10500. ] ว 1
+เลขผู้เสียภาษี 1234567890000  : if
+เว็บไซต์ www.examplecom ว :::
+ใบกํากับภาษี่อย่างย่อ/ใบเสร็จรับงิน : : 1
+¢A2019070001     a 0
+พนักงานขาย:) สมชาย. ใจดี 1 1:
+วันที่     . อมงย2019 อ) :! 1
+41 ~~ Double A Copier Paper. Ad             -     8:000.00
+100. Staples (24/Pack) Max i0-:    | :2,000.00
+:แถ่ Desk FurradexEX2590 : :   | 8300.00
+จ้านวนรวม.:111      : :    า   : iH
+.     รวมเป็นเงิน      : .10,300.00
+     ส่วนลด    | 300.00
+จํานวนเงินหลังหักส่วนลด       : 10,000.00.
+ภาษีมูลค่าเพิ่ม7%    654.21,
+ราคาไม่รวมภาษีมูลค่าเพิ่ม   | 9,345:79
+| รรวมทังสืน   10,000.00
+ใช้งาน POS WELAA FlowAccount.com :ะ
+ [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:529]
+2025-04-27 08:05:55,924 INFO: Detected FlowAccount receipt, using specialized extraction [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:533]
+2025-04-27 08:05:55,925 INFO: Extracted data: {'date': None, 'total_amount': 10000.0, 'vendor': 'บริษัท โฟลว์แอคเคาห์ จํากัด', 'items': [], 'receipt_no': None} [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:562]
+2025-04-27 08:05:55,925 INFO: OCR processing complete. Data: {"date": null, "total_amount": 10000.0, "vendor": "บริษัท โฟลว์แอคเคาห์ จํากัด", "items": [], "receipt_no": null} [in /Users/ampstark/expense_tracker/app/views/api.py:70]
+2025-04-27 08:05:55,925 INFO: Saved API response log to: /Users/ampstark/expense_tracker/app/logs/ocr_api_response_20250427_080555.json [in /Users/ampstark/expense_tracker/app/views/api.py:98]
+2025-04-27 08:05:55,925 INFO: OCR API returning success with data: {"date": null, "total_amount": 10000.0, "vendor": "บริษัท โฟลว์แอคเคาห์ จํากัด", "receipt_no": null, "items": []} [in /Users/ampstark/expense_tracker/app/views/api.py:111]

@@ -14,24 +14,42 @@ from app.services.ocr_service import process_receipt_image
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 
+# แก้ไขใน app/views/api.py
+# ค้นหาฟังก์ชัน ocr_receipt และแก้ไขส่วนของการตรวจสอบไฟล์
+
 @api_bp.route('/ocr/receipt', methods=['POST'])
 @login_required
 def ocr_receipt():
     """API สำหรับอัปโหลดใบเสร็จและวิเคราะห์ด้วย OCR"""
+    # เพิ่มการบันทึกข้อมูลเพื่อการดีบัก
+    current_app.logger.info(f"OCR API request received: {request.files}")
+    current_app.logger.info(f"Request headers: {request.headers}")
+
     if 'receipt' not in request.files:
+        current_app.logger.error("OCR API: No receipt file in request")
         return jsonify({
             'success': False,
             'error': 'ไม่พบไฟล์รูปภาพใบเสร็จ'
         }), 400
 
     file = request.files['receipt']
-    if not file or not allowed_file(file.filename):
+    if not file or file.filename == '':
+        current_app.logger.error("OCR API: Empty filename")
+        return jsonify({
+            'success': False,
+            'error': 'ไม่ได้เลือกไฟล์'
+        }), 400
+
+    if not allowed_file(file.filename):
+        current_app.logger.error(f"OCR API: Invalid file type: {file.filename}")
         return jsonify({
             'success': False,
             'error': 'ไฟล์ไม่ถูกต้อง กรุณาอัปโหลดไฟล์รูปภาพ (jpg, jpeg, png, etc.)'
         }), 400
 
     try:
+        # บันทึกไฟล์ชั่วคราวและดำเนินการต่อ...
+        # (ส่วนที่เหลือของฟังก์ชันให้คงเดิม)
         # บันทึกไฟล์ชั่วคราว
         upload_folder = os.path.join(current_app.root_path, 'static/uploads/receipts')
         os.makedirs(upload_folder, exist_ok=True)

@@ -95,23 +95,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Process OCR
-        function processOCR(file) {
-            const formData = new FormData();
-            formData.append('receipt', file);
+        // แก้ไขในไฟล์ app/static/js/ocr.js
+// หาฟังก์ชัน processOCR และแก้ไขตามนี้
 
-            console.log('Starting OCR processing for file:', file.name);
+function processOCR(file) {
+    const formData = new FormData();
+    formData.append('receipt', file);
 
-            fetch('/api/ocr/receipt', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                console.log('OCR API response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
+    console.log('Starting OCR processing for file:', file.name);
+
+    // เพิ่มการแสดง CSRF token (ถ้ามี)
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    fetch('/api/ocr/receipt', {
+        method: 'POST',
+        body: formData,
+        headers: csrfToken ? {
+            'X-CSRFToken': csrfToken
+        } : {} // ถ้าไม่มี CSRF token ส่งเป็น empty headers
+    })
+    .then(response => {
+        console.log('OCR API response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    // ส่วนที่เหลือของฟังก์ชันให้คงเดิม
             .then(data => {
                 console.log('OCR API response data:', data);
 
