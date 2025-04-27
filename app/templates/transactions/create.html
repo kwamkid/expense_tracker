@@ -1,3 +1,4 @@
+{# app/templates/transactions/create.html #}
 {% extends "base.html" %}
 {% from "macros.html" import render_field, render_submit_button %}
 
@@ -6,7 +7,13 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-plus me-2"></i>เพิ่มธุรกรรมใหม่</h5>
+                <h5 class="mb-0">
+                    {% if transaction_type == 'income' %}
+                    <i class="fas fa-plus-circle text-success me-2"></i>เพิ่มรายได้
+                    {% else %}
+                    <i class="fas fa-minus-circle text-danger me-2"></i>เพิ่มรายจ่าย
+                    {% endif %}
+                </h5>
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
@@ -14,7 +21,11 @@
 
                     <div class="row">
                         <div class="col-md-6">
+                            {% if transaction_type %}
+                            <input type="hidden" name="type" value="{{ transaction_type }}">
+                            {% else %}
                             {{ render_field(form.type) }}
+                            {% endif %}
                         </div>
                         <div class="col-md-6">
                             {{ render_field(form.transaction_date) }}
@@ -43,7 +54,7 @@
                     {{ render_field(form.receipt) }}
 
                     <div class="d-grid gap-2">
-                        {{ form.submit(class='btn btn-primary btn-lg') }}
+                        {{ form.submit(class='btn btn-lg ' + ('btn-success' if transaction_type == 'income' else 'btn-danger')) }}
                     </div>
                 </form>
             </div>
@@ -58,14 +69,99 @@
             <div class="card-body">
                 <h6>คำแนะนำในการบันทึกธุรกรรม:</h6>
                 <ul>
-                    <li>เลือกประเภทธุรกรรมเป็นรายรับหรือรายจ่าย</li>
                     <li>ใส่วันที่ที่เกิดธุรกรรม</li>
                     <li>เลือกหมวดหมู่และบัญชีที่เกี่ยวข้อง</li>
                     <li>ระบุจำนวนเงินและรายละเอียดของธุรกรรม</li>
                     <li>แนบไฟล์ใบเสร็จหากต้องการ (ไม่บังคับ)</li>
                 </ul>
+
+                <div class="alert {{ 'alert-success' if transaction_type == 'income' else 'alert-danger' }} mt-3">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    {% if transaction_type == 'income' %}
+                    เมื่อบันทึกรายได้ จำนวนเงินจะถูกเพิ่มในบัญชีของคุณทันทีหากสถานะเป็น "เสร็จสิ้น"
+                    {% else %}
+                    เมื่อบันทึกรายจ่าย จำนวนเงินจะถูกหักออกจากบัญชีของคุณทันทีหากสถานะเป็น "เสร็จสิ้น"
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // เมื่อประเภทธุรกรรมเปลี่ยน ให้โหลดหมวดหมู่ที่เกี่ยวข้อง
+        const transactionTypeSelect = document.getElementById('type');
+        const categorySelect = document.getElementById('category_id');
+
+        if (transactionTypeSelect && categorySelect) {
+            // ฟังก์ชันโหลดหมวดหมู่
+            function loadCategories(type) {
+                fetch(`/api/categories?type=${type}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // ล้างตัวเลือกปัจจุบัน
+                        categorySelect.innerHTML = '';
+
+                        // เพิ่มตัวเลือกใหม่
+                        data.forEach(category => {
+                            const option = document.createElement('option');
+                            option.value = category.id;
+                            option.textContent = category.name;
+                            categorySelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error loading categories:', error));
+            }
+
+            // โหลดหมวดหมู่เมื่อประเภทเปลี่ยน
+            transactionTypeSelect.addEventListener('change', function() {
+                loadCategories(this.value);
+
+                // เปลี่ยนสีปุ่ม Submit ตามประเภทธุรกรรม
+                const submitButton = document.querySelector('button[type="submit"]');
+                if (this.value === 'income') {
+                    submitButton.className = 'btn btn-lg btn-success';
+                } else {
+                    submitButton.className = 'btn btn-lg btn-danger';
+                }
+            });
+
+            // โหลดหมวดหมู่เริ่มต้น
+            if (transactionTypeSelect.value) {
+                loadCategories(transactionTypeSelect.value);
+            }
+        }
+
+        // แสดงตัวอย่างไฟล์ใบเสร็จที่อัพโหลด
+        const receiptInput = document.getElementById('receipt');
+        const receiptPreviewContainer = document.getElementById('receipt-preview-container');
+
+        if (receiptInput) {
+            receiptInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+
+                    // สร้าง container สำหรับแสดงตัวอย่างถ้ายังไม่มี
+                    if (!receiptPreviewContainer) {
+                        const container = document.createElement('div');
+                        container.id = 'receipt-preview-container';
+                        container.className = 'mt-3 text-center';
+                        container.innerHTML = '<p>ตัวอย่างใบเสร็จ:</p><img id="receipt-preview" class="img-fluid border rounded" style="max-height: 200px;" />';
+                        receiptInput.parentNode.appendChild(container);
+                    }
+
+                    reader.onload = function(e) {
+                        const preview = document.getElementById('receipt-preview');
+                        if (preview) {
+                            preview.src = e.target.result;
+                            preview.style.display = 'inline-block';
+                        }
+                    }
+
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }

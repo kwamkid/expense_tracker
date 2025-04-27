@@ -7,11 +7,14 @@
         <h1 class="mb-3">
             <i class="fas fa-chart-line text-primary me-2"></i>Dashboard
         </h1>
-        <p class="lead">ยินดีต้อนรับ, {{ current_user.username }}! นี่คือสรุปรายรับรายจ่ายของคุณ</p>
+        <p>ยินดีต้อนรับ, {{ current_user.username }}! นี่คือสรุปรายรับรายจ่ายของคุณ</p>
     </div>
-    <div class="col-auto">
-        <a href="{{ url_for('transactions.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> เพิ่มธุรกรรมใหม่
+    <div class="col-auto d-flex gap-2">
+        <a href="{{ url_for('transactions.create', type='income') }}" class="btn btn-success">
+            <i class="fas fa-plus-circle me-1"></i> เพิ่มรายได้
+        </a>
+        <a href="{{ url_for('transactions.create', type='expense') }}" class="btn btn-danger">
+            <i class="fas fa-minus-circle me-1"></i> เพิ่มรายจ่าย
         </a>
     </div>
 </div>
@@ -96,38 +99,6 @@
 </div>
 
 <div class="row mb-4">
-    <!-- แนวโน้มรายรับรายจ่าย 6 เดือนล่าสุด -->
-    <div class="col-lg-8 mb-3">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>แนวโน้มรายรับรายจ่าย 6 เดือนล่าสุด</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="monthlyTrendChart" height="300"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- หมวดหมู่รายจ่าย -->
-    <div class="col-lg-4 mb-3">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>หมวดหมู่รายจ่าย</h5>
-            </div>
-            <div class="card-body">
-                {% if category_summary|length > 0 %}
-                <canvas id="expenseCategoryChart" height="300"></canvas>
-                {% else %}
-                <div class="text-center py-5">
-                    <p class="text-muted">ยังไม่มีข้อมูลหมวดหมู่รายจ่าย</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mb-4">
     <!-- ธุรกรรมล่าสุด -->
     <div class="col-lg-8 mb-3">
         <div class="card h-100">
@@ -189,9 +160,14 @@
                 {% else %}
                 <div class="text-center py-5">
                     <p class="text-muted">ยังไม่มีธุรกรรม</p>
-                    <a href="{{ url_for('transactions.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-1"></i> เพิ่มธุรกรรมใหม่
-                    </a>
+                    <div class="mt-3 d-flex justify-content-center gap-3">
+                        <a href="{{ url_for('transactions.create', type='income') }}" class="btn btn-success">
+                            <i class="fas fa-plus-circle me-1"></i> เพิ่มรายได้
+                        </a>
+                        <a href="{{ url_for('transactions.create', type='expense') }}" class="btn btn-danger">
+                            <i class="fas fa-minus-circle me-1"></i> เพิ่มรายจ่าย
+                        </a>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -275,7 +251,7 @@
                                 <i class="fas fa-check-circle me-2"></i>อัพเดตสถานะธุรกรรมเรียบร้อยแล้ว
                             </div>
                         `;
-                        document.querySelector('.container').insertAdjacentHTML('afterbegin', alertHTML);
+                        document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHTML);
 
                         // เลื่อนไปด้านบนเพื่อให้เห็นข้อความแจ้งเตือน
                         window.scrollTo(0, 0);
@@ -307,150 +283,6 @@
                 });
             });
         });
-
-        // แนวโน้มรายรับรายจ่าย 6 เดือนล่าสุด
-        const trendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
-        const trendChart = new Chart(trendCtx, {
-            type: 'line',
-            data: {
-                labels: [
-                    {% for month in monthly_trend %}
-                    '{{ month["month_name"] }} {{ month["year"] }}',
-                    {% endfor %}
-                ],
-                datasets: [
-                    {
-                        label: 'รายรับทั้งหมด (รวมรอดำเนินการ)',
-                        data: [
-                            {% for month in monthly_trend %}
-                            {% set total_income = month["income"] + (month["pending_income"] if "pending_income" in month else 0) %}
-                            {{ total_income }},
-                            {% endfor %}
-                        ],
-                        backgroundColor: 'rgba(40, 167, 69, 0.2)',
-                        borderColor: 'rgba(40, 167, 69, 1)',
-                        borderWidth: 2,
-                        tension: 0.3
-                    },
-                    {
-                        label: 'รายจ่ายทั้งหมด (รวมรอดำเนินการ)',
-                        data: [
-                            {% for month in monthly_trend %}
-                            {% set total_expense = month["expense"] + (month["pending_expense"] if "pending_expense" in month else 0) %}
-                            {{ total_expense }},
-                            {% endfor %}
-                        ],
-                        backgroundColor: 'rgba(220, 53, 69, 0.2)',
-                        borderColor: 'rgba(220, 53, 69, 1)',
-                        borderWidth: 2,
-                        tension: 0.3
-                    },
-                    {
-                        label: 'คงเหลือทั้งหมด',
-                        data: [
-                            {% for month in monthly_trend %}
-                            {% set total_income = month["income"] + (month["pending_income"] if "pending_income" in month else 0) %}
-                            {% set total_expense = month["expense"] + (month["pending_expense"] if "pending_expense" in month else 0) %}
-                            {{ total_income - total_expense }},
-                            {% endfor %}
-                        ],
-                        backgroundColor: 'rgba(23, 162, 184, 0.2)',
-                        borderColor: 'rgba(23, 162, 184, 1)',
-                        borderWidth: 2,
-                        tension: 0.3
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return new Intl.NumberFormat('th-TH', {
-                                    style: 'currency',
-                                    currency: 'THB',
-                                    maximumFractionDigits: 0
-                                }).format(value);
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'แสดงทั้งรายการที่ดำเนินการแล้วและรอดำเนินการ',
-                        font: {
-                            size: 14
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + new Intl.NumberFormat('th-TH', {
-                                    style: 'currency',
-                                    currency: 'THB'
-                                }).format(context.raw);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // หมวดหมู่รายจ่าย
-        {% if category_summary|length > 0 %}
-        const categoryCtx = document.getElementById('expenseCategoryChart').getContext('2d');
-        const categoryChart = new Chart(categoryCtx, {
-            type: 'doughnut',
-            data: {
-                labels: [
-                    {% for category in category_summary %}
-                    '{{ category["name"] }}',
-                    {% endfor %}
-                ],
-                datasets: [{
-                    data: [
-                        {% for category in category_summary %}
-                        {{ category["total"] }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: [
-                        {% for category in category_summary %}
-                        '{{ category["color"] }}',
-                        {% endfor %}
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-
-                                return label + ': ' + new Intl.NumberFormat('th-TH', {
-                                    style: 'currency',
-                                    currency: 'THB'
-                                }).format(value) + ' (' + percentage + '%)';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        {% endif %}
     });
 </script>
 {% endblock %}

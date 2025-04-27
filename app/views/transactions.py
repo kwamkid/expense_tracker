@@ -29,9 +29,6 @@ def index():
     query = Transaction.query.filter_by(user_id=current_user.id)
 
     # Apply filters
-    # ใน function index
-    # เพิ่มการกรองตาม status
-
     if status:
         query = query.filter_by(status=status)
     if start_date:
@@ -67,13 +64,21 @@ def index():
 @transactions_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():
+    # รับค่า type จาก query string (ถ้ามี)
+    transaction_type = request.args.get('type', 'expense')
+
     form = TransactionForm()
+
+    # กำหนดค่าเริ่มต้นของประเภทธุรกรรมจาก query string
+    if transaction_type and transaction_type in ['income', 'expense']:
+        form.type.data = transaction_type
 
     # ดึงบัญชีและหมวดหมู่ของผู้ใช้สำหรับตัวเลือกในฟอร์ม
     form.account_id.choices = [(a.id, a.name) for a in Account.query.filter_by(user_id=current_user.id).all()]
 
     # ตัวเลือกหมวดหมู่จะเปลี่ยนตามประเภทธุรกรรม (รายรับ/รายจ่าย)
-    if form.type.data == 'income':
+    current_type = form.type.data or transaction_type
+    if current_type == 'income':
         form.category_id.choices = [(c.id, c.name) for c in
                                     Category.query.filter_by(user_id=current_user.id, type='income').all()]
     else:
@@ -100,18 +105,22 @@ def create():
 
         db.session.add(transaction)
 
-        # อัพเดทยอดเงินในบัญชี
-        account = Account.query.get(form.account_id.data)
-        if form.type.data == 'income':
-            account.balance += form.amount.data
-        else:
-            account.balance -= form.amount.data
+        # อัพเดทยอดเงินในบัญชี (เฉพาะกรณีสถานะเป็น 'completed')
+        if form.status.data == 'completed':
+            account = Account.query.get(form.account_id.data)
+            if form.type.data == 'income':
+                account.balance += form.amount.data
+            else:
+                account.balance -= form.amount.data
 
         db.session.commit()
         flash('บันทึกธุรกรรมสำเร็จ!', 'success')
         return redirect(url_for('transactions.index'))
 
-    return render_template('transactions/create.html', form=form, title='เพิ่มธุรกรรมใหม่')
+    # ตั้งชื่อหน้าตามประเภทธุรกรรม
+    title = 'เพิ่มรายได้' if transaction_type == 'income' else 'เพิ่มรายจ่าย'
+
+    return render_template('transactions/create.html', form=form, title=title, transaction_type=transaction_type)
 
 
 @transactions_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
@@ -123,6 +132,7 @@ def edit(id):
     old_amount = transaction.amount
     old_type = transaction.type
     old_account_id = transaction.account_id
+    old_status = transaction.status
 
     form = TransactionForm(obj=transaction)
 
@@ -159,37 +169,49 @@ def edit(id):
 
         # คำนวณและอัพเดทยอดเงินในบัญชี
 
-        # ถ้าบัญชีเดิมกับบัญชีใหม่เป็นบัญชีเดียวกัน
-        if old_account_id == transaction.account_id:
-            account = Account.query.get(transaction.account_id)
+        # กรณีธุรกรรมเดิมเป็น completed ให้คืนยอดเงิน
+        if old_status == 'completed':
+            # ถ้าบัญชีเดิมกับบัญชีใหม่เป็นบัญชีเดียวกัน
+            if old_account_id == transaction.account_id:
+                account = Account.query.get(transaction.account_id)
 
-            # ย้อนคืนธุรกรรมเดิม
-            if old_type == 'income':
-                account.balance -= old_amount
+                # ย้อนคืนธุรกรรมเดิม
+                if old_type == 'income':
+                    account.balance -= old_amount
+                else:
+                    account.balance += old_amount
+
+                # เพิ่มธุรกรรมใหม่ (เฉพาะถ้าสถานะยังเป็น completed)
+                if transaction.status == 'completed':
+                    if transaction.type == 'income':
+                        account.balance += transaction.amount
+                    else:
+                        account.balance -= transaction.amount
+
+            # ถ้าบัญชีเดิมกับบัญชีใหม่เป็นคนละบัญชี
             else:
-                account.balance += old_amount
+                # อัพเดทบัญชีเดิม
+                old_account = Account.query.get(old_account_id)
+                if old_type == 'income':
+                    old_account.balance -= old_amount
+                else:
+                    old_account.balance += old_amount
 
-            # เพิ่มธุรกรรมใหม่
+                # อัพเดทบัญชีใหม่ (เฉพาะถ้าสถานะเป็น completed)
+                if transaction.status == 'completed':
+                    new_account = Account.query.get(transaction.account_id)
+                    if transaction.type == 'income':
+                        new_account.balance += transaction.amount
+                    else:
+                        new_account.balance -= transaction.amount
+
+        # กรณีธุรกรรมเดิมเป็น pending แต่ธุรกรรมใหม่เป็น completed
+        elif transaction.status == 'completed':
+            account = Account.query.get(transaction.account_id)
             if transaction.type == 'income':
                 account.balance += transaction.amount
             else:
                 account.balance -= transaction.amount
-
-        # ถ้าบัญชีเดิมกับบัญชีใหม่เป็นคนละบัญชี
-        else:
-            # อัพเดทบัญชีเดิม
-            old_account = Account.query.get(old_account_id)
-            if old_type == 'income':
-                old_account.balance -= old_amount
-            else:
-                old_account.balance += old_amount
-
-            # อัพเดทบัญชีใหม่
-            new_account = Account.query.get(transaction.account_id)
-            if transaction.type == 'income':
-                new_account.balance += transaction.amount
-            else:
-                new_account.balance -= transaction.amount
 
         db.session.commit()
         flash('แก้ไขธุรกรรมสำเร็จ!', 'success')
@@ -203,12 +225,13 @@ def edit(id):
 def delete(id):
     transaction = Transaction.query.filter_by(id=id, user_id=current_user.id).first_or_404()
 
-    # อัพเดทยอดเงินในบัญชี
-    account = Account.query.get(transaction.account_id)
-    if transaction.type == 'income':
-        account.balance -= transaction.amount
-    else:
-        account.balance += transaction.amount
+    # อัพเดทยอดเงินในบัญชี (เฉพาะกรณีสถานะเป็น 'completed')
+    if transaction.status == 'completed':
+        account = Account.query.get(transaction.account_id)
+        if transaction.type == 'income':
+            account.balance -= transaction.amount
+        else:
+            account.balance += transaction.amount
 
     # ลบไฟล์ใบเสร็จ (ถ้ามี)
     if transaction.receipt_path:
@@ -227,4 +250,3 @@ def delete(id):
 def view(id):
     transaction = Transaction.query.filter_by(id=id, user_id=current_user.id).first_or_404()
     return render_template('transactions/view.html', transaction=transaction, title='รายละเอียดธุรกรรม')
-
