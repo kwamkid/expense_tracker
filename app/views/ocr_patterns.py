@@ -536,3 +536,14 @@ def seed_default_patterns():
 
     flash('เพิ่มรูปแบบ OCR พื้นฐานสำเร็จ!', 'success')
     return redirect(url_for('ocr_patterns.index'))
+
+# เพิ่มใน app/views/ocr_patterns.py
+
+@ocr_patterns_bp.route('/test-ocr', methods=['GET'])
+@login_required
+def test_ocr():
+    """แสดงหน้าทดสอบ OCR"""
+    return render_template(
+        'ocr_patterns/test_ocr.html',
+        title='ทดสอบการสแกน OCR'
+    )

@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-3">
+            <i class="fas fa-magic text-primary me-2"></i>ทดสอบการสแกน OCR
+        </h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('ocr_patterns.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> กลับไปหน้าจัดการรูปแบบ OCR
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>เกี่ยวกับการทดสอบ OCR</h5>
+        <p>
+            หน้านี้ใช้สำหรับทดสอบระบบแยกข้อความจากใบเสร็จอัตโนมัติ (OCR) โดยใช้รูปแบบ Regular Expression ที่คุณได้กำหนดไว้
+        </p>
+        <p class="mb-0">
+            <strong>คำแนะนำ:</strong> อัปโหลดรูปภาพใบเสร็จเพื่อดูว่าระบบสามารถดึงข้อมูลใดได้บ้าง และทดสอบประสิทธิภาพของรูปแบบ OCR ที่คุณสร้างขึ้น
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-upload me-2"></i>อัปโหลดใบเสร็จ</h5>
+            </div>
+            <div class="card-body">
+                <div id="upload-container">
+                    <div class="mb-3">
+                        <label for="receiptFile" class="form-label">เลือกรูปภาพใบเสร็จ</label>
+                       <!-- แก้ไขส่วน input file -->
+                        <input class="form-control" type="file" id="receiptFile" accept="image/*,.heic,.heif">
+                        <div class="form-text">รองรับไฟล์ jpg, jpeg, png, gif, heic</div>
+                    </div>
+                    <div class="d-grid">
+                        <button id="processButton" class="btn btn-primary" type="button">
+                            <i class="fas fa-cogs me-1"></i> วิเคราะห์ใบเสร็จ
+                        </button>
+                    </div>
+                </div>
+
+                <div id="processing-indicator" style="display: none;" class="text-center my-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">กำลังประมวลผล...</span>
+                    </div>
+                    <div class="mt-2">กำลังประมวลผล OCR กรุณารอสักครู่...</div>
+                </div>
+
+                <div id="error-container" class="mt-3" style="display: none;">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <span id="error-message"></span>
+                    </div>
+                </div>
+
+                <div id="preview-container" class="text-center mt-4" style="display: none;">
+                    <h5 class="mb-3">รูปภาพที่อัปโหลด</h5>
+                    <img id="receipt-preview" class="img-fluid border rounded" style="max-height: 400px;">
+                </div>
+
+                <!-- เพิ่มส่วนแสดงข้อความดิบจาก OCR -->
+                <div id="ocr-text-container" class="mt-4" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-font me-2"></i>ข้อความที่อ่านได้จาก OCR</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre id="ocr-text" class="bg-light p-3 rounded" style="font-size: 0.9rem; max-height: 300px; overflow-y: auto; white-space: pre-wrap;"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>ผลการวิเคราะห์</h5>
+            </div>
+            <div class="card-body">
+                <div id="result-container" style="display: none;">
+                    <div id="warning-container" style="display: none;" class="alert alert-warning mb-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="warning-message"></span>
+                    </div>
+
+                    <div id="success-indicator" style="display: none;" class="alert alert-success mb-3">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>วิเคราะห์สำเร็จ!</strong> พบข้อมูลจากใบเสร็จ
+                    </div>
+
+                    <h5 class="mb-3">ข้อมูลที่ตรวจพบ</h5>
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width: 40%;">วันที่</th>
+                                <td id="result-date"><span class="text-muted">ไม่พบข้อมูล</span></td>
+                            </tr>
+                            <tr>
+                                <th>จำนวนเงิน</th>
+                                <td id="result-amount"><span class="text-muted">ไม่พบข้อมูล</span></td>
+                            </tr>
+                            <tr>
+                                <th>ชื่อร้านค้า/ผู้ขาย</th>
+                                <td id="result-vendor"><span class="text-muted">ไม่พบข้อมูล</span></td>
+                            </tr>
+                            <tr>
+                                <th>เลขที่ใบเสร็จ</th>
+                                <td id="result-receipt-no"><span class="text-muted">ไม่พบข้อมูล</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div id="items-container" style="display: none;">
+                        <h5 class="mb-3">รายการสินค้า</h5>
+                        <table class="table table-bordered table-sm" id="items-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>รายการ</th>
+                                    <th class="text-end">ราคา</th>
+                                </tr>
+                            </thead>
+                            <tbody id="items-body">
+                                <!-- Items will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4">
+                        <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#rawDataCollapse" role="button" aria-expanded="false" aria-controls="rawDataCollapse">
+                            <i class="fas fa-code me-1"></i> แสดงข้อมูลดิบ
+                        </a>
+                    </div>
+                    <div class="collapse mt-3" id="rawDataCollapse">
+                        <div class="card card-body bg-light">
+                            <h6 class="card-subtitle mb-2 text-muted">ข้อมูลดิบจาก API (สำหรับนักพัฒนา)</h6>
+                            <pre id="raw-data" class="mb-0" style="font-size: 0.8rem;"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="no-result" class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-receipt text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4>ยังไม่มีผลการวิเคราะห์</h4>
+                    <p class="text-muted">อัปโหลดรูปภาพใบเสร็จเพื่อเริ่มวิเคราะห์</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const receiptFile = document.getElementById('receiptFile');
+        const processButton = document.getElementById('processButton');
+        const processingIndicator = document.getElementById('processing-indicator');
+        const previewContainer = document.getElementById('preview-container');
+        const receiptPreview = document.getElementById('receipt-preview');
+        const resultContainer = document.getElementById('result-container');
+        const noResult = document.getElementById('no-result');
+        const errorContainer = document.getElementById('error-container');
+        const errorMessage = document.getElementById('error-message');
+        const warningContainer = document.getElementById('warning-container');
+        const warningMessage = document.getElementById('warning-message');
+        const successIndicator = document.getElementById('success-indicator');
+        const rawData = document.getElementById('raw-data');
+
+        // OCR text elements
+        const ocrTextContainer = document.getElementById('ocr-text-container');
+        const ocrText = document.getElementById('ocr-text');
+
+        // Result fields
+        const resultDate = document.getElementById('result-date');
+        const resultAmount = document.getElementById('result-amount');
+        const resultVendor = document.getElementById('result-vendor');
+        const resultReceiptNo = document.getElementById('result-receipt-no');
+        const itemsContainer = document.getElementById('items-container');
+        const itemsBody = document.getElementById('items-body');
+
+        // Preview uploaded image
+        receiptFile.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    receiptPreview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        // Process OCR
+        processButton.addEventListener('click', function() {
+            if (!receiptFile.files.length) {
+                alert('กรุณาเลือกไฟล์รูปภาพใบเสร็จ');
+                return;
+            }
+
+            const file = receiptFile.files[0];
+            const formData = new FormData();
+            formData.append('receipt', file);
+
+            // Reset UI
+            errorContainer.style.display = 'none';
+            warningContainer.style.display = 'none';
+            successIndicator.style.display = 'none';
+            resultContainer.style.display = 'none';
+            noResult.style.display = 'none';
+            ocrTextContainer.style.display = 'none';
+            processingIndicator.style.display = 'block';
+
+            // ค้นหา CSRF token จากหน้าเว็บ
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                            document.querySelector('input[name="csrf_token"]')?.value;
+
+            // Call OCR API
+            fetch('/api/ocr/receipt', {
+                method: 'POST',
+                body: formData,
+                headers: csrfToken ? {
+                    'X-CSRFToken': csrfToken
+                } : {}
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response type:', response.headers.get('content-type'));
+
+                // ตรวจสอบว่าเป็น JSON หรือไม่
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().then(data => ({
+                        status: response.status,
+                        ok: response.ok,
+                        data: data,
+                        isJson: true
+                    }));
+                } else {
+                    // ถ้าไม่ใช่ JSON ให้อ่านเป็น text
+                    return response.text().then(text => {
+                        console.log('Non-JSON response:', text.substring(0, 200) + '...');
+                        // ตรวจสอบว่าเป็นหน้า login หรือไม่
+                        const isLoginPage = text.includes('login') || text.includes('เข้าสู่ระบบ');
+
+                        return {
+                            status: response.status,
+                            ok: response.ok,
+                            text: text,
+                            isJson: false,
+                            isLoginPage: isLoginPage
+                        };
+                    });
+                }
+            })
+            .then(result => {
+                // ตรวจสอบผลลัพธ์
+                console.log('Result:', result);
+                processingIndicator.style.display = 'none';
+
+                // ถ้าไม่ใช่ JSON และเป็นหน้า login ให้แสดงข้อความแนะนำให้เข้าสู่ระบบ
+                if (!result.isJson) {
+                    errorContainer.style.display = 'block';
+
+                    if (result.isLoginPage) {
+                        errorMessage.innerHTML = `
+                            <strong>กรุณาเข้าสู่ระบบ</strong><br>
+                            คุณจำเป็นต้องเข้าสู่ระบบก่อนใช้งานฟีเจอร์นี้<br>
+                            <a href="/auth/login?next=${encodeURIComponent(window.location.pathname)}" class="btn btn-primary mt-2">
+                                <i class="fas fa-sign-in-alt me-1"></i> เข้าสู่ระบบ
+                            </a>
+                        `;
+                    } else {
+                        errorMessage.innerHTML = `
+                            <strong>การตอบกลับไม่ใช่ JSON:</strong><br>
+                            สถานะ: ${result.status}<br>
+                            ข้อความ: ${result.text.substring(0, 200)}...
+                        `;
+                    }
+                    return;
+                }
+
+                // แสดงผลลัพธ์
+                resultContainer.style.display = 'block';
+                noResult.style.display = 'none';
+
+                // Display raw data (แก้ตรงนี้ โดยไม่แทนที่ resultContainer ทั้งหมด)
+                rawData.textContent = JSON.stringify(result.data, null, 2);
+
+                // แสดงข้อความดิบจาก OCR (ถ้ามี)
+                if (result.data.original_text) {
+                    ocrText.textContent = result.data.original_text;
+                    ocrTextContainer.style.display = 'block';
+                } else if (result.data.text) {
+                    ocrText.textContent = result.data.text;
+                    ocrTextContainer.style.display = 'block';
+                } else if (result.data.data && result.data.data.ocr_text) {
+                    ocrText.textContent = result.data.data.ocr_text;
+                    ocrTextContainer.style.display = 'block';
+                }
+
+                // Check if successful
+                if (result.data.success) {
+                    const ocrData = result.data.data;
+
+                    // Check if warning
+                    if (result.data.warning) {
+                        warningContainer.style.display = 'block';
+                        warningMessage.textContent = result.data.warning;
+                    } else {
+                        successIndicator.style.display = 'block';
+                    }
+
+                    // Set result fields
+                    if (ocrData) {
+                        // Date
+                        if (ocrData.date) {
+                            resultDate.innerHTML = formatDate(ocrData.date);
+                        } else {
+                            resultDate.innerHTML = '<span class="text-muted">ไม่พบข้อมูล</span>';
+                        }
+
+                        // Amount
+                        if (ocrData.total_amount) {
+                            const amount = parseFloat(ocrData.total_amount);
+                            resultAmount.innerHTML = `<span class="${amount > 1000 ? 'text-danger' : 'text-success'}">
+                                <strong>${formatMoney(amount)}</strong> บาท</span>`;
+                        } else {
+                            resultAmount.innerHTML = '<span class="text-muted">ไม่พบข้อมูล</span>';
+                        }
+
+                        // Vendor
+                        if (ocrData.vendor) {
+                            resultVendor.textContent = ocrData.vendor;
+                        } else {
+                            resultVendor.innerHTML = '<span class="text-muted">ไม่พบข้อมูล</span>';
+                        }
+
+                        // Receipt Number
+                        if (ocrData.receipt_no) {
+                            resultReceiptNo.textContent = ocrData.receipt_no;
+                        } else {
+                            resultReceiptNo.innerHTML = '<span class="text-muted">ไม่พบข้อมูล</span>';
+                        }
+
+                        // Items (if any)
+                        if (ocrData.items && ocrData.items.length > 0) {
+                            itemsContainer.style.display = 'block';
+                            itemsBody.innerHTML = '';
+
+                            ocrData.items.forEach((item, index) => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td>${index + 1}</td>
+                                    <td>${item.name}</td>
+                                    <td class="text-end">${formatMoney(item.price)} บาท</td>
+                                `;
+                                itemsBody.appendChild(row);
+                            });
+                        } else {
+                            itemsContainer.style.display = 'none';
+                        }
+                    }
+                } else {
+                    // Show error
+                    errorContainer.style.display = 'block';
+                    errorMessage.textContent = result.data.error || 'เกิดข้อผิดพลาดในการประมวลผล';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                processingIndicator.style.display = 'none';
+                errorContainer.style.display = 'block';
+                errorMessage.textContent = error.message || 'เกิดข้อผิดพลาดในการประมวลผล';
+            });
+        });
+
+        // Helper function to format money
+        function formatMoney(amount) {
+            if (typeof amount === 'string') {
+                amount = parseFloat(amount);
+            }
+            return amount.toLocaleString('th-TH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Helper function to format date
+        function formatDate(dateString) {
+            try {
+                // Check if it's in YYYY-MM-DD format
+                const regex = /^(\d{4})-(\d{2})-(\d{2})$/;
+                if (regex.test(dateString)) {
+                    const [_, year, month, day] = regex.exec(dateString);
+                    const date = new Date(year, month - 1, day);
+                    return date.toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                return dateString;
+            } catch (e) {
+                return dateString;
+            }
+        }
+    });
+</script>
+{% endblock %}

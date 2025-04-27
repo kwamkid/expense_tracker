@@ -22,84 +22,52 @@ def allowed_file(filename):
     ext = filename.rsplit('.', 1)[1].lower()
     return ext in current_app.config['ALLOWED_EXTENSIONS']
 
-def save_receipt(file_data):
-    """บันทึกไฟล์ใบเสร็จ"""
-    if file_data and allowed_file(file_data.filename):
+
+def save_receipt(file):
+    """บันทึกไฟล์ใบเสร็จและคืนค่าชื่อไฟล์"""
+    filename = secure_filename(file.filename)
+    extension = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+
+    # สร้างชื่อไฟล์ใหม่
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    new_filename = f"receipt_{timestamp}_{uuid.uuid4().hex[:8]}"
+
+    # ตรวจสอบว่าเป็นไฟล์ HEIC หรือไม่
+    if extension in ['heic', 'heif']:
+        # แปลง HEIC เป็น JPEG
         try:
-            # เพิ่มการบันทึกข้อมูลเพื่อการตรวจสอบ
-            current_app.logger.info(f"Saving receipt file: {file_data.filename}, MIME: {file_data.content_type}")
+            from pillow_heif import register_heif_opener
+            register_heif_opener()
 
-            # สร้างชื่อไฟล์ที่ไม่ซ้ำกัน
-            filename = secure_filename(file_data.filename)
-            current_app.logger.info(f"Secured filename: {filename}")
+            from PIL import Image
+            import io
 
-            ext = filename.rsplit('.', 1)[1].lower()
-            new_filename = f"{uuid.uuid4().hex}_{datetime.now().strftime('%Y%m%d')}.{ext}"
-            current_app.logger.info(f"Generated new filename: {new_filename}")
+            # อ่านไฟล์
+            file_data = file.read()
+            image = Image.open(io.BytesIO(file_data))
 
-            # กำหนดพาธสำหรับบันทึกไฟล์
-            upload_folder = current_app.config['UPLOAD_FOLDER']
-            current_app.logger.info(f"Upload folder: {upload_folder}")
+            # บันทึกเป็น JPEG
+            jpeg_filename = f"{new_filename}.jpg"
+            jpeg_path = os.path.join(current_app.config['UPLOAD_FOLDER'], jpeg_filename)
+            image.save(jpeg_path, format="JPEG", quality=95)
 
-            filepath = os.path.join(current_app.root_path, upload_folder, new_filename)
-            current_app.logger.info(f"Full filepath: {filepath}")
-
-            # ตรวจสอบว่าโฟลเดอร์มีอยู่จริง
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-
-            # บันทึกไฟล์
-            if ext in ['jpg', 'jpeg', 'png', 'gif']:
-                # ถ้าเป็นรูปภาพให้ย่อขนาด
-                try:
-                    img = Image.open(file_data)
-                    width, height = img.size
-                    current_app.logger.info(f"Original image size: {width}x{height}")
-
-                    img.thumbnail((800, 800))  # ย่อขนาดรูปให้มีความกว้างหรือความสูงไม่เกิน 800px
-                    width, height = img.size
-                    current_app.logger.info(f"Resized image size: {width}x{height}")
-
-                    img.save(filepath, quality=85, optimize=True)  # บีบอัดรูปเพื่อลดขนาดไฟล์
-                    current_app.logger.info(f"Image saved successfully")
-
-                    # ตรวจสอบว่าไฟล์ถูกบันทึกจริง
-                    if os.path.exists(filepath):
-                        file_size = os.path.getsize(filepath)
-                        current_app.logger.info(f"File saved successfully. Size: {file_size} bytes")
-                    else:
-                        current_app.logger.error(f"File was not saved: {filepath}")
-                        return None
-
-                except Exception as img_error:
-                    current_app.logger.error(f"Error processing image: {str(img_error)}")
-                    # ถ้าประมวลผลภาพไม่สำเร็จ ให้ลองบันทึกไฟล์โดยตรง
-                    file_data.seek(0)  # กลับไปที่จุดเริ่มต้นของไฟล์
-                    file_data.save(filepath)
-                    current_app.logger.info(f"Saved original file as fallback")
-            else:
-                # ถ้าเป็นไฟล์อื่นให้บันทึกตามปกติ
-                file_data.save(filepath)
-                current_app.logger.info(f"Non-image file saved directly")
-
-            # ตรวจสอบอีกครั้งว่าไฟล์ถูกบันทึกจริง
-            if os.path.exists(filepath):
-                return new_filename
-            else:
-                current_app.logger.error(f"File was not saved after all attempts: {filepath}")
-                return None
-
+            return jpeg_filename
         except Exception as e:
-            current_app.logger.error(f"Error saving receipt: {str(e)}")
-            import traceback
-            current_app.logger.error(f"Traceback: {traceback.format_exc()}")
-            return None
+            current_app.logger.error(f"Error converting HEIC: {str(e)}")
+            # กรณีแปลงไม่ได้ให้ใช้วิธีเดิม
 
-    else:
-        if not file_data:
-            current_app.logger.error("Empty file data")
-        else:
-            current_app.logger.error(f"File not allowed: {file_data.filename}")
-        return None
+    # บันทึกไฟล์ปกติ (ไม่ใช่ HEIC)
+    saved_filename = f"{new_filename}.{extension}" if extension else f"{new_filename}"
+    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], saved_filename)
+
+    # ตรวจสอบว่าโฟลเดอร์มีอยู่หรือไม่
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    # บันทึกไฟล์
+    file.seek(0)  # ย้อนกลับไปที่ต้นไฟล์ (กรณีที่มีการอ่านไฟล์ก่อนหน้านี้)
+    file.save(file_path)
+
+    return saved_filename
 
 
 def delete_receipt(filename):

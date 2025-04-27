@@ -8,14 +8,17 @@
         </h1>
     </div>
     <div class="col-auto">
-        <div class="btn-group">
-            <a href="{{ url_for('ocr_patterns.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-1"></i> เพิ่มรูปแบบเดียว
-            </a>
-            <a href="{{ url_for('ocr_patterns.bulk_create') }}" class="btn btn-success">
-                <i class="fas fa-list-ol me-1"></i> เพิ่มหลายรายการ
-            </a>
-        </div>
+         <div class="btn-group">
+        <a href="{{ url_for('ocr_patterns.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> เพิ่มรูปแบบเดียว
+        </a>
+        <a href="{{ url_for('ocr_patterns.bulk_create') }}" class="btn btn-success">
+            <i class="fas fa-list-ol me-1"></i> เพิ่มหลายรายการ
+        </a>
+        <a href="{{ url_for('ocr_patterns.test_ocr') }}" class="btn btn-info">
+            <i class="fas fa-magic me-1"></i> ทดสอบ OCR
+        </a>
+    </div>
 
         <div class="btn-group ms-2">
             <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">

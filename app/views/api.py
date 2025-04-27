@@ -18,7 +18,7 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 # ค้นหาฟังก์ชัน ocr_receipt และแก้ไขส่วนของการตรวจสอบไฟล์
 
 @api_bp.route('/ocr/receipt', methods=['POST'])
-@login_required
+# @login_required
 def ocr_receipt():
     """API สำหรับอัปโหลดใบเสร็จและวิเคราะห์ด้วย OCR"""
     # เพิ่มการบันทึกข้อมูลเพื่อการดีบัก
@@ -82,8 +82,9 @@ def ocr_receipt():
             'date': ocr_data.get('date'),
             'total_amount': ocr_data.get('total_amount'),
             'vendor': ocr_data.get('vendor'),
-            'receipt_no': receipt_no,  # ส่งค่า receipt_no กลับไปด้วย
-            'items': ocr_data.get('items', [])
+            'receipt_no': receipt_no,
+            'items': ocr_data.get('items', []),
+            'ocr_text': ocr_data.get('text', '')  # เพิ่มส่วนนี้
         }
 
         # บันทึกข้อมูลดิบเพื่อการวิเคราะห์
@@ -159,3 +160,5 @@ def get_categories():
 
     # คืนค่ากลับเป็น JSON
     return jsonify(result)
+
+
