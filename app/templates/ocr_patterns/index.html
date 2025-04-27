@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-3">
+            <i class="fas fa-cogs text-primary me-2"></i>จัดการรูปแบบ OCR
+        </h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('ocr_patterns.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> เพิ่มรูปแบบใหม่
+        </a>
+
+        <div class="btn-group ms-2">
+            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-cog me-1"></i> ตัวเลือก
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <form action="{{ url_for('ocr_patterns.seed_default_patterns') }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="dropdown-item">
+                            <i class="fas fa-seedling me-1"></i> เพิ่มรูปแบบพื้นฐาน
+                        </button>
+                    </form>
+                </li>
+                <li><a class="dropdown-item" href="{{ url_for('ocr_patterns.export_patterns') }}" target="_blank">
+                    <i class="fas fa-file-export me-1"></i> ส่งออก JSON
+                </a></li>
+                <li><button class="dropdown-item" id="import-json-btn">
+                    <i class="fas fa-file-import me-1"></i> นำเข้า JSON
+                </button></li>
+                <li><a class="dropdown-item" href="{{ url_for('ocr_patterns.download_template') }}" target="_blank">
+                    <i class="fas fa-file-code me-1"></i> ดาวน์โหลดเทมเพลต
+                </a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- คำอธิบาย -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>เกี่ยวกับรูปแบบ OCR</h5>
+        <p>
+            รูปแบบ OCR คือรูปแบบนิพจน์ปกติ (Regular Expression) ที่ใช้ในการดึงข้อมูลจากข้อความที่ได้จากการสแกนใบเสร็จ
+            คุณสามารถเพิ่ม แก้ไข หรือลบรูปแบบต่างๆ ตามต้องการ เพื่อให้ระบบสามารถดึงข้อมูลได้ถูกต้องมากขึ้น
+        </p>
+        <p class="mb-0">
+            <strong>คำแนะนำ:</strong> รูปแบบที่มีลำดับความสำคัญ (Priority) สูงจะถูกใช้ก่อน เรียงจากมากไปน้อย
+            เมื่อพบรูปแบบที่ตรงกันแล้ว ระบบจะไม่ใช้รูปแบบที่เหลือ
+        </p>
+    </div>
+</div>
+
+{% if not patterns_by_name %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-cogs text-muted" style="font-size: 4rem;"></i>
+        </div>
+        <h4>ยังไม่มีรูปแบบ OCR</h4>
+        <p class="text-muted">ยังไม่มีรูปแบบ OCR ในระบบ คุณสามารถเพิ่มรูปแบบพื้นฐานหรือเพิ่มรูปแบบใหม่ด้วยตนเอง</p>
+        <div class="mt-3">
+            <form action="{{ url_for('ocr_patterns.seed_default_patterns') }}" method="post" class="d-inline-block">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-seedling me-1"></i> เพิ่มรูปแบบพื้นฐาน
+                </button>
+            </form>
+            <a href="{{ url_for('ocr_patterns.create') }}" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-plus me-1"></i> เพิ่มรูปแบบใหม่
+            </a>
+        </div>
+    </div>
+</div>
+{% else %}
+
+<!-- แสดงรูปแบบทั้งหมด แยกตามฟิลด์ -->
+<div class="accordion" id="patternsAccordion">
+    {% for field_name, patterns in patterns_by_name.items() %}
+    <div class="accordion-item mb-3 border">
+        <h2 class="accordion-header" id="heading{{ field_name }}">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ field_name }}" aria-expanded="true" aria-controls="collapse{{ field_name }}">
+                <strong>{{ field_name }}</strong>
+                <span class="badge bg-primary ms-2">{{ patterns|length }}</span>
+            </button>
+        </h2>
+        <div id="collapse{{ field_name }}" class="accordion-collapse collapse show" aria-labelledby="heading{{ field_name }}" data-bs-parent="#patternsAccordion">
+            <div class="accordion-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>รูปแบบ (Regex)</th>
+                                <th>คำอธิบาย</th>
+                                <th>หมวดหมู่</th>
+                                <th style="width: 100px;">ลำดับ</th>
+                                <th style="width: 100px;">สถานะ</th>
+                                <th style="width: 120px;">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pattern in patterns %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <code>{{ pattern.pattern }}</code>
+                                    {% if pattern.example %}
+                                    <div class="small text-muted mt-1">
+                                        ตัวอย่าง: {{ pattern.example }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ pattern.description or '-' }}</td>
+                                <td><span class="badge bg-secondary">{{ pattern.category }}</span></td>
+                                <td>{{ pattern.priority }}</td>
+                                <td>
+                                    {% if pattern.is_active %}
+                                    <span class="badge bg-success">ใช้งาน</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">ไม่ใช้งาน</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex">
+                                        <a href="{{ url_for('ocr_patterns.edit', id=pattern.id) }}" class="btn btn-sm btn-outline-primary me-1" title="แก้ไข">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-info me-1"
+                                           data-bs-toggle="modal" data-bs-target="#testPatternModal"
+                                           data-pattern="{{ pattern.pattern }}"
+                                           data-pattern-id="{{ pattern.id }}"
+                                           title="ทดสอบ">
+                                            <i class="fas fa-flask"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                           data-bs-toggle="modal" data-bs-target="#deletePatternModal"
+                                           data-pattern-id="{{ pattern.id }}"
+                                           data-pattern-desc="{{ pattern.description or pattern.pattern }}"
+                                           title="ลบ">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Modal สำหรับทดสอบรูปแบบ -->
+<div class="modal fade" id="testPatternModal" tabindex="-1" aria-labelledby="testPatternModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="testPatternModalLabel">ทดสอบรูปแบบ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="patternInput" class="form-label">รูปแบบ (Regex)</label>
+                    <input type="text" class="form-control" id="patternInput" placeholder="ใส่รูปแบบ regex ที่ต้องการทดสอบ">
+                </div>
+                <div class="mb-3">
+                    <label for="testText" class="form-label">ข้อความทดสอบ</label>
+                    <textarea class="form-control" id="testText" rows="8" placeholder="ใส่ข้อความที่ต้องการทดสอบกับรูปแบบ regex"></textarea>
+                </div>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-primary" id="runTestBtn">
+                        <i class="fas fa-play me-1"></i> ทดสอบ
+                    </button>
+                </div>
+
+                <div id="testResult" class="mt-3" style="display: none;">
+                    <h6>ผลลัพธ์</h6>
+                    <div id="testResultContent" class="p-3 border rounded bg-light"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal สำหรับลบรูปแบบ -->
+<div class="modal fade" id="deletePatternModal" tabindex="-1" aria-labelledby="deletePatternModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deletePatternModalLabel">ยืนยันการลบรูปแบบ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>คุณต้องการลบรูปแบบ "<span id="deletePatternDesc"></span>" ใช่หรือไม่?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    การลบรูปแบบเป็นการดำเนินการที่ไม่สามารถเรียกคืนได้
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <form id="deletePatternForm" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">ยืนยันการลบ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal สำหรับนำเข้า JSON -->
+<div class="modal fade" id="importJsonModal" tabindex="-1" aria-labelledby="importJsonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importJsonModalLabel">นำเข้ารูปแบบ OCR จาก JSON</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="jsonInput" class="form-label">ข้อมูล JSON</label>
+                    <textarea class="form-control" id="jsonInput" rows="12" placeholder='ใส่ข้อมูล JSON เช่น {"date": [{"pattern": "วันที่\\s*(\\d{1,2}/\\d{1,2}/\\d{4})", "category": "thai", ...}]}'></textarea>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span>คุณสามารถดาวน์โหลดเทมเพลตเพื่อดูรูปแบบ JSON ที่ถูกต้องได้จากเมนู "ดาวน์โหลดเทมเพลต"</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary" id="importJsonBtn">
+                    <i class="fas fa-file-import me-1"></i> นำเข้า
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Test Pattern Modal
+        const testPatternModal = document.getElementById('testPatternModal');
+        const patternInput = document.getElementById('patternInput');
+        const testText = document.getElementById('testText');
+        const runTestBtn = document.getElementById('runTestBtn');
+        const testResult = document.getElementById('testResult');
+        const testResultContent = document.getElementById('testResultContent');
+
+        if (testPatternModal) {
+            testPatternModal.addEventListener('show.bs.modal', function(event) {
+                // นำข้อมูลจาก data attribute มาใช้
+                const button = event.relatedTarget;
+                const pattern = button.getAttribute('data-pattern');
+
+                // เติมข้อมูลใน input
+                patternInput.value = pattern;
+
+                // ล้างข้อมูลเก่า
+                testText.value = '';
+                testResult.style.display = 'none';
+                testResultContent.innerHTML = '';
+            });
+
+            // ทดสอบรูปแบบ
+            runTestBtn.addEventListener('click', function() {
+                const pattern = patternInput.value;
+                const text = testText.value;
+
+                if (!pattern || !text) {
+                    alert('กรุณากรอกรูปแบบและข้อความทดสอบ');
+                    return;
+                }
+
+                // ส่งข้อมูลไปทดสอบที่เซิร์ฟเวอร์
+                fetch('{{ url_for("ocr_patterns.test_pattern") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: new URLSearchParams({
+                        'pattern': pattern,
+                        'text': text
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    testResult.style.display = 'block';
+
+                    if (data.success) {
+                        testResultContent.innerHTML = `
+                            <div class="alert alert-success mb-0">
+                                <p><i class="fas fa-check-circle me-2"></i>${data.message}</p>
+                                <strong>ค่าที่ได้:</strong> <code>${data.result}</code>
+                            </div>
+                        `;
+                    } else {
+                        testResultContent.innerHTML = `
+                            <div class="alert alert-danger mb-0">
+                                <i class="fas fa-exclamation-circle me-2"></i>${data.message}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    testResult.style.display = 'block';
+                    testResultContent.innerHTML = `
+                        <div class="alert alert-danger mb-0">
+                            <i class="fas fa-exclamation-circle me-2"></i>เกิดข้อผิดพลาดในการทดสอบ
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        // Delete Pattern Modal
+        const deletePatternModal = document.getElementById('deletePatternModal');
+        const deletePatternDesc = document.getElementById('deletePatternDesc');
+        const deletePatternForm = document.getElementById('deletePatternForm');
+
+        if (deletePatternModal) {
+            deletePatternModal.addEventListener('show.bs.modal', function(event) {
+                // นำข้อมูลจาก data attribute มาใช้
+                const button = event.relatedTarget;
+                const patternId = button.getAttribute('data-pattern-id');
+                const patternDesc = button.getAttribute('data-pattern-desc');
+
+                // เติมข้อมูลใน modal
+                deletePatternDesc.textContent = patternDesc;
+                deletePatternForm.action = `{{ url_for('ocr_patterns.delete', id=0) }}`.replace('0', patternId);
+            });
+        }
+
+        // Import JSON Modal
+        const importJsonBtn = document.getElementById('import-json-btn');
+        const importJsonModal = new bootstrap.Modal(document.getElementById('importJsonModal'));
+        const importJsonTextarea = document.getElementById('jsonInput');
+        const importJsonSubmitBtn = document.getElementById('importJsonBtn');
+
+        if (importJsonBtn) {
+            importJsonBtn.addEventListener('click', function() {
+                importJsonModal.show();
+            });
+        }
+
+        if (importJsonSubmitBtn) {
+            importJsonSubmitBtn.addEventListener('click', function() {
+                const jsonData = importJsonTextarea.value;
+
+                if (!jsonData) {
+                    alert('กรุณากรอกข้อมูล JSON');
+                    return;
+                }
+
+                try {
+                    // ตรวจสอบว่าเป็น JSON ที่ถูกต้อง
+                    const parsedData = JSON.parse(jsonData);
+
+                    // ส่งข้อมูลไปยังเซิร์ฟเวอร์
+                    fetch('{{ url_for("ocr_patterns.import_patterns") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() }}'
+                        },
+                        body: jsonData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            importJsonModal.hide();
+                            // รีโหลดหน้าเพื่อแสดงข้อมูลใหม่
+                            window.location.reload();
+                        } else {
+                            alert(`ข้อผิดพลาด: ${data.message}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('เกิดข้อผิดพลาดในการนำเข้าข้อมูล');
+                    });
+                } catch (error) {
+                    alert(`ข้อมูล JSON ไม่ถูกต้อง: ${error.message}`);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,582 @@
+2025-04-27 05:25:15,264 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 05:25:15,264 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 05:25:15,334 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 05:25:15,360 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 05:25:15,798 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 05:25:15,798 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 05:25:15,832 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 05:25:15,842 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 05:28:16,586 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 05:28:16,586 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 05:28:16,639 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 05:28:16,663 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 05:42:57,552 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 05:42:57,552 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 05:42:57,612 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 05:42:57,638 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 05:43:17,645 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 05:43:17,646 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 05:43:17,699 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 05:43:17,723 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 05:43:29,201 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 05:43:29,201 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 05:43:29,248 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 05:43:29,257 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 05:43:29,605 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 05:43:29,605 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 05:43:29,639 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 05:43:29,647 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 05:43:34,262 INFO: OCR API: Starting OCR processing [in /Users/ampstark/expense_tracker/app/views/api.py:23]
+2025-04-27 05:43:34,265 INFO: OCR API: Received file: POS.png [in /Users/ampstark/expense_tracker/app/views/api.py:30]
+2025-04-27 05:43:34,265 INFO: Saving receipt file: POS.png, MIME: image/png [in /Users/ampstark/expense_tracker/app/services/file_service.py:21]
+2025-04-27 05:43:34,265 INFO: Secured filename: POS.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:25]
+2025-04-27 05:43:34,266 INFO: Generated new filename: 0db102ceb1b747d5bae6dac77a4a9d2b_20250427.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:29]
+2025-04-27 05:43:34,266 INFO: Upload folder: static/uploads/receipts [in /Users/ampstark/expense_tracker/app/services/file_service.py:33]
+2025-04-27 05:43:34,266 INFO: Full filepath: /Users/ampstark/expense_tracker/app/static/uploads/receipts/0db102ceb1b747d5bae6dac77a4a9d2b_20250427.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:36]
+2025-04-27 05:43:34,289 INFO: Original image size: 363x1024 [in /Users/ampstark/expense_tracker/app/services/file_service.py:47]
+2025-04-27 05:43:34,297 INFO: Resized image size: 284x800 [in /Users/ampstark/expense_tracker/app/services/file_service.py:51]
+2025-04-27 05:43:34,370 INFO: Image saved successfully [in /Users/ampstark/expense_tracker/app/services/file_service.py:54]
+2025-04-27 05:43:34,370 INFO: File saved successfully. Size: 132861 bytes [in /Users/ampstark/expense_tracker/app/services/file_service.py:59]
+2025-04-27 05:43:34,370 INFO: OCR API: File saved as: 0db102ceb1b747d5bae6dac77a4a9d2b_20250427.png [in /Users/ampstark/expense_tracker/app/views/api.py:43]
+2025-04-27 05:43:34,370 INFO: OCR API: Starting OCR processing on /Users/ampstark/expense_tracker/app/static/uploads/receipts/0db102ceb1b747d5bae6dac77a4a9d2b_20250427.png [in /Users/ampstark/expense_tracker/app/views/api.py:57]
+2025-04-27 05:43:34,370 INFO: Starting OCR processing for image: /Users/ampstark/expense_tracker/app/static/uploads/receipts/0db102ceb1b747d5bae6dac77a4a9d2b_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:427]
+2025-04-27 05:43:34,389 INFO: Image preprocessing successful for /Users/ampstark/expense_tracker/app/static/uploads/receipts/0db102ceb1b747d5bae6dac77a4a9d2b_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:90]
+2025-04-27 05:43:34,394 INFO: OCR: Processing image with size 284x800 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:112]
+2025-04-27 05:43:34,394 INFO: OCR: Tesseract path: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:113]
+2025-04-27 05:43:34,394 INFO: OCR: Attempting OCR with config: --oem 1 --psm 6 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:120]
+2025-04-27 05:43:35,560 INFO: OCR: First pass result length: 917 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:122]
+2025-04-27 05:43:35,560 INFO: OCR: Results saved to /Users/ampstark/expense_tracker/app/logs/ocr_result_20250427_054335.txt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:177]
+2025-04-27 05:43:35,560 INFO: Extracting all data from receipt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:400]
+2025-04-27 05:43:35,561 WARNING: No date pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:258]
+2025-04-27 05:43:35,562 WARNING: No amount pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:314]
+2025-04-27 05:43:35,562 INFO: Found vendor by prefix: oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:342]
+2025-04-27 05:43:35,562 WARNING: No receipt number pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:388]
+2025-04-27 05:43:35,562 INFO: Extracted data: {'date': None, 'total_amount': None, 'vendor': 'oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8', 'items': [], 'receipt_no': None} [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:411]
+2025-04-27 05:43:35,562 INFO: OCR API: OCR processing completed successfully [in /Users/ampstark/expense_tracker/app/views/api.py:62]
+2025-04-27 05:43:35,562 INFO: OCR API: Extracted data: {'date': None, 'total_amount': None, 'vendor': 'oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8', 'items': [], 'receipt_no': None} [in /Users/ampstark/expense_tracker/app/views/api.py:94]
+2025-04-27 05:45:32,837 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 05:45:32,837 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 05:45:32,896 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 05:45:32,919 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 05:46:13,020 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 05:46:13,020 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 05:46:13,057 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 05:46:13,066 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:24:03,190 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:24:03,190 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:24:03,247 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:24:03,272 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:24:14,952 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:24:14,952 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:24:14,987 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:24:14,996 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:24:30,722 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:24:30,722 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:24:30,757 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:24:30,768 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:24:42,089 INFO: OCR API: Starting OCR processing [in /Users/ampstark/expense_tracker/app/views/api.py:23]
+2025-04-27 06:24:42,093 INFO: OCR API: Received file: POS.png [in /Users/ampstark/expense_tracker/app/views/api.py:30]
+2025-04-27 06:24:42,093 INFO: Saving receipt file: POS.png, MIME: image/png [in /Users/ampstark/expense_tracker/app/services/file_service.py:21]
+2025-04-27 06:24:42,093 INFO: Secured filename: POS.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:25]
+2025-04-27 06:24:42,093 INFO: Generated new filename: a8dcfdd5dd584aa88e60521d49d7ebb7_20250427.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:29]
+2025-04-27 06:24:42,093 INFO: Upload folder: static/uploads/receipts [in /Users/ampstark/expense_tracker/app/services/file_service.py:33]
+2025-04-27 06:24:42,093 INFO: Full filepath: /Users/ampstark/expense_tracker/app/static/uploads/receipts/a8dcfdd5dd584aa88e60521d49d7ebb7_20250427.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:36]
+2025-04-27 06:24:42,114 INFO: Original image size: 363x1024 [in /Users/ampstark/expense_tracker/app/services/file_service.py:47]
+2025-04-27 06:24:42,121 INFO: Resized image size: 284x800 [in /Users/ampstark/expense_tracker/app/services/file_service.py:51]
+2025-04-27 06:24:42,187 INFO: Image saved successfully [in /Users/ampstark/expense_tracker/app/services/file_service.py:54]
+2025-04-27 06:24:42,187 INFO: File saved successfully. Size: 132861 bytes [in /Users/ampstark/expense_tracker/app/services/file_service.py:59]
+2025-04-27 06:24:42,187 INFO: OCR API: File saved as: a8dcfdd5dd584aa88e60521d49d7ebb7_20250427.png [in /Users/ampstark/expense_tracker/app/views/api.py:43]
+2025-04-27 06:24:42,187 INFO: OCR API: Starting OCR processing on /Users/ampstark/expense_tracker/app/static/uploads/receipts/a8dcfdd5dd584aa88e60521d49d7ebb7_20250427.png [in /Users/ampstark/expense_tracker/app/views/api.py:57]
+2025-04-27 06:24:42,187 INFO: Starting OCR processing for image: /Users/ampstark/expense_tracker/app/static/uploads/receipts/a8dcfdd5dd584aa88e60521d49d7ebb7_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:481]
+2025-04-27 06:24:42,194 INFO: Image preprocessing successful for /Users/ampstark/expense_tracker/app/static/uploads/receipts/a8dcfdd5dd584aa88e60521d49d7ebb7_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:90]
+2025-04-27 06:24:42,198 INFO: OCR: Processing image with size 284x800 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:112]
+2025-04-27 06:24:42,198 INFO: OCR: Tesseract path: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:113]
+2025-04-27 06:24:42,198 INFO: OCR: Attempting OCR with config: --oem 1 --psm 6 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:120]
+2025-04-27 06:24:43,367 INFO: OCR: First pass result length: 917 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:122]
+2025-04-27 06:24:43,367 INFO: OCR: Results saved to /Users/ampstark/expense_tracker/app/logs/ocr_result_20250427_062443.txt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:177]
+2025-04-27 06:24:43,367 INFO: Extracting all data from receipt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:446]
+2025-04-27 06:24:43,367 INFO: Full OCR text:
+oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8
+เณ         ' (สํานักงานใหญ่) 50, 5 !
+141/12 ขั้น 11 ยูนิต 128อาคารขุด สกุลไทย สุรวงศ์
+. . ทาวเวอร์ ถนนสุรวงศ์ แขวงสุริยวงศ์ เขตบางรัก: 4
+aft      .กรุงเทพมหานคร 10500 % 1: ,
+"5 7าโลยฆผู้เสียภาษี 1234567890000 :[ !
+ft      เว็บไซต์ weni.example.com. = 2
+ใบกําคับภาษีอย่างย่อ/ใบเสร็จรับเงิน =  ;
+CA2019070001.     2      ศก พ
+พนักงานขาย.!: med ใจดี 15, 5 5
+ซู อ  Double 4 Copier Paper Aa      “ 5,000.00:
+“400° Staples (24/Pack) Max.10:          มง [2,000.00:
+"แอ Desk Furradex EX2590 22   jie 3,300.00:
+aa             1 จมเป็นเงิน ,. 10,300.00
+               1            ..สิ่วนลด ?1“ 300.00
+° ;       จําบวนเงินหลังพักส่วนลด.        40,000.00
+=        ภาษีมูลค่าเพิ่ม%% = 3% 654.21,
+*% “ ฐาคาไม่รรม์ภาษีมูลค่าเพิ่ม: sks 9,345.79
+——— ae
+ah            | 'รวมทั้งสิน “10,000.00
+4H        PVATINCLUDED- ๆ oz 5
+' " ใช้งาน 605 WEA FlowAccount.com =
+1           ง       i,    eg
+ [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:447]
+2025-04-27 06:24:43,367 INFO: Starting date extraction from text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:211]
+2025-04-27 06:24:43,367 INFO: Text content: oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8
+เณ         ' (สํานักงานใหญ่) 50, 5 !
+141/12 ขั้น 11 ยูนิต 128อาคารขุด สกุลไทย สุรวงศ์
+. . ทาวเวอร์ ถนนสุรวงศ์ แขวงสุริยวงศ์ เขตบางรัก: 4
+aft      .กรุงเทพมห... [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:212]
+2025-04-27 06:24:43,368 WARNING: No date pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:277]
+2025-04-27 06:24:43,368 INFO: Date extraction result: None [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:450]
+2025-04-27 06:24:43,368 INFO: Starting amount extraction from text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:291]
+2025-04-27 06:24:43,369 WARNING: No amount pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:359]
+2025-04-27 06:24:43,369 INFO: Amount extraction result: None [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:453]
+2025-04-27 06:24:43,369 INFO: Found vendor by prefix: oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:387]
+2025-04-27 06:24:43,369 INFO: Vendor extraction result: oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:456]
+2025-04-27 06:24:43,369 WARNING: No receipt number pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:433]
+2025-04-27 06:24:43,369 INFO: Receipt number extraction result: None [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:459]
+2025-04-27 06:24:43,369 INFO: Extracted data: {'date': None, 'total_amount': None, 'vendor': 'oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8', 'items': [], 'receipt_no': None} [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:465]
+2025-04-27 06:24:43,369 INFO: OCR API: OCR processing completed successfully [in /Users/ampstark/expense_tracker/app/views/api.py:62]
+2025-04-27 06:24:43,369 INFO: OCR API: Extracted data: {'date': None, 'total_amount': None, 'vendor': 'oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8', 'items': [], 'receipt_no': None} [in /Users/ampstark/expense_tracker/app/views/api.py:94]
+2025-04-27 06:41:44,078 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:41:44,078 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:41:44,134 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:41:44,158 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:42:22,650 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:42:22,650 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:42:22,715 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:42:22,738 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:42:45,549 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:42:45,549 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:42:45,584 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:42:45,596 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:43:19,850 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:43:19,850 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:43:19,900 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:43:19,922 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:53:06,703 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:53:06,703 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:53:06,758 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:53:06,783 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:53:29,806 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:53:29,806 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:53:29,853 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:53:29,863 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:53:32,343 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:53:32,343 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:53:32,378 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:53:32,388 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 06:53:52,124 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 06:53:52,124 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 06:53:52,159 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 06:53:52,169 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 07:09:58,834 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 07:09:58,835 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 07:09:58,898 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 07:09:58,923 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 07:10:01,313 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 07:10:01,313 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 07:10:01,347 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 07:10:01,356 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 07:10:01,684 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 07:10:01,684 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 07:10:01,740 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 07:10:01,749 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 07:10:23,614 INFO: OCR API: Starting OCR processing [in /Users/ampstark/expense_tracker/app/views/api.py:23]
+2025-04-27 07:10:23,618 INFO: OCR API: Received file: POS.png [in /Users/ampstark/expense_tracker/app/views/api.py:30]
+2025-04-27 07:10:23,618 INFO: Saving receipt file: POS.png, MIME: image/png [in /Users/ampstark/expense_tracker/app/services/file_service.py:21]
+2025-04-27 07:10:23,618 INFO: Secured filename: POS.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:25]
+2025-04-27 07:10:23,618 INFO: Generated new filename: 0e4e003c745b44608c0d6ee41088cbd3_20250427.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:29]
+2025-04-27 07:10:23,618 INFO: Upload folder: static/uploads/receipts [in /Users/ampstark/expense_tracker/app/services/file_service.py:33]
+2025-04-27 07:10:23,618 INFO: Full filepath: /Users/ampstark/expense_tracker/app/static/uploads/receipts/0e4e003c745b44608c0d6ee41088cbd3_20250427.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:36]
+2025-04-27 07:10:23,636 INFO: Original image size: 363x1024 [in /Users/ampstark/expense_tracker/app/services/file_service.py:47]
+2025-04-27 07:10:23,644 INFO: Resized image size: 284x800 [in /Users/ampstark/expense_tracker/app/services/file_service.py:51]
+2025-04-27 07:10:23,712 INFO: Image saved successfully [in /Users/ampstark/expense_tracker/app/services/file_service.py:54]
+2025-04-27 07:10:23,712 INFO: File saved successfully. Size: 132861 bytes [in /Users/ampstark/expense_tracker/app/services/file_service.py:59]
+2025-04-27 07:10:23,712 INFO: OCR API: File saved as: 0e4e003c745b44608c0d6ee41088cbd3_20250427.png [in /Users/ampstark/expense_tracker/app/views/api.py:43]
+2025-04-27 07:10:23,712 INFO: OCR API: Starting OCR processing on /Users/ampstark/expense_tracker/app/static/uploads/receipts/0e4e003c745b44608c0d6ee41088cbd3_20250427.png [in /Users/ampstark/expense_tracker/app/views/api.py:57]
+2025-04-27 07:10:23,712 INFO: Starting OCR processing for image: /Users/ampstark/expense_tracker/app/static/uploads/receipts/0e4e003c745b44608c0d6ee41088cbd3_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:481]
+2025-04-27 07:10:23,719 INFO: Image preprocessing successful for /Users/ampstark/expense_tracker/app/static/uploads/receipts/0e4e003c745b44608c0d6ee41088cbd3_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:90]
+2025-04-27 07:10:23,723 INFO: OCR: Processing image with size 284x800 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:112]
+2025-04-27 07:10:23,724 INFO: OCR: Tesseract path: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:113]
+2025-04-27 07:10:23,724 INFO: OCR: Attempting OCR with config: --oem 1 --psm 6 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:120]
+2025-04-27 07:10:24,886 INFO: OCR: First pass result length: 917 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:122]
+2025-04-27 07:10:24,886 INFO: OCR: Results saved to /Users/ampstark/expense_tracker/app/logs/ocr_result_20250427_071024.txt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:177]
+2025-04-27 07:10:24,886 INFO: Extracting all data from receipt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:446]
+2025-04-27 07:10:24,886 INFO: Full OCR text:
+oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8
+เณ         ' (สํานักงานใหญ่) 50, 5 !
+141/12 ขั้น 11 ยูนิต 128อาคารขุด สกุลไทย สุรวงศ์
+. . ทาวเวอร์ ถนนสุรวงศ์ แขวงสุริยวงศ์ เขตบางรัก: 4
+aft      .กรุงเทพมหานคร 10500 % 1: ,
+"5 7าโลยฆผู้เสียภาษี 1234567890000 :[ !
+ft      เว็บไซต์ weni.example.com. = 2
+ใบกําคับภาษีอย่างย่อ/ใบเสร็จรับเงิน =  ;
+CA2019070001.     2      ศก พ
+พนักงานขาย.!: med ใจดี 15, 5 5
+ซู อ  Double 4 Copier Paper Aa      “ 5,000.00:
+“400° Staples (24/Pack) Max.10:          มง [2,000.00:
+"แอ Desk Furradex EX2590 22   jie 3,300.00:
+aa             1 จมเป็นเงิน ,. 10,300.00
+               1            ..สิ่วนลด ?1“ 300.00
+° ;       จําบวนเงินหลังพักส่วนลด.        40,000.00
+=        ภาษีมูลค่าเพิ่ม%% = 3% 654.21,
+*% “ ฐาคาไม่รรม์ภาษีมูลค่าเพิ่ม: sks 9,345.79
+——— ae
+ah            | 'รวมทั้งสิน “10,000.00
+4H        PVATINCLUDED- ๆ oz 5
+' " ใช้งาน 605 WEA FlowAccount.com =
+1           ง       i,    eg
+ [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:447]
+2025-04-27 07:10:24,886 INFO: Starting date extraction from text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:211]
+2025-04-27 07:10:24,886 INFO: Text content: oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8
+เณ         ' (สํานักงานใหญ่) 50, 5 !
+141/12 ขั้น 11 ยูนิต 128อาคารขุด สกุลไทย สุรวงศ์
+. . ทาวเวอร์ ถนนสุรวงศ์ แขวงสุริยวงศ์ เขตบางรัก: 4
+aft      .กรุงเทพมห... [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:212]
+2025-04-27 07:10:24,887 WARNING: No date pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:277]
+2025-04-27 07:10:24,887 INFO: Date extraction result: None [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:450]
+2025-04-27 07:10:24,887 INFO: Starting amount extraction from text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:291]
+2025-04-27 07:10:24,887 WARNING: No amount pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:359]
+2025-04-27 07:10:24,887 INFO: Amount extraction result: None [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:453]
+2025-04-27 07:10:24,887 INFO: Found vendor by prefix: oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:387]
+2025-04-27 07:10:24,887 INFO: Vendor extraction result: oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:456]
+2025-04-27 07:10:24,888 WARNING: No receipt number pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:433]
+2025-04-27 07:10:24,888 INFO: Receipt number extraction result: None [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:459]
+2025-04-27 07:10:24,888 INFO: Extracted data: {'date': None, 'total_amount': None, 'vendor': 'oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8', 'items': [], 'receipt_no': None} [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:465]
+2025-04-27 07:10:24,888 INFO: OCR API: OCR processing completed successfully [in /Users/ampstark/expense_tracker/app/views/api.py:62]
+2025-04-27 07:10:24,888 INFO: OCR API: Extracted data: {'date': None, 'total_amount': None, 'vendor': 'oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8', 'items': [], 'receipt_no': None} [in /Users/ampstark/expense_tracker/app/views/api.py:94]
+2025-04-27 07:12:34,349 INFO: OCR API: Starting OCR processing [in /Users/ampstark/expense_tracker/app/views/api.py:23]
+2025-04-27 07:12:34,351 INFO: OCR API: Received file: POS.png [in /Users/ampstark/expense_tracker/app/views/api.py:30]
+2025-04-27 07:12:34,351 INFO: Saving receipt file: POS.png, MIME: image/png [in /Users/ampstark/expense_tracker/app/services/file_service.py:21]
+2025-04-27 07:12:34,352 INFO: Secured filename: POS.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:25]
+2025-04-27 07:12:34,352 INFO: Generated new filename: 9c13a4b49bc6427f9d8104a227ad16d2_20250427.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:29]
+2025-04-27 07:12:34,352 INFO: Upload folder: static/uploads/receipts [in /Users/ampstark/expense_tracker/app/services/file_service.py:33]
+2025-04-27 07:12:34,353 INFO: Full filepath: /Users/ampstark/expense_tracker/app/static/uploads/receipts/9c13a4b49bc6427f9d8104a227ad16d2_20250427.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:36]
+2025-04-27 07:12:34,354 INFO: Original image size: 363x1024 [in /Users/ampstark/expense_tracker/app/services/file_service.py:47]
+2025-04-27 07:12:34,379 INFO: Resized image size: 284x800 [in /Users/ampstark/expense_tracker/app/services/file_service.py:51]
+2025-04-27 07:12:34,454 INFO: Image saved successfully [in /Users/ampstark/expense_tracker/app/services/file_service.py:54]
+2025-04-27 07:12:34,454 INFO: File saved successfully. Size: 132861 bytes [in /Users/ampstark/expense_tracker/app/services/file_service.py:59]
+2025-04-27 07:12:34,454 INFO: OCR API: File saved as: 9c13a4b49bc6427f9d8104a227ad16d2_20250427.png [in /Users/ampstark/expense_tracker/app/views/api.py:43]
+2025-04-27 07:12:34,454 INFO: OCR API: Starting OCR processing on /Users/ampstark/expense_tracker/app/static/uploads/receipts/9c13a4b49bc6427f9d8104a227ad16d2_20250427.png [in /Users/ampstark/expense_tracker/app/views/api.py:57]
+2025-04-27 07:12:34,454 INFO: Starting OCR processing for image: /Users/ampstark/expense_tracker/app/static/uploads/receipts/9c13a4b49bc6427f9d8104a227ad16d2_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:481]
+2025-04-27 07:12:34,460 INFO: Image preprocessing successful for /Users/ampstark/expense_tracker/app/static/uploads/receipts/9c13a4b49bc6427f9d8104a227ad16d2_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:90]
+2025-04-27 07:12:34,463 INFO: OCR: Processing image with size 284x800 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:112]
+2025-04-27 07:12:34,464 INFO: OCR: Tesseract path: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:113]
+2025-04-27 07:12:34,464 INFO: OCR: Attempting OCR with config: --oem 1 --psm 6 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:120]
+2025-04-27 07:12:35,624 INFO: OCR: First pass result length: 917 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:122]
+2025-04-27 07:12:35,625 INFO: OCR: Results saved to /Users/ampstark/expense_tracker/app/logs/ocr_result_20250427_071235.txt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:177]
+2025-04-27 07:12:35,625 INFO: Extracting all data from receipt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:446]
+2025-04-27 07:12:35,625 INFO: Full OCR text:
+oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8
+เณ         ' (สํานักงานใหญ่) 50, 5 !
+141/12 ขั้น 11 ยูนิต 128อาคารขุด สกุลไทย สุรวงศ์
+. . ทาวเวอร์ ถนนสุรวงศ์ แขวงสุริยวงศ์ เขตบางรัก: 4
+aft      .กรุงเทพมหานคร 10500 % 1: ,
+"5 7าโลยฆผู้เสียภาษี 1234567890000 :[ !
+ft      เว็บไซต์ weni.example.com. = 2
+ใบกําคับภาษีอย่างย่อ/ใบเสร็จรับเงิน =  ;
+CA2019070001.     2      ศก พ
+พนักงานขาย.!: med ใจดี 15, 5 5
+ซู อ  Double 4 Copier Paper Aa      “ 5,000.00:
+“400° Staples (24/Pack) Max.10:          มง [2,000.00:
+"แอ Desk Furradex EX2590 22   jie 3,300.00:
+aa             1 จมเป็นเงิน ,. 10,300.00
+               1            ..สิ่วนลด ?1“ 300.00
+° ;       จําบวนเงินหลังพักส่วนลด.        40,000.00
+=        ภาษีมูลค่าเพิ่ม%% = 3% 654.21,
+*% “ ฐาคาไม่รรม์ภาษีมูลค่าเพิ่ม: sks 9,345.79
+——— ae
+ah            | 'รวมทั้งสิน “10,000.00
+4H        PVATINCLUDED- ๆ oz 5
+' " ใช้งาน 605 WEA FlowAccount.com =
+1           ง       i,    eg
+ [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:447]
+2025-04-27 07:12:35,625 INFO: Starting date extraction from text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:211]
+2025-04-27 07:12:35,625 INFO: Text content: oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8
+เณ         ' (สํานักงานใหญ่) 50, 5 !
+141/12 ขั้น 11 ยูนิต 128อาคารขุด สกุลไทย สุรวงศ์
+. . ทาวเวอร์ ถนนสุรวงศ์ แขวงสุริยวงศ์ เขตบางรัก: 4
+aft      .กรุงเทพมห... [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:212]
+2025-04-27 07:12:35,625 WARNING: No date pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:277]
+2025-04-27 07:12:35,625 INFO: Date extraction result: None [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:450]
+2025-04-27 07:12:35,625 INFO: Starting amount extraction from text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:291]
+2025-04-27 07:12:35,625 WARNING: No amount pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:359]
+2025-04-27 07:12:35,625 INFO: Amount extraction result: None [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:453]
+2025-04-27 07:12:35,625 INFO: Found vendor by prefix: oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:387]
+2025-04-27 07:12:35,625 INFO: Vendor extraction result: oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:456]
+2025-04-27 07:12:35,625 WARNING: No receipt number pattern matched in text [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:433]
+2025-04-27 07:12:35,625 INFO: Receipt number extraction result: None [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:459]
+2025-04-27 07:12:35,625 INFO: Extracted data: {'date': None, 'total_amount': None, 'vendor': 'oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8', 'items': [], 'receipt_no': None} [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:465]
+2025-04-27 07:12:35,625 INFO: OCR API: OCR processing completed successfully [in /Users/ampstark/expense_tracker/app/views/api.py:62]
+2025-04-27 07:12:35,625 INFO: OCR API: Extracted data: {'date': None, 'total_amount': None, 'vendor': 'oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8', 'items': [], 'receipt_no': None} [in /Users/ampstark/expense_tracker/app/views/api.py:94]
+2025-04-27 07:14:27,248 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 07:14:27,249 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 07:14:27,300 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 07:14:27,310 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 07:18:21,108 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 07:18:21,108 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 07:18:21,152 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 07:18:21,172 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 07:18:40,005 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 07:18:40,005 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 07:18:40,038 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 07:18:40,046 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 07:18:43,481 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 07:18:43,481 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 07:18:43,513 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 07:18:43,523 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 07:18:58,319 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 07:18:58,320 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 07:18:58,352 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 07:18:58,361 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 07:18:58,654 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:89]
+2025-04-27 07:18:58,654 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:33]
+2025-04-27 07:18:58,690 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:112]
+2025-04-27 07:18:58,705 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:116]
+2025-04-27 07:19:04,884 INFO: OCR API: Starting OCR processing [in /Users/ampstark/expense_tracker/app/views/api.py:23]
+2025-04-27 07:19:04,887 INFO: OCR API: Received file: POS.png [in /Users/ampstark/expense_tracker/app/views/api.py:30]
+2025-04-27 07:19:04,887 INFO: Saving receipt file: POS.png, MIME: image/png [in /Users/ampstark/expense_tracker/app/services/file_service.py:21]
+2025-04-27 07:19:04,887 INFO: Secured filename: POS.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:25]
+2025-04-27 07:19:04,888 INFO: Generated new filename: c0f4885bdb354ab69461831d6869f6a3_20250427.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:29]
+2025-04-27 07:19:04,888 INFO: Upload folder: static/uploads/receipts [in /Users/ampstark/expense_tracker/app/services/file_service.py:33]
+2025-04-27 07:19:04,888 INFO: Full filepath: /Users/ampstark/expense_tracker/app/static/uploads/receipts/c0f4885bdb354ab69461831d6869f6a3_20250427.png [in /Users/ampstark/expense_tracker/app/services/file_service.py:36]
+2025-04-27 07:19:04,913 INFO: Original image size: 363x1024 [in /Users/ampstark/expense_tracker/app/services/file_service.py:47]
+2025-04-27 07:19:04,920 INFO: Resized image size: 284x800 [in /Users/ampstark/expense_tracker/app/services/file_service.py:51]
+2025-04-27 07:19:04,994 INFO: Image saved successfully [in /Users/ampstark/expense_tracker/app/services/file_service.py:54]
+2025-04-27 07:19:04,994 INFO: File saved successfully. Size: 132861 bytes [in /Users/ampstark/expense_tracker/app/services/file_service.py:59]
+2025-04-27 07:19:04,994 INFO: OCR API: File saved as: c0f4885bdb354ab69461831d6869f6a3_20250427.png [in /Users/ampstark/expense_tracker/app/views/api.py:43]
+2025-04-27 07:19:04,994 INFO: OCR API: Starting OCR processing on /Users/ampstark/expense_tracker/app/static/uploads/receipts/c0f4885bdb354ab69461831d6869f6a3_20250427.png [in /Users/ampstark/expense_tracker/app/views/api.py:57]
+2025-04-27 07:19:04,995 INFO: Starting OCR processing for image: /Users/ampstark/expense_tracker/app/static/uploads/receipts/c0f4885bdb354ab69461831d6869f6a3_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:399]
+2025-04-27 07:19:05,001 INFO: Image preprocessing successful for /Users/ampstark/expense_tracker/app/static/uploads/receipts/c0f4885bdb354ab69461831d6869f6a3_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:91]
+2025-04-27 07:19:05,005 INFO: OCR: Processing image with size 284x800 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:113]
+2025-04-27 07:19:05,005 INFO: OCR: Tesseract path: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:114]
+2025-04-27 07:19:05,005 INFO: OCR: Attempting OCR with config: --oem 1 --psm 6 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:121]
+2025-04-27 07:19:06,155 INFO: OCR: First pass result length: 917 [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:123]
+2025-04-27 07:19:06,156 INFO: OCR: Results saved to /Users/ampstark/expense_tracker/app/logs/ocr_result_20250427_071906.txt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:178]
+2025-04-27 07:19:06,156 INFO: Extracting all data from receipt [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:368]
+2025-04-27 07:19:06,156 INFO: Full OCR text:
+oa      บริษัท โฟลว์แอคเค้าที่ จํากัด ;   8
+เณ         ' (สํานักงานใหญ่) 50, 5 !
+141/12 ขั้น 11 ยูนิต 128อาคารขุด สกุลไทย สุรวงศ์
+. . ทาวเวอร์ ถนนสุรวงศ์ แขวงสุริยวงศ์ เขตบางรัก: 4
+aft      .กรุงเทพมหานคร 10500 % 1: ,
+"5 7าโลยฆผู้เสียภาษี 1234567890000 :[ !
+ft      เว็บไซต์ weni.example.com. = 2
+ใบกําคับภาษีอย่างย่อ/ใบเสร็จรับเงิน =  ;
+CA2019070001.     2      ศก พ
+พนักงานขาย.!: med ใจดี 15, 5 5
+ซู อ  Double 4 Copier Paper Aa      “ 5,000.00:
+“400° Staples (24/Pack) Max.10:          มง [2,000.00:
+"แอ Desk Furradex EX2590 22   jie 3,300.00:
+aa             1 จมเป็นเงิน ,. 10,300.00
+               1            ..สิ่วนลด ?1“ 300.00
+° ;       จําบวนเงินหลังพักส่วนลด.        40,000.00
+=        ภาษีมูลค่าเพิ่ม%% = 3% 654.21,
+*% “ ฐาคาไม่รรม์ภาษีมูลค่าเพิ่ม: sks 9,345.79
+——— ae
+ah            | 'รวมทั้งสิน “10,000.00
+4H        PVATINCLUDED- ๆ oz 5
+' " ใช้งาน 605 WEA FlowAccount.com =
+1           ง       i,    eg
+ [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:369]
+2025-04-27 07:19:06,156 INFO: Starting date extraction from text using database patterns [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:218]
+2025-04-27 07:19:06,158 INFO: Trying pattern 'รูปแบบวันที่ไทย: วันที่ DD/MM/YYYY': วันที่\s*(\d{1,2}/\d{1,2}/\d{4}) [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,161 INFO: Trying pattern 'วันที่ทั่วไปรูปแบบ DD/MM/YYYY': (\d{1,2}/\d{1,2}/\d{4}) [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,161 INFO: Trying pattern 'วันที่ภาษาอังกฤษ': (?:Date|DATE):?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{4}) [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,161 WARNING: No pattern matched for field: date [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:311]
+2025-04-27 07:19:06,161 INFO: Starting total_amount extraction from text using database patterns [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:218]
+2025-04-27 07:19:06,161 INFO: Trying pattern 'จำนวนเงินรวมท้ายใบเสร็จ (รวมทั้งสิน - ไม่มีวรรณยุกต์)': ['\"]?รวมทั้งสิน['\"]?\s*['\"]?(\d+(?:[.,]\d{1,2})?)['\"]? [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,162 INFO: Trying pattern 'จำนวนเงินรวมท้ายใบเสร็จ': รวมทั้งสิ้น\s*(\d+(?:[.,]\d{1,2})?) [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,166 INFO: Trying pattern 'จำนวนเงินรวมท้ายใบเสร็จ (รวมทั้งสิน)': รวมทั้งสิน\s*(\d+(?:[.,]\d{1,2})?) [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,166 INFO: Trying pattern 'จำนวนเงินหลังหักส่วนลด': จำนวนเงินหลังหักส่วนลด\s*(\d+(?:[.,]\d{1,2})?) [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,166 INFO: Trying pattern 'จำนวนเงินรวมภาษาอังกฤษ': TOTAL\s*(\d+(?:[.,]\d{1,2})?) [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,166 WARNING: No pattern matched for field: total_amount [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:311]
+2025-04-27 07:19:06,166 INFO: Starting vendor extraction from text using database patterns [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:218]
+2025-04-27 07:19:06,166 INFO: Trying pattern 'ชื่อบริษัทบรรทัดแรก': ^(บริษัท.+?)[\r\n] [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,166 INFO: Trying pattern 'ชื่อร้านค้าบรรทัดแรก': ^(ร้าน.+?)[\r\n] [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,166 WARNING: No pattern matched for field: vendor [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:311]
+2025-04-27 07:19:06,166 INFO: Starting receipt_number extraction from text using database patterns [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:218]
+2025-04-27 07:19:06,167 INFO: Trying pattern 'เลขที่ใบเสร็จภาษาไทย': เลขที่\s*([A-Za-z0-9\-_/]+) [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,167 INFO: Trying pattern 'เลขที่ใบกำกับภาษี/ใบเสร็จรับเงิน': (?:ใบกำกับภาษี|ใบเสร็จรับเงิน).*?(?:เลขที่)\s*([A-Za-z0-9\-_/]+) [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,167 INFO: Trying pattern 'เลขที่ใบเสร็จภาษาอังกฤษ': (?:No|NO|no)\.?\s*([A-Za-z0-9\-_/]+) [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:259]
+2025-04-27 07:19:06,167 WARNING: No pattern matched for field: receipt_number [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:311]
+2025-04-27 07:19:06,167 INFO: Starting items_section extraction from text using database patterns [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:218]
+2025-04-27 07:19:06,167 WARNING: No patterns found for field: items_section [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:224]
+2025-04-27 07:19:06,172 WARNING: No data extracted from receipt: /Users/ampstark/expense_tracker/app/static/uploads/receipts/c0f4885bdb354ab69461831d6869f6a3_20250427.png [in /Users/ampstark/expense_tracker/app/services/ocr_service.py:381]
+2025-04-27 07:19:06,172 INFO: OCR API: OCR processing completed successfully [in /Users/ampstark/expense_tracker/app/views/api.py:62]
+2025-04-27 07:19:06,172 INFO: OCR API: Extracted data: {'date': None, 'total_amount': None, 'vendor': None, 'items': [], 'receipt_no': None} [in /Users/ampstark/expense_tracker/app/views/api.py:94]

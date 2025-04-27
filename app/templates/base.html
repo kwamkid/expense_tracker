@@ -71,27 +71,13 @@
                             </li>
                         </ul>
                     </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle me-1"></i> {{ current_user.username }}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('ocr_patterns') %}active{% endif %}" href="{{ url_for('ocr_patterns.index') }}">
+                            <i class="fas fa-cogs me-1"></i> จัดการรูปแบบ OCR
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-user-cog me-1"></i> โปรไฟล์
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                    <i class="fas fa-sign-out-alt me-1"></i> ออกจากระบบ
-                                </a>
-                            </li>
-                        </ul>
                     </li>
                 </ul>
+
             </div>
         </div>
     </nav>

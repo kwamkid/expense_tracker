@@ -33,8 +33,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Clear previous results
                 if (ocrResultsContainer) {
-                    ocrResultsContainer.innerHTML = '';
-                    ocrResultsContainer.style.display = 'none';
+                    ocrResultsContainer.innerHTML = `
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                    <span class="visually-hidden">กำลังประมวลผล...</span>
+                                </div>
+                                <span>กำลังวิเคราะห์ใบเสร็จ กรุณารอสักครู่...</span>
+                            </div>
+                        </div>
+                    `;
+                    ocrResultsContainer.style.display = 'block';
                 }
 
                 // Show preview
@@ -42,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 reader.onload = function(e) {
                     receiptPreview.src = e.target.result;
                     receiptPreview.style.display = 'block';
+                    receiptPreview.parentElement.style.display = 'block';
                 };
                 reader.readAsDataURL(this.files[0]);
 
@@ -55,12 +65,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData();
             formData.append('receipt', file);
 
+            console.log('Starting OCR processing for file:', file.name);
+
             fetch('/api/ocr/receipt', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('OCR API response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('OCR API response data:', data);
+
                 // Hide loading indicator
                 if (ocrLoadingIndicator) {
                     ocrLoadingIndicator.style.display = 'none';
@@ -68,20 +88,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (data.success) {
                     // Fill form fields with extracted data
-                    if (data.data.total_amount && amountInput) {
+                    if (data.data && data.data.total_amount && amountInput) {
                         amountInput.value = data.data.total_amount;
+                        console.log('Set amount input to:', data.data.total_amount);
                     }
 
-                    if (data.data.date && dateInput) {
+                    if (data.data && data.data.date && dateInput) {
                         dateInput.value = data.data.date;
+                        console.log('Set date input to:', data.data.date);
                     }
 
-                    if (data.data.vendor && descriptionInput) {
+                    if (data.data && data.data.vendor && descriptionInput) {
                         descriptionInput.value = data.data.vendor;
+                        console.log('Set description input to:', data.data.vendor);
 
                         // เพิ่มเลขที่ใบเสร็จถ้ามี
                         if (data.data.receipt_no) {
                             descriptionInput.value += ` (เลขที่: ${data.data.receipt_no})`;
+                            console.log('Added receipt number to description');
                         }
                     }
 
@@ -95,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             resultHTML += 'alert-warning"><i class="fas fa-exclamation-triangle me-2"></i><strong>ไม่พบข้อมูล:</strong> ' + data.warning;
                         }
                         // ถ้ามีข้อมูลอย่างน้อย 1 อย่าง ถือว่าสำเร็จบางส่วน
-                        else if (Object.values(data.data).some(val => val !== null)) {
+                        else if (data.data && Object.values(data.data).some(val => val !== null)) {
                             resultHTML += 'alert-success"><i class="fas fa-check-circle me-2"></i><strong>ดึงข้อมูลสำเร็จ</strong>';
                         }
                         // ถ้าไม่มีข้อมูลใดเลย แต่ยังถือว่าสำเร็จในการประมวลผล
@@ -106,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         resultHTML += '</div>';
 
                         // แสดงรายละเอียดข้อมูลที่ดึงได้
-                        if (Object.values(data.data).some(val => val !== null)) {
+                        if (data.data && Object.values(data.data).some(val => val !== null)) {
                             resultHTML += '<div class="card mb-3"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-file-invoice me-2"></i>ข้อมูลที่ดึงได้จากใบเสร็จ</h6></div><div class="card-body">';
                             resultHTML += '<table class="table table-sm">';
                             resultHTML += '<tr><th style="width: 40%;">วันที่:</th><td>' + (data.data.date || '<span class="text-muted">ไม่พบ</span>') + '</td></tr>';
@@ -125,11 +149,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } else {
                     // Show error
+                    console.error('OCR API returned error:', data.error);
                     if (ocrResultsContainer) {
                         ocrResultsContainer.innerHTML = `
                             <div class="alert alert-danger">
-                                <p><strong>เกิดข้อผิดพลาด:</strong> ${data.error}</p>
+                                <p><i class="fas fa-exclamation-circle me-2"></i><strong>เกิดข้อผิดพลาด:</strong> ${data.error || 'ไม่สามารถประมวลผลใบเสร็จได้'}</p>
                                 <p>กรุณากรอกข้อมูลด้วยตนเอง</p>
+                                <p class="mt-2 small">หมายเหตุ: รูปภาพใบเสร็จได้ถูกบันทึกแล้ว แต่ไม่สามารถดึงข้อมูลได้โดยอัตโนมัติ</p>
                             </div>
                         `;
                         ocrResultsContainer.style.display = 'block';
@@ -148,11 +174,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (ocrResultsContainer) {
                     ocrResultsContainer.innerHTML = `
                         <div class="alert alert-danger">
-                            <p><strong>เกิดข้อผิดพลาด:</strong> ไม่สามารถประมวลผลใบเสร็จได้</p>
+                            <p><i class="fas fa-exclamation-circle me-2"></i><strong>เกิดข้อผิดพลาด:</strong> ${error.message || 'ไม่สามารถประมวลผลใบเสร็จได้'}</p>
                             <p>กรุณากรอกข้อมูลด้วยตนเอง</p>
+                            <details class="mt-2">
+                                <summary class="text-muted small">รายละเอียดเพิ่มเติม (สำหรับนักพัฒนา)</summary>
+                                <pre class="small mt-2 p-2 bg-light">${error.stack || error}</pre>
+                            </details>
                         </div>
                     `;
                     ocrResultsContainer.style.display = 'block';
+                }
+
+                // ให้ใบเสร็จยังแสดงอยู่ แม้จะมีข้อผิดพลาด
+                if (receiptPreview) {
+                    receiptPreview.style.display = 'block';
+                    receiptPreview.parentElement.style.display = 'block';
                 }
             });
         }
