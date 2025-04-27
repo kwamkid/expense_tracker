@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-3">
+            <i class="fas fa-building text-primary me-2"></i>องค์กรของฉัน
+        </h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('organization.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> สร้างองค์กรใหม่
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    {% if organizations|length > 0 %}
+        {% for org in organizations %}
+        <div class="col-md-4 col-sm-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ org.name }}</h5>
+                    <div>
+                        {% if current_user.active_organization_id == org.id %}
+                        <span class="badge bg-success">กำลังใช้งาน</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if org.logo_path %}
+                <div class="text-center p-3">
+                    <img src="{{ url_for('static', filename='uploads/organizations/' + org.logo_path) }}"
+                         alt="{{ org.name }}"
+                         style="max-height: 100px; max-width: 100%; object-fit: contain;">
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    {% if org.description %}
+                    <p class="text-muted">{{ org.description }}</p>
+                    {% endif %}
+                    <p class="mb-0">
+                        <small class="text-muted">บทบาทของคุณ:
+                        {% set role = org.get_user_role(current_user.id) %}
+                        {% if role == 'admin' %}
+                            <span class="badge bg-danger">แอดมิน</span>
+                        {% elif role == 'member' %}
+                            <span class="badge bg-primary">สมาชิก</span>
+                        {% else %}
+                            <span class="badge bg-secondary">ผู้ชม</span>
+                        {% endif %}
+                        </small>
+                    </p>
+                    <p>
+                        <small class="text-muted">สร้างเมื่อ {{ org.created_at.strftime('%d/%m/%Y') }}</small>
+                    </p>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    {% if current_user.active_organization_id != org.id %}
+                    <a href="{{ url_for('organization.select', id=org.id) }}" class="btn btn-sm btn-primary flex-grow-1">
+                        <i class="fas fa-check-circle me-1"></i> เลือกใช้งาน
+                    </a>
+                    {% endif %}
+
+                    <a href="{{ url_for('organization.members', id=org.id) }}" class="btn btn-sm btn-outline-secondary flex-grow-1">
+                        <i class="fas fa-users me-1"></i> สมาชิก
+                    </a>
+
+                    {% if org.get_user_role(current_user.id) == 'admin' %}
+                    <a href="{{ url_for('organization.update', id=org.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-building text-muted" style="font-size: 4rem;"></i>
+                </div>
+                <h4>ยังไม่มีองค์กร</h4>
+                <p class="text-muted">คุณยังไม่ได้เป็นสมาชิกขององค์กรใด กรุณาสร้างองค์กรใหม่เพื่อเริ่มใช้งาน</p>
+                <a href="{{ url_for('organization.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> สร้างองค์กรใหม่
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- แสดงข้อมูลเพิ่มเติมเกี่ยวกับสิทธิ์และบทบาท -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>คำอธิบายบทบาทในองค์กร</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card h-100 bg-danger bg-opacity-10">
+                    <div class="card-body">
+                        <h5><i class="fas fa-user-cog me-2"></i>แอดมิน</h5>
+                        <ul class="small mb-0">
+                            <li>จัดการสมาชิกในองค์กร</li>
+                            <li>เชิญและลบสมาชิก</li>
+                            <li>กำหนดบทบาทของสมาชิก</li>
+                            <li>แก้ไขข้อมูลองค์กร</li>
+                            <li>จัดการรายรับรายจ่ายทั้งหมด</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 bg-primary bg-opacity-10">
+                    <div class="card-body">
+                        <h5><i class="fas fa-user-edit me-2"></i>สมาชิก</h5>
+                        <ul class="small mb-0">
+                            <li>ดูข้อมูลรายรับรายจ่ายทั้งหมด</li>
+                            <li>เพิ่มรายรับรายจ่าย</li>
+                            <li>แก้ไขและลบรายการที่ตัวเองสร้าง</li>
+                            <li>สร้างและจัดการบัญชี</li>
+                            <li>สร้างและจัดการหมวดหมู่</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 bg-secondary bg-opacity-10">
+                    <div class="card-body">
+                        <h5><i class="fas fa-user me-2"></i>ผู้ชม</h5>
+                        <ul class="small mb-0">
+                            <li>ดูข้อมูลรายรับรายจ่ายทั้งหมด</li>
+                            <li>ดูรายงานต่างๆ</li>
+                            <li>ไม่สามารถเพิ่ม แก้ไข หรือลบรายการได้</li>
+                            <li>ไม่สามารถจัดการบัญชีและหมวดหมู่ได้</li>
+                            <li>เหมาะสำหรับผู้ตรวจสอบบัญชี</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

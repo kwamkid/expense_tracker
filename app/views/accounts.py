@@ -11,7 +11,7 @@ accounts_bp = Blueprint('accounts', __name__, url_prefix='/accounts')
 @accounts_bp.route('/')
 @login_required
 def index():
-    accounts = Account.query.filter_by(user_id=current_user.id).all()
+    accounts = Account.query.filter_by(organization_id=current_user.active_organization_id).all()
     return render_template('accounts/index.html', accounts=accounts, title='บัญชีของฉัน')
 
 
@@ -25,7 +25,7 @@ def create():
             name=form.name.data,
             balance=form.balance.data,
             is_active=form.is_active.data,
-            user_id=current_user.id
+            organization_id=current_user.active_organization_id
         )
         db.session.add(account)
         db.session.commit()
@@ -40,7 +40,7 @@ def create():
 @accounts_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
-    account = Account.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    account = Account.query.filter_by(id=id, organization_id=current_user.active_organization_id).first_or_404()
     form = AccountForm(obj=account)
 
     # กำหนดค่า id สำหรับการตรวจสอบชื่อซ้ำ
@@ -61,7 +61,7 @@ def edit(id):
 @accounts_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete(id):
-    account = Account.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    account = Account.query.filter_by(id=id, organization_id=current_user.active_organization_id).first_or_404()
 
     # ตรวจสอบว่ามีธุรกรรมในบัญชีหรือไม่
     if account.transactions.count() > 0:

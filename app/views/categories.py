@@ -12,8 +12,8 @@ categories_bp = Blueprint('categories', __name__, url_prefix='/categories')
 @login_required
 def index():
     # แยกหมวดหมู่ตามประเภท
-    income_categories = Category.query.filter_by(user_id=current_user.id, type='income').all()
-    expense_categories = Category.query.filter_by(user_id=current_user.id, type='expense').all()
+    income_categories = Category.query.filter_by(organization_id=current_user.active_organization_id, type='income').all()
+    expense_categories = Category.query.filter_by(organization_id=current_user.active_organization_id, type='expense').all()
 
     return render_template(
         'categories/index.html',
@@ -34,7 +34,7 @@ def create():
             type=form.type.data,
             color=form.color.data,
             icon=form.icon.data,
-            user_id=current_user.id
+            organization_id=current_user.active_organization_id
         )
         db.session.add(category)
         db.session.commit()
@@ -48,7 +48,7 @@ def create():
 @categories_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
-    category = Category.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    category = Category.query.filter_by(id=id, organization_id=current_user.active_organization_id).first_or_404()
     form = CategoryForm(obj=category)
 
     if form.validate_on_submit():
@@ -67,7 +67,7 @@ def edit(id):
 @categories_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete(id):
-    category = Category.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    category = Category.query.filter_by(id=id, organization_id=current_user.active_organization_id).first_or_404()
 
     # ตรวจสอบว่ามีธุรกรรมในหมวดหมู่หรือไม่
     if category.transactions.count() > 0:
@@ -90,18 +90,18 @@ def reset_defaults():
     try:
         # ตรวจสอบว่ามีธุรกรรมที่ใช้หมวดหมู่หรือไม่
         from app.models import Transaction
-        transactions_count = Transaction.query.filter_by(user_id=current_user.id).count()
+        transactions_count = Transaction.query.filter_by(organization_id=current_user.active_organization_id).count()
 
         if transactions_count > 0:
             flash('ไม่สามารถรีเซ็ตหมวดหมู่ได้ เนื่องจากมีธุรกรรมที่ใช้หมวดหมู่อยู่ กรุณาลบธุรกรรมก่อน', 'danger')
             return redirect(url_for('categories.index'))
 
         # ลบหมวดหมู่เดิมทั้งหมด
-        Category.query.filter_by(user_id=current_user.id).delete()
+        Category.query.filter_by(organization_id=current_user.active_organization_id).delete()
 
         # สร้างหมวดหมู่เริ่มต้นใหม่
         from app.views.auth import create_default_categories
-        create_default_categories(current_user.id)
+        create_default_categories(current_user.active_organization_id)
 
         flash('รีเซ็ตหมวดหมู่เป็นค่าเริ่มต้นเรียบร้อยแล้ว', 'success')
     except Exception as e:

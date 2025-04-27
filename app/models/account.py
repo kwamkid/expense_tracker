@@ -10,7 +10,14 @@ class Account(db.Model):
     name = db.Column(db.String(100), nullable=False)
     balance = db.Column(db.Float, default=0.0)
     is_active = db.Column(db.Boolean, default=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    # เปลี่ยนจาก user_id เป็น organization_id
+    organization_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False)
+
+    # เพิ่มฟิลด์ว่าใครสร้าง/แก้ไข
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

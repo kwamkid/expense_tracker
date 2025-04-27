@@ -26,7 +26,7 @@ def index():
     account_id = request.args.get('account_id')
     status = request.args.get('status')
 
-    query = Transaction.query.filter_by(user_id=current_user.id)
+    query = Transaction.query.filter_by(organization_id=current_user.active_organization_id)
 
     # Apply filters
     if status:
@@ -49,8 +49,8 @@ def index():
     transactions = query.paginate(page=page, per_page=per_page)
 
     # Get categories and accounts for filter dropdowns
-    categories = Category.query.filter_by(user_id=current_user.id).all()
-    accounts = Account.query.filter_by(user_id=current_user.id).all()
+    categories = Category.query.filter_by(organization_id=current_user.active_organization_id).all()
+    accounts = Account.query.filter_by(organization_id=current_user.active_organization_id).all()
 
     return render_template(
         'transactions/index.html',
@@ -75,16 +75,16 @@ def create():
         form.type.data = transaction_type
 
     # ดึงบัญชีและหมวดหมู่ของผู้ใช้สำหรับตัวเลือกในฟอร์ม
-    form.account_id.choices = [(a.id, a.name) for a in Account.query.filter_by(user_id=current_user.id).all()]
+    form.account_id.choices = [(a.id, a.name) for a in Account.query.filter_by(organization_id=current_user.active_organization_id).all()]
 
     # ตัวเลือกหมวดหมู่จะเปลี่ยนตามประเภทธุรกรรม (รายรับ/รายจ่าย)
     current_type = form.type.data or transaction_type or 'expense'
     if current_type == 'income':
         form.category_id.choices = [(c.id, c.name) for c in
-                                    Category.query.filter_by(user_id=current_user.id, type='income').all()]
+                                    Category.query.filter_by(organization_id=current_user.active_organization_id, type='income').all()]
     else:
         form.category_id.choices = [(c.id, c.name) for c in
-                                    Category.query.filter_by(user_id=current_user.id, type='expense').all()]
+                                    Category.query.filter_by(organization_id=current_user.active_organization_id, type='expense').all()]
 
     if form.validate_on_submit():
         # สร้างธุรกรรมใหม่
@@ -94,7 +94,7 @@ def create():
             transaction_date=form.transaction_date.data,
             type=form.type.data,
             status=form.status.data,
-            user_id=current_user.id,
+            organization_id=current_user.active_organization_id,
             account_id=form.account_id.data,
             category_id=form.category_id.data
         )
@@ -136,7 +136,7 @@ def create():
 @transactions_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
-    transaction = Transaction.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    transaction = Transaction.query.filter_by(id=id, organization_id=current_user.active_organization_id).first_or_404()
 
     # เก็บค่าเดิมไว้เพื่อคำนวณยอดเงินในบัญชี
     old_amount = transaction.amount
@@ -147,15 +147,15 @@ def edit(id):
     form = TransactionForm(obj=transaction)
 
     # ดึงบัญชีและหมวดหมู่ของผู้ใช้สำหรับตัวเลือกในฟอร์ม
-    form.account_id.choices = [(a.id, a.name) for a in Account.query.filter_by(user_id=current_user.id).all()]
+    form.account_id.choices = [(a.id, a.name) for a in Account.query.filter_by(organization_id=current_user.active_organization_id).all()]
 
     # ตัวเลือกหมวดหมู่จะเปลี่ยนตามประเภทธุรกรรม (รายรับ/รายจ่าย)
     if form.type.data == 'income':
         form.category_id.choices = [(c.id, c.name) for c in
-                                    Category.query.filter_by(user_id=current_user.id, type='income').all()]
+                                    Category.query.filter_by(organization_id=current_user.active_organization_id, type='income').all()]
     else:
         form.category_id.choices = [(c.id, c.name) for c in
-                                    Category.query.filter_by(user_id=current_user.id, type='expense').all()]
+                                    Category.query.filter_by(organization_id=current_user.active_organization_id, type='expense').all()]
 
     if form.validate_on_submit():
         # อัพเดทข้อมูลธุรกรรม
@@ -233,7 +233,7 @@ def edit(id):
 @transactions_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete(id):
-    transaction = Transaction.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    transaction = Transaction.query.filter_by(id=id, organization_id=current_user.active_organization_id).first_or_404()
 
     # อัพเดทยอดเงินในบัญชี (เฉพาะกรณีสถานะเป็น 'completed')
     if transaction.status == 'completed':
@@ -258,5 +258,5 @@ def delete(id):
 @transactions_bp.route('/view/<int:id>')
 @login_required
 def view(id):
-    transaction = Transaction.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    transaction = Transaction.query.filter_by(id=id, organization_id=current_user.active_organization_id).first_or_404()
     return render_template('transactions/view.html', transaction=transaction, title='รายละเอียดธุรกรรม')

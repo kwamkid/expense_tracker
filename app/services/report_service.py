@@ -7,7 +7,8 @@ from app.models import Transaction, Category, Account
 from app.extensions import db
 
 
-def get_monthly_summary(user_id, year, month):
+# แก้ไขฟังก์ชัน get_monthly_summary
+def get_monthly_summary(organization_id, year, month):
     """ดึงข้อมูลสรุปรายรับรายจ่ายประจำเดือน"""
     # กำหนดช่วงวันที่ของเดือน
     start_date = date(year, month, 1)
@@ -19,7 +20,7 @@ def get_monthly_summary(user_id, year, month):
     # ดึงยอดรวมรายรับที่เสร็จสิ้นแล้ว
     completed_income = db.session.query(func.sum(Transaction.amount)) \
                            .filter(
-        Transaction.user_id == user_id,
+        Transaction.organization_id == organization_id,
         Transaction.type == 'income',
         Transaction.status == 'completed',
         Transaction.transaction_date >= start_date,
@@ -29,7 +30,7 @@ def get_monthly_summary(user_id, year, month):
     # ดึงยอดรวมรายรับที่รอดำเนินการ
     pending_income = db.session.query(func.sum(Transaction.amount)) \
                          .filter(
-        Transaction.user_id == user_id,
+        Transaction.organization_id == organization_id,
         Transaction.type == 'income',
         Transaction.status == 'pending',
         Transaction.transaction_date >= start_date,
@@ -39,7 +40,7 @@ def get_monthly_summary(user_id, year, month):
     # ดึงยอดรวมรายจ่ายที่เสร็จสิ้นแล้ว
     completed_expense = db.session.query(func.sum(Transaction.amount)) \
                             .filter(
-        Transaction.user_id == user_id,
+        Transaction.organization_id == organization_id,
         Transaction.type == 'expense',
         Transaction.status == 'completed',
         Transaction.transaction_date >= start_date,
@@ -49,7 +50,7 @@ def get_monthly_summary(user_id, year, month):
     # ดึงยอดรวมรายจ่ายที่รอดำเนินการ
     pending_expense = db.session.query(func.sum(Transaction.amount)) \
                           .filter(
-        Transaction.user_id == user_id,
+        Transaction.organization_id == organization_id,
         Transaction.type == 'expense',
         Transaction.status == 'pending',
         Transaction.transaction_date >= start_date,
@@ -59,11 +60,11 @@ def get_monthly_summary(user_id, year, month):
     # ดึงยอดเงินเริ่มต้นจากบัญชีต่างๆ
     account_balances = db.session.query(func.sum(Account.balance)) \
                            .filter(
-        Account.user_id == user_id,
+        Account.organization_id == organization_id,
         Account.is_active == True
     ).scalar() or 0
 
-    # คำนวณยอดคาดการณ์ (ยอดเงินปัจจุบัน + รายรับรอดำเนินการ - รายจ่ายรอดำเนินการ)
+    # คำนวณยอดคาดการณ์
     forecast_balance = account_balances + pending_income - pending_expense
 
     return {
@@ -81,7 +82,7 @@ def get_monthly_summary(user_id, year, month):
         'balance': completed_income - completed_expense,
         'total_balance': (completed_income + pending_income) - (completed_expense + pending_expense),
         'account_balance': account_balances,
-        'real_balance': forecast_balance  # เปลี่ยนจาก account_balances เป็น forecast_balance
+        'real_balance': forecast_balance
     }
 
 
@@ -96,7 +97,7 @@ def get_category_summary(user_id, year=None, month=None, transaction_type='expen
     ) \
         .join(Transaction, Category.id == Transaction.category_id) \
         .filter(
-        Transaction.user_id == user_id,
+        Transaction.organization_id == user_id,
         Transaction.type == transaction_type
     ) \
         .group_by(Category.id)
@@ -178,7 +179,7 @@ def get_monthly_trend(user_id, months=6, end_year=None, end_month=None):
     # ดึงข้อมูลธุรกรรมในช่วงวันที่
     transactions = Transaction.query \
         .filter(
-        Transaction.user_id == user_id,
+        Transaction.organization_id == user_id,
         Transaction.transaction_date >= start_date,
         Transaction.transaction_date <= end_date
     ) \
@@ -235,7 +236,7 @@ def get_transactions_by_date_range(user_id, start_date, end_date, category_id=No
     """ดึงรายการธุรกรรมตามช่วงวันที่และเงื่อนไขอื่นๆ"""
     query = Transaction.query \
         .filter(
-        Transaction.user_id == user_id,
+        Transaction.organization_id == user_id,
         Transaction.transaction_date >= start_date,
         Transaction.transaction_date <= end_date
     )

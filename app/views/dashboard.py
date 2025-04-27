@@ -22,19 +22,19 @@ def index():
     # 1. ข้อมูลสรุปรายเดือนปัจจุบัน
     current_month = datetime.now().month
     current_year = datetime.now().year
-    monthly_summary = get_monthly_summary(current_user.id, current_year, current_month)
+    monthly_summary = get_monthly_summary(current_user.active_organization_id, current_year, current_month)
 
     # 2. ข้อมูลสรุปตามหมวดหมู่ (สำหรับ charts)
-    category_summary = get_category_summary(current_user.id)
+    category_summary = get_category_summary(current_user.active_organization_id)
 
     # 3. ธุรกรรมล่าสุด 5 รายการ
-    recent_transactions = get_recent_transactions(current_user.id, limit=5)
+    recent_transactions = get_recent_transactions(current_user.active_organization_id, limit=5)
 
     # 4. ยอดเงินคงเหลือในแต่ละบัญชี
-    account_balances = get_account_balances(current_user.id)
+    account_balances = get_account_balances(current_user.active_organization_id)
 
     # 5. แนวโน้มรายรับ-รายจ่าย 6 เดือนล่าสุด
-    monthly_trend = get_monthly_trend(current_user.id, months=6)
+    monthly_trend = get_monthly_trend(current_user.active_organization_id, months=6)
 
     return render_template(
         'dashboard/index.html',

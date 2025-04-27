@@ -31,7 +31,7 @@ def get_categories():
     # ดึงรายการหมวดหมู่
     categories = Category.query.filter_by(
         type=transaction_type,
-        user_id=current_user.id
+        organization_id=current_user.active_organization_id
     ).order_by(Category.name).all()
 
     # สร้างรายการหมวดหมู่
@@ -69,7 +69,7 @@ def update_transaction_status():
         # ค้นหาธุรกรรมพร้อมกับตรวจสอบว่าเป็นของผู้ใช้ปัจจุบัน
         transaction = db.session.query(Transaction).filter(
             Transaction.id == transaction_id,
-            Transaction.user_id == current_user.id
+            Transaction.organization_id == current_user.active_organization_id
         ).first()
 
         if not transaction:

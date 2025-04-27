@@ -27,7 +27,7 @@ def monthly():
     month = request.args.get('month', datetime.now().month, type=int)
 
     # ดึงข้อมูลสรุปรายเดือน
-    monthly_summary = get_monthly_summary(current_user.id, year, month)
+    monthly_summary = get_monthly_summary(current_user.active_organization_id, year, month)
 
     # ดึงข้อมูลธุรกรรมในเดือนที่เลือก
     start_date = date(year, month, 1)
@@ -36,10 +36,10 @@ def monthly():
     else:
         end_date = date(year, month + 1, 1) - timedelta(days=1)
 
-    transactions = get_transactions_by_date_range(current_user.id, start_date, end_date)
+    transactions = get_transactions_by_date_range(current_user.active_organization_id, start_date, end_date)
 
     # ดึงข้อมูลสรุปตามหมวดหมู่
-    category_summary = get_category_summary(current_user.id, year, month)
+    category_summary = get_category_summary(current_user.active_organization_id, year, month)
 
     # สร้างตัวเลือกปีและเดือนสำหรับตัวเลือกในฟอร์ม
     current_year = datetime.now().year
@@ -68,7 +68,7 @@ def category():
     transaction_type = request.args.get('type', 'expense')
 
     # ดึงข้อมูลสรุปตามหมวดหมู่
-    category_summary = get_category_summary(current_user.id, year, month, transaction_type)
+    category_summary = get_category_summary(current_user.active_organization_id, year, month, transaction_type)
 
     # สร้างตัวเลือกปีและเดือนสำหรับตัวเลือกในฟอร์ม
     current_year = datetime.now().year
@@ -95,7 +95,7 @@ def trends():
     months_count = request.args.get('months', 12, type=int)
 
     # ดึงข้อมูลแนวโน้มรายเดือน
-    monthly_trend = get_monthly_trend(current_user.id, months=months_count, end_year=year)
+    monthly_trend = get_monthly_trend(current_user.active_organization_id, months=months_count, end_year=year)
 
     # สร้างตัวเลือกปีสำหรับตัวเลือกในฟอร์ม
     current_year = datetime.now().year
@@ -124,7 +124,7 @@ def export(report_type):
         filename = f"monthly_report_{year}_{month}"
 
         # ดึงข้อมูลสำหรับรายงาน
-        monthly_summary = get_monthly_summary(current_user.id, year, month)
+        monthly_summary = get_monthly_summary(current_user.active_organization_id, year, month)
 
         start_date = date(year, month, 1)
         if month == 12:
@@ -132,7 +132,7 @@ def export(report_type):
         else:
             end_date = date(year, month + 1, 1) - timedelta(days=1)
 
-        transactions = get_transactions_by_date_range(current_user.id, start_date, end_date)
+        transactions = get_transactions_by_date_range(current_user.active_organization_id, start_date, end_date)
 
         data = {
             'summary': monthly_summary,
@@ -150,7 +150,7 @@ def export(report_type):
             filename += f"_{month}"
 
         # ดึงข้อมูลสำหรับรายงาน
-        category_summary = get_category_summary(current_user.id, year, month, transaction_type)
+        category_summary = get_category_summary(current_user.active_organization_id, year, month, transaction_type)
 
         data = {
             'category_summary': category_summary,

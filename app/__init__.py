@@ -29,8 +29,13 @@ def create_app(config_class=Config):
 
     # Ensure uploads directory exists
     uploads_dir = os.path.join(app.static_folder, 'uploads', 'receipts')
+    organizations_dir = os.path.join(app.static_folder, 'uploads', 'organizations')
+
     os.makedirs(uploads_dir, exist_ok=True)
+    os.makedirs(organizations_dir, exist_ok=True)
+
     app.logger.info(f"Uploads directory: {uploads_dir}")
+    app.logger.info(f"Organizations directory: {organizations_dir}")
 
     # ตรวจสอบ Tesseract
     check_tesseract(app)
@@ -151,7 +156,7 @@ def register_blueprints(app):
     from app.views.transactions import transactions_bp
     from app.views.reports import reports_bp
     from app.views.api import api_bp
-
+    from app.views.organization import organization_bp  # เพิ่ม blueprint สำหรับองค์กร
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -160,6 +165,7 @@ def register_blueprints(app):
     app.register_blueprint(transactions_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(organization_bp)  # ลงทะเบียน blueprint องค์กร
 
 
 def register_error_handlers(app):
