@@ -9,122 +9,8 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 
 from app.services.file_service import allowed_file, save_receipt
-from app.services.ocr_service import process_receipt_image
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
-
-
-# แก้ไขใน app/views/api.py
-# ค้นหาฟังก์ชัน ocr_receipt และแก้ไขส่วนของการตรวจสอบไฟล์
-
-@api_bp.route('/ocr/receipt', methods=['POST'])
-# @login_required
-def ocr_receipt():
-    """API สำหรับอัปโหลดใบเสร็จและวิเคราะห์ด้วย OCR"""
-    # เพิ่มการบันทึกข้อมูลเพื่อการดีบัก
-    current_app.logger.info(f"OCR API request received: {request.files}")
-    current_app.logger.info(f"Request headers: {request.headers}")
-
-    if 'receipt' not in request.files:
-        current_app.logger.error("OCR API: No receipt file in request")
-        return jsonify({
-            'success': False,
-            'error': 'ไม่พบไฟล์รูปภาพใบเสร็จ'
-        }), 400
-
-    file = request.files['receipt']
-    if not file or file.filename == '':
-        current_app.logger.error("OCR API: Empty filename")
-        return jsonify({
-            'success': False,
-            'error': 'ไม่ได้เลือกไฟล์'
-        }), 400
-
-    if not allowed_file(file.filename):
-        current_app.logger.error(f"OCR API: Invalid file type: {file.filename}")
-        return jsonify({
-            'success': False,
-            'error': 'ไฟล์ไม่ถูกต้อง กรุณาอัปโหลดไฟล์รูปภาพ (jpg, jpeg, png, etc.)'
-        }), 400
-
-    try:
-        # บันทึกไฟล์ชั่วคราวและดำเนินการต่อ...
-        # (ส่วนที่เหลือของฟังก์ชันให้คงเดิม)
-        # บันทึกไฟล์ชั่วคราว
-        upload_folder = os.path.join(current_app.root_path, 'static/uploads/receipts')
-        os.makedirs(upload_folder, exist_ok=True)
-
-        # ใช้ UUID สำหรับชื่อไฟล์
-        temp_filename = f"{uuid.uuid4().hex}_{datetime.now().strftime('%Y%m%d')}.jpg"
-        temp_filepath = os.path.join(upload_folder, temp_filename)
-
-        # บันทึกไฟล์
-        file.save(temp_filepath)
-
-        # บันทึก log เพื่อการตรวจสอบ
-        current_app.logger.info(f"Saved receipt image to: {temp_filepath}")
-
-        # ประมวลผล OCR
-        current_app.logger.info("Starting OCR processing")
-        ocr_data = process_receipt_image(temp_filepath)
-        current_app.logger.info(f"OCR processing complete. Data: {json.dumps(ocr_data, ensure_ascii=False)}")
-
-        # ถ้ามีข้อมูล receipt_number ให้ใช้อันนั้น แต่ถ้าไม่มีและมี receipt_no ให้ใช้ receipt_no แทน
-        if 'receipt_number' in ocr_data and ocr_data['receipt_number']:
-            receipt_no = ocr_data['receipt_number']
-        elif 'receipt_no' in ocr_data and ocr_data['receipt_no']:
-            receipt_no = ocr_data['receipt_no']
-        else:
-            receipt_no = None
-
-        # สร้างข้อมูลตอบกลับ
-        response_data = {
-            'date': ocr_data.get('date'),
-            'total_amount': ocr_data.get('total_amount'),
-            'vendor': ocr_data.get('vendor'),
-            'receipt_no': receipt_no,
-            'items': ocr_data.get('items', []),
-            'ocr_text': ocr_data.get('text', '')  # เพิ่มส่วนนี้
-        }
-
-        # บันทึกข้อมูลดิบเพื่อการวิเคราะห์
-        log_dir = os.path.join(current_app.root_path, 'logs')
-        os.makedirs(log_dir, exist_ok=True)
-        log_file_path = os.path.join(log_dir, f'ocr_api_response_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
-        with open(log_file_path, 'w', encoding='utf-8') as f:
-            f.write(json.dumps({
-                'original_data': ocr_data,
-                'response_data': response_data
-            }, ensure_ascii=False, indent=2))
-        current_app.logger.info(f"Saved API response log to: {log_file_path}")
-
-        # ตรวจสอบว่ามีข้อมูลหรือไม่
-        if all(v is None for v in [response_data['date'], response_data['total_amount'], response_data['vendor'],
-                                   response_data['receipt_no']]):
-            current_app.logger.warning("No data extracted from receipt")
-            return jsonify({
-                'success': True,
-                'warning': 'ไม่สามารถดึงข้อมูลจากใบเสร็จได้ กรุณากรอกข้อมูลด้วยตนเอง',
-                'data': response_data,
-                'temp_file': temp_filename
-            })
-
-        current_app.logger.info(f"OCR API returning success with data: {json.dumps(response_data, ensure_ascii=False)}")
-        return jsonify({
-            'success': True,
-            'data': response_data,
-            'temp_file': temp_filename
-        })
-
-    except Exception as e:
-        current_app.logger.error(f"Error in OCR API: {str(e)}")
-        import traceback
-        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
-
-        return jsonify({
-            'success': False,
-            'error': f'เกิดข้อผิดพลาดในการประมวลผล: {str(e)}'
-        }), 500
 
 
 @api_bp.route('/categories', methods=['GET'])
@@ -160,5 +46,66 @@ def get_categories():
 
     # คืนค่ากลับเป็น JSON
     return jsonify(result)
+
+
+@api_bp.route('/transactions/update-status', methods=['POST'])
+@login_required
+def update_transaction_status():
+    """API สำหรับอัพเดตสถานะธุรกรรม"""
+    from app.models import Transaction, Account
+
+    transaction_id = request.json.get('id')
+    new_status = request.json.get('status')  # 'completed' หรือ 'pending'
+
+    if not transaction_id or not new_status:
+        return jsonify({
+            'success': False,
+            'error': 'Missing required parameters'
+        }), 400
+
+    transaction = Transaction.query.filter_by(id=transaction_id, user_id=current_user.id).first()
+
+    if not transaction:
+        return jsonify({
+            'success': False,
+            'error': 'Transaction not found'
+        }), 404
+
+    old_status = transaction.status
+
+    # ไม่ต้องทำอะไรถ้าสถานะเดิมและใหม่เหมือนกัน
+    if old_status == new_status:
+        return jsonify({
+            'success': True,
+            'message': 'Status unchanged'
+        })
+
+    # อัพเดตสถานะ
+    transaction.status = new_status
+
+    # อัพเดตยอดเงินในบัญชี
+    account = Account.query.get(transaction.account_id)
+
+    # ถ้าเปลี่ยนจาก pending เป็น completed
+    if old_status == 'pending' and new_status == 'completed':
+        if transaction.type == 'income':
+            account.balance += transaction.amount
+        else:  # expense
+            account.balance -= transaction.amount
+
+    # ถ้าเปลี่ยนจาก completed เป็น pending
+    elif old_status == 'completed' and new_status == 'pending':
+        if transaction.type == 'income':
+            account.balance -= transaction.amount
+        else:  # expense
+            account.balance += transaction.amount
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'Transaction status updated to {new_status}',
+        'new_balance': account.balance
+    })
 
 

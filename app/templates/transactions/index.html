@@ -25,7 +25,7 @@
     <div class="card-body">
         <form id="filter-form" method="GET" action="{{ url_for('transactions.index') }}">
             <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <label for="date-range" class="form-label">ช่วงวันที่</label>
                     <input type="text" id="date-range" class="form-control" placeholder="เลือกช่วงวันที่" readonly>
                     <input type="hidden" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
@@ -38,6 +38,15 @@
                         <option value="">ทั้งหมด</option>
                         <option value="income" {{ 'selected' if request.args.get('type') == 'income' }}>รายรับ</option>
                         <option value="expense" {{ 'selected' if request.args.get('type') == 'expense' }}>รายจ่าย</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label for="status" class="form-label">สถานะ</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="">ทั้งหมด</option>
+                        <option value="completed" {{ 'selected' if request.args.get('status') == 'completed' }}>ดำเนินการแล้ว</option>
+                        <option value="pending" {{ 'selected' if request.args.get('status') == 'pending' }}>รอดำเนินการ</option>
                     </select>
                 </div>
 
@@ -64,7 +73,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-3 mb-3">
+                <div class="col-md-2 mb-3">
                     <label for="account_id" class="form-label">บัญชี</label>
                     <select id="account_id" name="account_id" class="form-select">
                         <option value="">ทั้งหมด</option>
@@ -110,6 +119,7 @@
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
+                        <th style="width: 60px;">สถานะ</th>
                         <th style="width: 120px;">วันที่</th>
                         <th style="width: 100px;">ประเภท</th>
                         <th>รายละเอียด</th>
@@ -123,16 +133,22 @@
                 <tbody>
                     {% for transaction in transactions.items %}
                     <tr>
+                        <td class="text-center">
+                            <div class="form-check">
+                                <input class="form-check-input status-toggle"
+                                       type="checkbox"
+                                       data-transaction-id="{{ transaction.id }}"
+                                       data-transaction-type="{{ transaction.type }}"
+                                       {% if transaction.status == 'completed' %}checked{% endif %}>
+                                <span class="d-none status-label">{{ transaction.status }}</span>
+                            </div>
+                        </td>
                         <td>{{ transaction.transaction_date.strftime('%d/%m/%Y') }}</td>
                         <td>
                             {% if transaction.type == 'income' %}
                             <span class="badge bg-success">รายรับ</span>
                             {% else %}
                             <span class="badge bg-danger">รายจ่าย</span>
-                            {% endif %}
-
-                            {% if transaction.status == 'pending' %}
-                            <span class="badge bg-warning text-dark">รอดำเนินการ</span>
                             {% endif %}
                         </td>
                         <td>{{ transaction.description or '-' }}</td>
@@ -358,6 +374,79 @@
                 const imageUrl = this.getAttribute('data-img-url');
                 receiptModalImage.src = imageUrl;
                 downloadReceiptBtn.href = imageUrl;
+            });
+        });
+
+        // สำหรับการอัพเดตสถานะธุรกรรม
+        const statusToggles = document.querySelectorAll('.status-toggle');
+        statusToggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const transactionId = this.getAttribute('data-transaction-id');
+                const newStatus = this.checked ? 'completed' : 'pending';
+                const row = this.closest('tr');
+
+                // แสดง loading
+                row.style.opacity = '0.5';
+
+                // ส่งคำขอ AJAX เพื่ออัพเดตสถานะ
+                fetch('/api/transactions/update-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        id: transactionId,
+                        status: newStatus
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    row.style.opacity = '1';
+                    if (data.success) {
+                        // อัพเดตตัวแสดงสถานะ
+                        row.querySelector('.status-label').textContent = newStatus;
+
+                        // แสดงข้อความแจ้งเตือน
+                        const alertHTML = `
+                            <div class="alert alert-success alert-dismissible fade show">
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <i class="fas fa-check-circle me-2"></i>อัพเดตสถานะธุรกรรมเรียบร้อยแล้ว
+                            </div>
+                        `;
+                        document.querySelector('.container').insertAdjacentHTML('afterbegin', alertHTML);
+
+                        // เลื่อนไปด้านบนเพื่อให้เห็นข้อความแจ้งเตือน
+                        window.scrollTo(0, 0);
+
+                        // ซ่อนข้อความแจ้งเตือนอัตโนมัติหลังจาก 3 วินาที
+                        setTimeout(function() {
+                            const alertElement = document.querySelector('.alert-success');
+                            if (alertElement) {
+                                const bsAlert = new bootstrap.Alert(alertElement);
+                                bsAlert.close();
+                            }
+                        }, 3000);
+                    } else {
+                        // แสดงข้อความแจ้งเตือนข้อผิดพลาด
+                        alert('เกิดข้อผิดพลาด: ' + data.error);
+                        this.checked = !this.checked; // กลับไปที่สถานะเดิม
+                    }
+                })
+                .catch(error => {
+                    row.style.opacity = '1';
+                    console.error('Error:', error);
+                    alert('เกิดข้อผิดพลาดในการอัพเดตสถานะ');
+                    this.checked = !this.checked; // กลับไปที่สถานะเดิม
+                });
+            });
+        });
+
+        // Auto-submit เมื่อเลือกตัวกรอง
+        const selectFilters = document.querySelectorAll('#filter-form select');
+        selectFilters.forEach(select => {
+            select.addEventListener('change', function() {
+                document.getElementById('filter-form').submit();
             });
         });
     });

@@ -6,7 +6,6 @@ import calendar
 from app.models import Transaction, Category, Account
 from app.extensions import db
 
-
 def get_monthly_summary(user_id, year, month):
     """ดึงข้อมูลสรุปรายรับรายจ่ายประจำเดือน"""
     # กำหนดช่วงวันที่ของเดือน
@@ -16,22 +15,51 @@ def get_monthly_summary(user_id, year, month):
     else:
         end_date = date(year, month + 1, 1) - timedelta(days=1)
 
-    # ดึงยอดรวมรายรับ
-    income_sum = db.session.query(func.sum(Transaction.amount)) \
+    # ดึงยอดรวมรายรับที่เสร็จสิ้นแล้ว
+    completed_income = db.session.query(func.sum(Transaction.amount)) \
                      .filter(
         Transaction.user_id == user_id,
         Transaction.type == 'income',
+        Transaction.status == 'completed',
         Transaction.transaction_date >= start_date,
         Transaction.transaction_date <= end_date
     ).scalar() or 0
 
-    # ดึงยอดรวมรายจ่าย
-    expense_sum = db.session.query(func.sum(Transaction.amount)) \
+    # ดึงยอดรวมรายรับที่รอดำเนินการ
+    pending_income = db.session.query(func.sum(Transaction.amount)) \
+                     .filter(
+        Transaction.user_id == user_id,
+        Transaction.type == 'income',
+        Transaction.status == 'pending',
+        Transaction.transaction_date >= start_date,
+        Transaction.transaction_date <= end_date
+    ).scalar() or 0
+
+    # ดึงยอดรวมรายจ่ายที่เสร็จสิ้นแล้ว
+    completed_expense = db.session.query(func.sum(Transaction.amount)) \
                       .filter(
         Transaction.user_id == user_id,
         Transaction.type == 'expense',
+        Transaction.status == 'completed',
         Transaction.transaction_date >= start_date,
         Transaction.transaction_date <= end_date
+    ).scalar() or 0
+
+    # ดึงยอดรวมรายจ่ายที่รอดำเนินการ
+    pending_expense = db.session.query(func.sum(Transaction.amount)) \
+                      .filter(
+        Transaction.user_id == user_id,
+        Transaction.type == 'expense',
+        Transaction.status == 'pending',
+        Transaction.transaction_date >= start_date,
+        Transaction.transaction_date <= end_date
+    ).scalar() or 0
+
+    # ดึงยอดเงินเริ่มต้นจากบัญชีต่างๆ
+    account_balances = db.session.query(func.sum(Account.balance)) \
+                      .filter(
+        Account.user_id == user_id,
+        Account.is_active == True
     ).scalar() or 0
 
     return {
@@ -40,10 +68,18 @@ def get_monthly_summary(user_id, year, month):
         'month_name': calendar.month_name[month],
         'start_date': start_date,
         'end_date': end_date,
-        'income': income_sum,
-        'expense': expense_sum,
-        'balance': income_sum - expense_sum
+        'income': completed_income,
+        'pending_income': pending_income,
+        'total_income': completed_income + pending_income,
+        'expense': completed_expense,
+        'pending_expense': pending_expense,
+        'total_expense': completed_expense + pending_expense,
+        'balance': completed_income - completed_expense,
+        'total_balance': (completed_income + pending_income) - (completed_expense + pending_expense),
+        'account_balance': account_balances,
+        'real_balance': account_balances  # ยอดเงินจริงในบัญชี
     }
+
 
 
 def get_category_summary(user_id, year=None, month=None, transaction_type='expense'):

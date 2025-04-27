@@ -24,10 +24,16 @@ def index():
     transaction_type = request.args.get('type')
     category_id = request.args.get('category_id')
     account_id = request.args.get('account_id')
+    status = request.args.get('status')
 
     query = Transaction.query.filter_by(user_id=current_user.id)
 
     # Apply filters
+    # ใน function index
+    # เพิ่มการกรองตาม status
+
+    if status:
+        query = query.filter_by(status=status)
     if start_date:
         query = query.filter(Transaction.transaction_date >= start_date)
     if end_date:

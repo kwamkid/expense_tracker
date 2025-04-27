@@ -151,7 +151,6 @@ def register_blueprints(app):
     from app.views.transactions import transactions_bp
     from app.views.reports import reports_bp
     from app.views.api import api_bp
-    from app.views.ocr_patterns import ocr_patterns_bp
 
 
     app.register_blueprint(auth_bp)
@@ -161,7 +160,6 @@ def register_blueprints(app):
     app.register_blueprint(transactions_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(api_bp)
-    app.register_blueprint(ocr_patterns_bp)
 
 
 def register_error_handlers(app):
