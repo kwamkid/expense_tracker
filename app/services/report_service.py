@@ -6,6 +6,7 @@ import calendar
 from app.models import Transaction, Category, Account
 from app.extensions import db
 
+
 def get_monthly_summary(user_id, year, month):
     """ดึงข้อมูลสรุปรายรับรายจ่ายประจำเดือน"""
     # กำหนดช่วงวันที่ของเดือน
@@ -17,7 +18,7 @@ def get_monthly_summary(user_id, year, month):
 
     # ดึงยอดรวมรายรับที่เสร็จสิ้นแล้ว
     completed_income = db.session.query(func.sum(Transaction.amount)) \
-                     .filter(
+                           .filter(
         Transaction.user_id == user_id,
         Transaction.type == 'income',
         Transaction.status == 'completed',
@@ -27,7 +28,7 @@ def get_monthly_summary(user_id, year, month):
 
     # ดึงยอดรวมรายรับที่รอดำเนินการ
     pending_income = db.session.query(func.sum(Transaction.amount)) \
-                     .filter(
+                         .filter(
         Transaction.user_id == user_id,
         Transaction.type == 'income',
         Transaction.status == 'pending',
@@ -37,7 +38,7 @@ def get_monthly_summary(user_id, year, month):
 
     # ดึงยอดรวมรายจ่ายที่เสร็จสิ้นแล้ว
     completed_expense = db.session.query(func.sum(Transaction.amount)) \
-                      .filter(
+                            .filter(
         Transaction.user_id == user_id,
         Transaction.type == 'expense',
         Transaction.status == 'completed',
@@ -47,7 +48,7 @@ def get_monthly_summary(user_id, year, month):
 
     # ดึงยอดรวมรายจ่ายที่รอดำเนินการ
     pending_expense = db.session.query(func.sum(Transaction.amount)) \
-                      .filter(
+                          .filter(
         Transaction.user_id == user_id,
         Transaction.type == 'expense',
         Transaction.status == 'pending',
@@ -57,10 +58,13 @@ def get_monthly_summary(user_id, year, month):
 
     # ดึงยอดเงินเริ่มต้นจากบัญชีต่างๆ
     account_balances = db.session.query(func.sum(Account.balance)) \
-                      .filter(
+                           .filter(
         Account.user_id == user_id,
         Account.is_active == True
     ).scalar() or 0
+
+    # คำนวณยอดคาดการณ์ (ยอดเงินปัจจุบัน + รายรับรอดำเนินการ - รายจ่ายรอดำเนินการ)
+    forecast_balance = account_balances + pending_income - pending_expense
 
     return {
         'year': year,
@@ -77,9 +81,8 @@ def get_monthly_summary(user_id, year, month):
         'balance': completed_income - completed_expense,
         'total_balance': (completed_income + pending_income) - (completed_expense + pending_expense),
         'account_balance': account_balances,
-        'real_balance': account_balances  # ยอดเงินจริงในบัญชี
+        'real_balance': forecast_balance  # เปลี่ยนจาก account_balances เป็น forecast_balance
     }
-
 
 
 def get_category_summary(user_id, year=None, month=None, transaction_type='expense'):

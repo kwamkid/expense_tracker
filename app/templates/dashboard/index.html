@@ -76,14 +76,14 @@
                 <div class="row">
                     <div class="col-6 text-center">
                         <p class="mb-1">ยอดจริง</p>
-                        <h3 class="{{ 'text-success' if monthly_summary['real_balance'] >= 0 else 'text-danger' }}">
-                            {{ "{:,.2f}".format(monthly_summary['real_balance']) }} ฿
+                        <h3 class="{{ 'text-success' if monthly_summary['account_balance'] >= 0 else 'text-danger' }}">
+                            {{ "{:,.2f}".format(monthly_summary['account_balance']) }} ฿
                         </h3>
                     </div>
                     <div class="col-6 text-center">
                         <p class="mb-1">คาดการณ์</p>
-                        <h3 class="{{ 'text-success' if monthly_summary['total_balance'] >= 0 else 'text-danger' }}">
-                            {{ "{:,.2f}".format(monthly_summary['total_balance']) }} ฿
+                        <h3 class="{{ 'text-success' if monthly_summary['real_balance'] >= 0 else 'text-danger' }}">
+                            {{ "{:,.2f}".format(monthly_summary['real_balance']) }} ฿
                         </h3>
                     </div>
                 </div>
@@ -315,15 +315,16 @@
             data: {
                 labels: [
                     {% for month in monthly_trend %}
-                    '{{ month["month_name"] }}',
+                    '{{ month["month_name"] }} {{ month["year"] }}',
                     {% endfor %}
                 ],
                 datasets: [
                     {
-                        label: 'รายรับ',
+                        label: 'รายรับทั้งหมด (รวมรอดำเนินการ)',
                         data: [
                             {% for month in monthly_trend %}
-                            {{ month["income"] }},
+                            {% set total_income = month["income"] + (month["pending_income"] if "pending_income" in month else 0) %}
+                            {{ total_income }},
                             {% endfor %}
                         ],
                         backgroundColor: 'rgba(40, 167, 69, 0.2)',
@@ -332,10 +333,11 @@
                         tension: 0.3
                     },
                     {
-                        label: 'รายจ่าย',
+                        label: 'รายจ่ายทั้งหมด (รวมรอดำเนินการ)',
                         data: [
                             {% for month in monthly_trend %}
-                            {{ month["expense"] }},
+                            {% set total_expense = month["expense"] + (month["pending_expense"] if "pending_expense" in month else 0) %}
+                            {{ total_expense }},
                             {% endfor %}
                         ],
                         backgroundColor: 'rgba(220, 53, 69, 0.2)',
@@ -344,10 +346,12 @@
                         tension: 0.3
                     },
                     {
-                        label: 'คงเหลือ',
+                        label: 'คงเหลือทั้งหมด',
                         data: [
                             {% for month in monthly_trend %}
-                            {{ month["balance"] }},
+                            {% set total_income = month["income"] + (month["pending_income"] if "pending_income" in month else 0) %}
+                            {% set total_expense = month["expense"] + (month["pending_expense"] if "pending_expense" in month else 0) %}
+                            {{ total_income - total_expense }},
                             {% endfor %}
                         ],
                         backgroundColor: 'rgba(23, 162, 184, 0.2)',
@@ -375,6 +379,13 @@
                     }
                 },
                 plugins: {
+                    title: {
+                        display: true,
+                        text: 'แสดงทั้งรายการที่ดำเนินการแล้วและรอดำเนินการ',
+                        font: {
+                            size: 14
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: function(context) {

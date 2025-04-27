@@ -7,7 +7,7 @@ import uuid
 import json
 from datetime import datetime
 from werkzeug.utils import secure_filename
-
+from app.extensions import db  # เพิ่มบรรทัดนี้เพื่อนำเข้า db
 from app.services.file_service import allowed_file, save_receipt
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
