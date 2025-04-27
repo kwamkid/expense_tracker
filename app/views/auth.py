@@ -60,29 +60,27 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
+# app/views/auth.py - แก้ไขฟังก์ชัน create_default_categories
+
 def create_default_categories(user_id):
     """สร้างหมวดหมู่เริ่มต้นสำหรับผู้ใช้ใหม่"""
     from app.models import Category
 
     # หมวดหมู่รายรับ
     income_categories = [
-        {'name': 'เงินเดือน', 'color': '#27ae60', 'icon': 'money-bill'},
-        {'name': 'รายได้เสริม', 'color': '#2ecc71', 'icon': 'coins'},
-        {'name': 'ของขวัญ', 'color': '#3498db', 'icon': 'gift'},
-        {'name': 'เงินปันผล', 'color': '#9b59b6', 'icon': 'chart-line'},
+        {'name': 'ค่าคอร์ส', 'color': '#27ae60', 'icon': 'money-bill'},
+        {'name': 'ค่าคอร์ส Summer', 'color': '#2ecc71', 'icon': 'sun'},
+        {'name': 'ค่าคอร์สแข่ง', 'color': '#3498db', 'icon': 'trophy'},
         {'name': 'อื่นๆ', 'color': '#34495e', 'icon': 'plus-circle'}
     ]
 
     # หมวดหมู่รายจ่าย
     expense_categories = [
         {'name': 'อาหาร', 'color': '#e74c3c', 'icon': 'utensils'},
-        {'name': 'ที่อยู่อาศัย', 'color': '#d35400', 'icon': 'home'},
-        {'name': 'การเดินทาง', 'color': '#f39c12', 'icon': 'car'},
-        {'name': 'บิล/สาธารณูปโภค', 'color': '#f1c40f', 'icon': 'file-invoice'},
-        {'name': 'ช้อปปิ้ง', 'color': '#e67e22', 'icon': 'shopping-cart'},
-        {'name': 'บันเทิง', 'color': '#1abc9c', 'icon': 'film'},
-        {'name': 'สุขภาพ', 'color': '#2980b9', 'icon': 'heartbeat'},
-        {'name': 'การศึกษา', 'color': '#8e44ad', 'icon': 'book'},
+        {'name': 'ก่อสร้าง/ต่อเติม', 'color': '#d35400', 'icon': 'home'},
+        {'name': 'ค่าอุปกรณ์การสอน', 'color': '#f39c12', 'icon': 'book'},
+        {'name': 'ค่าเช่า/บิล/สาธารณูปโภค', 'color': '#f1c40f', 'icon': 'file-invoice'},
+        {'name': 'การเดินทาง', 'color': '#1abc9c', 'icon': 'car'},
         {'name': 'อื่นๆ', 'color': '#7f8c8d', 'icon': 'tag'}
     ]
 

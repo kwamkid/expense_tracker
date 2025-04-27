@@ -12,6 +12,7 @@
             <div class="card-body">
                 <form method="POST" action="{{ url_for('accounts.edit', id=account.id) }}">
                     {{ form.csrf_token }}
+                    {{ form.id }} {# เพิ่ม hidden field เพื่อส่งค่า ID #}
 
                     <div class="row">
                         <div class="col-md-8">

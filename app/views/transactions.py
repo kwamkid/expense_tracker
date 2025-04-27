@@ -61,11 +61,12 @@ def index():
     )
 
 
+# แก้ไขฟังก์ชัน create ใน app/views/transactions.py
 @transactions_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():
     # รับค่า type จาก query string (ถ้ามี)
-    transaction_type = request.args.get('type', 'expense')
+    transaction_type = request.args.get('type', None)
 
     form = TransactionForm()
 
@@ -77,7 +78,7 @@ def create():
     form.account_id.choices = [(a.id, a.name) for a in Account.query.filter_by(user_id=current_user.id).all()]
 
     # ตัวเลือกหมวดหมู่จะเปลี่ยนตามประเภทธุรกรรม (รายรับ/รายจ่าย)
-    current_type = form.type.data or transaction_type
+    current_type = form.type.data or transaction_type or 'expense'
     if current_type == 'income':
         form.category_id.choices = [(c.id, c.name) for c in
                                     Category.query.filter_by(user_id=current_user.id, type='income').all()]
@@ -117,8 +118,17 @@ def create():
         flash('บันทึกธุรกรรมสำเร็จ!', 'success')
         return redirect(url_for('transactions.index'))
 
+    # ตั้งค่าเริ่มต้นให้ status เป็น 'pending'
+    if request.method == 'GET':
+        form.status.data = 'pending'
+
     # ตั้งชื่อหน้าตามประเภทธุรกรรม
-    title = 'เพิ่มรายได้' if transaction_type == 'income' else 'เพิ่มรายจ่าย'
+    if transaction_type == 'income':
+        title = 'เพิ่มรายได้'
+    elif transaction_type == 'expense':
+        title = 'เพิ่มรายจ่าย'
+    else:
+        title = 'เพิ่มธุรกรรมใหม่'
 
     return render_template('transactions/create.html', form=form, title=title, transaction_type=transaction_type)
 

@@ -48,64 +48,130 @@ def get_categories():
     return jsonify(result)
 
 
+# app/views/api.py - แก้ไขฟังก์ชัน update_transaction_status
+
 @api_bp.route('/transactions/update-status', methods=['POST'])
 @login_required
 def update_transaction_status():
     """API สำหรับอัพเดตสถานะธุรกรรม"""
     from app.models import Transaction, Account
 
-    transaction_id = request.json.get('id')
-    new_status = request.json.get('status')  # 'completed' หรือ 'pending'
+    try:
+        transaction_id = request.json.get('id')
+        new_status = request.json.get('status')  # 'completed' หรือ 'pending'
 
-    if not transaction_id or not new_status:
+        if not transaction_id or not new_status:
+            return jsonify({
+                'success': False,
+                'error': 'Missing required parameters'
+            }), 400
+
+        # ค้นหาธุรกรรมพร้อมกับตรวจสอบว่าเป็นของผู้ใช้ปัจจุบัน
+        transaction = db.session.query(Transaction).filter(
+            Transaction.id == transaction_id,
+            Transaction.user_id == current_user.id
+        ).first()
+
+        if not transaction:
+            return jsonify({
+                'success': False,
+                'error': 'Transaction not found'
+            }), 404
+
+        # บันทึกสถานะเดิมก่อนเปลี่ยน
+        old_status = transaction.status
+
+        # ไม่ต้องทำอะไรถ้าสถานะเดิมและใหม่เหมือนกัน
+        if old_status == new_status:
+            return jsonify({
+                'success': True,
+                'message': 'Status unchanged',
+                'transaction': {
+                    'id': transaction.id,
+                    'status': transaction.status,
+                    'type': transaction.type,
+                    'amount': transaction.amount
+                }
+            })
+
+        # อัพเดตสถานะในฐานข้อมูล
+        db.session.begin_nested()  # สร้าง savepoint เพื่อให้สามารถ rollback ได้ถ้าเกิดข้อผิดพลาด
+
+        try:
+            # อัพเดตบัญชีตามการเปลี่ยนแปลงสถานะ
+            account = Account.query.get(transaction.account_id)
+
+            if not account:
+                db.session.rollback()
+                return jsonify({
+                    'success': False,
+                    'error': 'Account not found'
+                }), 404
+
+            # ถ้าเปลี่ยนจาก pending เป็น completed
+            if old_status == 'pending' and new_status == 'completed':
+                if transaction.type == 'income':
+                    account.balance += transaction.amount
+                else:  # expense
+                    account.balance -= transaction.amount
+
+                current_app.logger.info(
+                    f"Updating from pending to completed. Account {account.id} balance: {account.balance}")
+
+            # ถ้าเปลี่ยนจาก completed เป็น pending
+            elif old_status == 'completed' and new_status == 'pending':
+                if transaction.type == 'income':
+                    # ตรวจสอบว่าบัญชีมียอดเงินพอหรือไม่
+                    if account.balance < transaction.amount:
+                        db.session.rollback()
+                        return jsonify({
+                            'success': False,
+                            'error': 'ไม่สามารถเปลี่ยนสถานะได้ เนื่องจากบัญชีมียอดเงินไม่เพียงพอ'
+                        }), 400
+
+                    account.balance -= transaction.amount
+                else:  # expense
+                    account.balance += transaction.amount
+
+                current_app.logger.info(
+                    f"Updating from completed to pending. Account {account.id} balance: {account.balance}")
+
+            # เปลี่ยนสถานะธุรกรรม
+            transaction.status = new_status
+
+            # บันทึกการเปลี่ยนแปลงทั้งหมด
+            db.session.commit()
+
+            return jsonify({
+                'success': True,
+                'message': f'Transaction status updated to {new_status}',
+                'transaction': {
+                    'id': transaction.id,
+                    'status': transaction.status,
+                    'type': transaction.type,
+                    'amount': transaction.amount
+                },
+                'account': {
+                    'id': account.id,
+                    'name': account.name,
+                    'balance': account.balance
+                }
+            })
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating transaction status: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'Error updating status: {str(e)}'
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f"Unexpected error in update_transaction_status: {str(e)}")
         return jsonify({
             'success': False,
-            'error': 'Missing required parameters'
-        }), 400
+            'error': f'Unexpected error: {str(e)}'
+        }), 500
 
-    transaction = Transaction.query.filter_by(id=transaction_id, user_id=current_user.id).first()
-
-    if not transaction:
-        return jsonify({
-            'success': False,
-            'error': 'Transaction not found'
-        }), 404
-
-    old_status = transaction.status
-
-    # ไม่ต้องทำอะไรถ้าสถานะเดิมและใหม่เหมือนกัน
-    if old_status == new_status:
-        return jsonify({
-            'success': True,
-            'message': 'Status unchanged'
-        })
-
-    # อัพเดตสถานะ
-    transaction.status = new_status
-
-    # อัพเดตยอดเงินในบัญชี
-    account = Account.query.get(transaction.account_id)
-
-    # ถ้าเปลี่ยนจาก pending เป็น completed
-    if old_status == 'pending' and new_status == 'completed':
-        if transaction.type == 'income':
-            account.balance += transaction.amount
-        else:  # expense
-            account.balance -= transaction.amount
-
-    # ถ้าเปลี่ยนจาก completed เป็น pending
-    elif old_status == 'completed' and new_status == 'pending':
-        if transaction.type == 'income':
-            account.balance -= transaction.amount
-        else:  # expense
-            account.balance += transaction.amount
-
-    db.session.commit()
-
-    return jsonify({
-        'success': True,
-        'message': f'Transaction status updated to {new_status}',
-        'new_balance': account.balance
-    })
 
 

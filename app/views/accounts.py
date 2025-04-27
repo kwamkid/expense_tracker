@@ -36,11 +36,15 @@ def create():
     return render_template('accounts/create.html', form=form, title='เพิ่มบัญชีใหม่')
 
 
+# แก้ไขฟังก์ชัน edit ใน app/views/accounts.py
 @accounts_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
     account = Account.query.filter_by(id=id, user_id=current_user.id).first_or_404()
     form = AccountForm(obj=account)
+
+    # กำหนดค่า id สำหรับการตรวจสอบชื่อซ้ำ
+    form.id.data = account.id
 
     if form.validate_on_submit():
         account.name = form.name.data

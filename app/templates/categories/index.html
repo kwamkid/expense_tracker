@@ -1,4 +1,4 @@
-{# app/templates/categories/index.html #}
+{# แก้ไขส่วนด้านบนของไฟล์ app/templates/categories/index.html #}
 {% extends "base.html" %}
 
 {% block content %}
@@ -9,9 +9,48 @@
         </h1>
     </div>
     <div class="col-auto">
-        <a href="{{ url_for('categories.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> เพิ่มหมวดหมู่ใหม่
-        </a>
+        <div class="btn-group" role="group" aria-label="Category Actions">
+            <a href="{{ url_for('categories.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> เพิ่มหมวดหมู่ใหม่
+            </a>
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#resetCategoriesModal">
+                <i class="fas fa-redo me-1"></i> รีเซ็ตหมวดหมู่
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal สำหรับยืนยันการรีเซ็ตหมวดหมู่ -->
+<div class="modal fade" id="resetCategoriesModal" tabindex="-1" aria-labelledby="resetCategoriesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resetCategoriesModalLabel">ยืนยันการรีเซ็ตหมวดหมู่</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>คุณต้องการรีเซ็ตหมวดหมู่เป็นค่าเริ่มต้นใหม่ใช่หรือไม่?</p>
+                <p>การดำเนินการนี้จะ:</p>
+                <ul>
+                    <li>ลบหมวดหมู่ทั้งหมดที่มีอยู่</li>
+                    <li>สร้างหมวดหมู่เริ่มต้นใหม่</li>
+                </ul>
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>คำเตือน:</strong> คุณไม่สามารถรีเซ็ตหมวดหมู่ได้หากมีธุรกรรมที่ใช้หมวดหมู่อยู่ กรุณาลบธุรกรรมก่อน
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <form action="{{ url_for('categories.reset_defaults') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-redo me-1"></i> รีเซ็ต
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -22,194 +61,4 @@
             <i class="fas fa-hand-holding-usd me-2"></i>หมวดหมู่รายรับ
         </h5>
     </div>
-    <div class="card-body p-0">
-        {% if income_categories|length > 0 %}
-        <div class="table-responsive">
-            <table class="table table-hover m-0">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 50px;">#</th>
-                        <th>ชื่อหมวดหมู่</th>
-                        <th style="width: 120px;">สี</th>
-                        <th style="width: 120px;">ไอคอน</th>
-                        <th style="width: 150px;" class="text-end">การจัดการ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for category in income_categories %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ category.name }}</td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="color-box me-2" style="background-color: {{ category.color }}; width: 20px; height: 20px; border-radius: 4px;"></div>
-                                <span>{{ category.color }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            {% if category.icon %}
-                            <i class="fas fa-{{ category.icon }} fa-lg"></i>
-                            {% else %}
-                            <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-end">
-                            <a href="{{ url_for('categories.edit', id=category.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                    data-bs-toggle="modal" data-bs-target="#deleteCategory{{ category.id }}">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Modal for deletion confirmation -->
-                    <div class="modal fade" id="deleteCategory{{ category.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">ยืนยันการลบหมวดหมู่</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>คุณต้องการลบหมวดหมู่ "{{ category.name }}" ใช่หรือไม่?</p>
-                                    {% if category.transactions.count() > 0 %}
-                                    <div class="alert alert-danger">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        หมวดหมู่นี้มีธุรกรรมอยู่ {{ category.transactions.count() }} รายการ
-                                        คุณต้องลบธุรกรรมทั้งหมดก่อนจึงจะสามารถลบหมวดหมู่ได้
-                                    </div>
-                                    {% else %}
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        การลบหมวดหมู่เป็นการดำเนินการที่ไม่สามารถเรียกคืนได้
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                                    <form action="{{ url_for('categories.delete', id=category.id) }}" method="post">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-danger" {{ 'disabled' if category.transactions.count() > 0 }}>
-                                            ยืนยันการลบ
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="text-center py-5">
-            <p class="text-muted">ยังไม่มีหมวดหมู่รายรับ</p>
-            <a href="{{ url_for('categories.create') }}?type=income" class="btn btn-success">
-                <i class="fas fa-plus me-1"></i> เพิ่มหมวดหมู่รายรับ
-            </a>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<!-- หมวดหมู่รายจ่าย -->
-<div class="card">
-    <div class="card-header bg-danger bg-opacity-10">
-        <h5 class="mb-0">
-            <i class="fas fa-shopping-cart me-2"></i>หมวดหมู่รายจ่าย
-        </h5>
-    </div>
-    <div class="card-body p-0">
-        {% if expense_categories|length > 0 %}
-        <div class="table-responsive">
-            <table class="table table-hover m-0">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 50px;">#</th>
-                        <th>ชื่อหมวดหมู่</th>
-                        <th style="width: 120px;">สี</th>
-                        <th style="width: 120px;">ไอคอน</th>
-                        <th style="width: 150px;" class="text-end">การจัดการ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for category in expense_categories %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ category.name }}</td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="color-box me-2" style="background-color: {{ category.color }}; width: 20px; height: 20px; border-radius: 4px;"></div>
-                                <span>{{ category.color }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            {% if category.icon %}
-                            <i class="fas fa-{{ category.icon }} fa-lg"></i>
-                            {% else %}
-                            <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-end">
-                            <a href="{{ url_for('categories.edit', id=category.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                    data-bs-toggle="modal" data-bs-target="#deleteCategory{{ category.id }}">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Modal for deletion confirmation -->
-                    <div class="modal fade" id="deleteCategory{{ category.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">ยืนยันการลบหมวดหมู่</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>คุณต้องการลบหมวดหมู่ "{{ category.name }}" ใช่หรือไม่?</p>
-                                    {% if category.transactions.count() > 0 %}
-                                    <div class="alert alert-danger">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        หมวดหมู่นี้มีธุรกรรมอยู่ {{ category.transactions.count() }} รายการ
-                                        คุณต้องลบธุรกรรมทั้งหมดก่อนจึงจะสามารถลบหมวดหมู่ได้
-                                    </div>
-                                    {% else %}
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        การลบหมวดหมู่เป็นการดำเนินการที่ไม่สามารถเรียกคืนได้
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                                    <form action="{{ url_for('categories.delete', id=category.id) }}" method="post">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-danger" {{ 'disabled' if category.transactions.count() > 0 }}>
-                                            ยืนยันการลบ
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="text-center py-5">
-            <p class="text-muted">ยังไม่มีหมวดหมู่รายจ่าย</p>
-            <a href="{{ url_for('categories.create') }}?type=expense" class="btn btn-danger">
-                <i class="fas fa-plus me-1"></i> เพิ่มหมวดหมู่รายจ่าย
-            </a>
-        </div>
-        {% endif %}
-    </div>
-</div>
-{% endblock %}
+    <!-- ที่เหลือคงเดิม -->
