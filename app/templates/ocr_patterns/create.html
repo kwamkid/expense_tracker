@@ -1,125 +1,97 @@
 {% extends "base.html" %}
+{% from "macros.html" import render_field, render_submit_button %}
 
 {% block content %}
-<div class="row justify-content-center">
+<div class="row">
     <div class="col-md-8">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>เพิ่มรูปแบบ OCR ใหม่</h4>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus me-2"></i>เพิ่มธุรกรรมใหม่</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('ocr_patterns.create') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.csrf_token }}
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label">ชื่อฟิลด์ <span class="text-danger">*</span></label>
-                            <select name="name" id="name" class="form-select" required>
-                                <option value="" disabled selected>เลือกชื่อฟิลด์</option>
-                                {% for field_name in field_names %}
-                                <option value="{{ field_name }}">{{ field_name }}</option>
-                                {% endfor %}
-                                <option value="custom">ระบุเอง...</option>
-                            </select>
-                            <div id="custom-name-container" class="mt-2" style="display: none;">
-                                <input type="text" class="form-control" id="custom_name" name="custom_name" placeholder="ระบุชื่อฟิลด์">
+                    <!-- เพิ่มส่วน OCR -->
+                    <div class="mb-4 border p-3 rounded bg-light">
+                        <h6><i class="fas fa-magic me-2"></i>สแกนใบเสร็จอัตโนมัติ</h6>
+                        <p class="text-muted small">อัพโหลดรูปภาพใบเสร็จเพื่อดึงข้อมูลโดยอัตโนมัติ</p>
+
+                        <div class="d-flex gap-3 align-items-center mb-3">
+                            <!-- แก้ไขปุ่มให้มี type="button" เพื่อไม่ให้มีการ submit form -->
+                            <button id="ocr-upload-btn" class="btn btn-outline-primary" type="button">
+                                <i class="fas fa-file-image me-1"></i> เลือกรูปภาพใบเสร็จ
+                            </button>
+                            <div id="ocr-loading" style="display: none;">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">กำลังประมวลผล...</span>
+                                </div>
+                                <span class="ms-2">กำลังวิเคราะห์ใบเสร็จ...</span>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="category" class="form-label">หมวดหมู่</label>
-                            <select name="category" id="category" class="form-select">
-                                {% for category in categories %}
-                                <option value="{{ category }}">{{ category }}</option>
-                                {% endfor %}
-                            </select>
+
+                        <div id="ocr-results" class="mb-3" style="display: none;"></div>
+
+                        <div class="text-center mb-3" style="display: none;">
+                            <img id="receipt-preview" class="img-fluid border rounded" style="max-height: 200px;">
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="pattern" class="form-label">รูปแบบ (Regex) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="pattern" name="pattern" required placeholder="เช่น วันที่\s*(\d{1,2}/\d{1,2}/\d{4})">
-                        <div class="form-text">ใส่รูปแบบ Regular Expression ที่ใช้ในการค้นหาข้อมูล กลุ่มที่ 1 (ในวงเล็บแรก) จะถูกใช้เป็นค่าที่ดึงออกมา</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label">คำอธิบาย</label>
-                        <input type="text" class="form-control" id="description" name="description" placeholder="คำอธิบายสั้นๆ เกี่ยวกับรูปแบบนี้">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="example" class="form-label">ตัวอย่าง</label>
-                        <input type="text" class="form-control" id="example" name="example" placeholder="ตัวอย่างข้อความที่ตรงกับรูปแบบ">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="priority" class="form-label">ลำดับความสำคัญ</label>
-                        <input type="number" class="form-control" id="priority" name="priority" value="0" min="0" max="100">
-                        <div class="form-text">ค่ามากมีความสำคัญมากกว่า จะถูกใช้ก่อน</div>
-                    </div>
-
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
-                        <label class="form-check-label" for="is_active">เปิดใช้งาน</label>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="alert alert-info">
-                            <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>เกี่ยวกับรูปแบบ Regex</h6>
-                            <p class="mb-0">รูปแบบ Regex ที่ใช้ในการดึงข้อมูลต้องมีวงเล็บสำหรับจับกลุ่มค่าที่ต้องการตัวอย่าง:</p>
-                            <ul class="mb-0">
-                                <li><code>วันที่\s*(\d{1,2}/\d{1,2}/\d{4})</code> - ค้นหาวันที่ในรูปแบบ "วันที่ DD/MM/YYYY"</li>
-                                <li><code>รวมทั้งสิ้น\s*(\d+(?:[.,]\d{1,2})?)</code> - ค้นหาจำนวนเงินในรูปแบบ "รวมทั้งสิ้น X,XXX.XX"</li>
-                            </ul>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ render_field(form.type) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ render_field(form.transaction_date) }}
                         </div>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <a href="{{ url_for('ocr_patterns.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-1"></i> ยกเลิก
-                        </a>
-                        <button type="button" class="btn btn-info" id="test-pattern-btn">
-                            <i class="fas fa-flask me-1"></i> ทดสอบรูปแบบ
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> บันทึก
-                        </button>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ render_field(form.category_id) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ render_field(form.account_id) }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ render_field(form.amount) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ render_field(form.status) }}
+                        </div>
+                    </div>
+
+                    {{ render_field(form.description) }}
+                    {{ render_field(form.receipt) }}
+
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class='btn btn-primary btn-lg') }}
                     </div>
                 </form>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal สำหรับทดสอบรูปแบบ -->
-<div class="modal fade" id="testPatternModal" tabindex="-1" aria-labelledby="testPatternModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="testPatternModalLabel">ทดสอบรูปแบบ</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>คำแนะนำ</h5>
             </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="patternInput" class="form-label">รูปแบบ (Regex)</label>
-                    <input type="text" class="form-control" id="patternInput" readonly>
+            <div class="card-body">
+                <h6>วิธีการสแกนใบเสร็จ:</h6>
+                <ol>
+                    <li>ถ่ายรูปใบเสร็จให้ชัดเจน</li>
+                    <li>ตรวจสอบให้แน่ใจว่ารูปภาพมีความสว่างเพียงพอ</li>
+                    <li>ข้อความในใบเสร็จควรอ่านง่ายและไม่มีเงาบัง</li>
+                    <li>คลิกปุ่ม "เลือกรูปภาพใบเสร็จ" เพื่ออัพโหลด</li>
+                    <li>ตรวจสอบข้อมูลที่ดึงได้และแก้ไขหากจำเป็น</li>
+                </ol>
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i> ระบบสามารถดึงข้อมูลวันที่, จำนวนเงิน และชื่อร้านค้าได้ดีที่สุดเมื่อรูปภาพชัดเจน
                 </div>
-                <div class="mb-3">
-                    <label for="testText" class="form-label">ข้อความทดสอบ</label>
-                    <textarea class="form-control" id="testText" rows="8" placeholder="ใส่ข้อความที่ต้องการทดสอบกับรูปแบบ regex"></textarea>
-                </div>
-                <div class="d-grid">
-                    <button type="button" class="btn btn-primary" id="runTestBtn">
-                        <i class="fas fa-play me-1"></i> ทดสอบ
-                    </button>
-                </div>
-
-                <div id="testResult" class="mt-3" style="display: none;">
-                    <h6>ผลลัพธ์</h6>
-                    <div id="testResultContent" class="p-3 border rounded bg-light"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
             </div>
         </div>
     </div>
@@ -127,107 +99,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // สลับระหว่างเลือกฟิลด์และระบุเอง
-        const nameSelect = document.getElementById('name');
-        const customNameContainer = document.getElementById('custom-name-container');
-        const customNameInput = document.getElementById('custom_name');
-
-        if (nameSelect && customNameContainer) {
-            nameSelect.addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    customNameContainer.style.display = 'block';
-                    customNameInput.required = true;
-                } else {
-                    customNameContainer.style.display = 'none';
-                    customNameInput.required = false;
-                }
-            });
-        }
-
-        // ทดสอบรูปแบบ
-        const patternInput = document.getElementById('pattern');
-        const testPatternBtn = document.getElementById('test-pattern-btn');
-        const testPatternModal = new bootstrap.Modal(document.getElementById('testPatternModal'));
-        const modalPatternInput = document.getElementById('patternInput');
-        const testText = document.getElementById('testText');
-        const runTestBtn = document.getElementById('runTestBtn');
-        const testResult = document.getElementById('testResult');
-        const testResultContent = document.getElementById('testResultContent');
-
-        if (testPatternBtn && patternInput) {
-            testPatternBtn.addEventListener('click', function() {
-                const pattern = patternInput.value;
-
-                if (!pattern) {
-                    alert('กรุณากรอกรูปแบบ regex ก่อน');
-                    return;
-                }
-
-                // เติมข้อมูลใน modal
-                modalPatternInput.value = pattern;
-                testText.value = '';
-                testResult.style.display = 'none';
-                testResultContent.innerHTML = '';
-
-                // แสดง modal
-                testPatternModal.show();
-            });
-        }
-
-        if (runTestBtn) {
-            runTestBtn.addEventListener('click', function() {
-                const pattern = modalPatternInput.value;
-                const text = testText.value;
-
-                if (!pattern || !text) {
-                    alert('กรุณากรอกรูปแบบและข้อความทดสอบ');
-                    return;
-                }
-
-                // ส่งข้อมูลไปทดสอบที่เซิร์ฟเวอร์
-                fetch('{{ url_for("ocr_patterns.test_pattern") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': '{{ csrf_token() }}'
-                    },
-                    body: new URLSearchParams({
-                        'pattern': pattern,
-                        'text': text
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    testResult.style.display = 'block';
-
-                    if (data.success) {
-                        testResultContent.innerHTML = `
-                            <div class="alert alert-success mb-0">
-                                <p><i class="fas fa-check-circle me-2"></i>${data.message}</p>
-                                <strong>ค่าที่ได้:</strong> <code>${data.result}</code>
-                            </div>
-                        `;
-                    } else {
-                        testResultContent.innerHTML = `
-                            <div class="alert alert-danger mb-0">
-                                <i class="fas fa-exclamation-circle me-2"></i>${data.message}
-                            </div>
-                        `;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    testResult.style.display = 'block';
-                    testResultContent.innerHTML = `
-                        <div class="alert alert-danger mb-0">
-                            <i class="fas fa-exclamation-circle me-2"></i>เกิดข้อผิดพลาดในการทดสอบ
-                        </div>
-                    `;
-                });
-            });
-        }
-    });
-</script>
+<script src="{{ url_for('static', filename='js/ocr.js') }}"></script>
 {% endblock %}

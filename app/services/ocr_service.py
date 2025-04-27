@@ -3,6 +3,7 @@ import re
 import cv2
 import numpy as np
 import pytesseract
+import json
 from datetime import datetime
 from PIL import Image, ImageEnhance
 from flask import current_app
@@ -15,6 +16,165 @@ elif os.path.exists('/usr/bin/tesseract'):
     pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 elif os.path.exists('/usr/local/bin/tesseract'):
     pytesseract.pytesseract.tesseract_cmd = '/usr/local/bin/tesseract'
+
+
+def extract_flowaccount_data(text):
+    """
+    ฟังก์ชันเฉพาะสำหรับดึงข้อมูลจากใบเสร็จของ FlowAccount
+
+    Args:
+        text (str): ข้อความที่ได้จาก OCR
+
+    Returns:
+        dict: ข้อมูลที่ดึงได้ประกอบด้วย vendor, total_amount, receipt_number, date
+    """
+    result = {
+        'vendor': None,
+        'total_amount': None,
+        'receipt_number': None,
+        'date': None
+    }
+
+    if text is None or len(text.strip()) == 0:
+        return result
+
+    # บันทึกข้อมูลดิบเพื่อการวิเคราะห์
+    log_dir = os.path.join(current_app.root_path, 'logs')
+    os.makedirs(log_dir, exist_ok=True)
+
+    debug_log = []
+    debug_log.append(f"Processing FlowAccount receipt text:\n{text}\n")
+
+    # 1. ดึงชื่อบริษัท (vendor)
+    vendor_patterns = [
+        r'^(บริษัท.*?จํากัด)',
+        r'(บริษัท.*?จํากัด.*?)[\n\r]',
+        r'(บริษัท.*?จำกัด)',
+        r'^(.+?)\s*;',
+        r'oa\s*(บริษัท.*?จํากัด)',
+        r'oa\s+บริษัท\s+(.*?)\s*จํากัด\s*;',
+        r'บริษัท\s+(.*?จํากัด)'
+    ]
+
+    debug_log.append("Trying vendor patterns:")
+    for pattern in vendor_patterns:
+        debug_log.append(f"  Pattern: {pattern}")
+        match = re.search(pattern, text, re.MULTILINE)
+        if match:
+            result['vendor'] = match.group(1).strip()
+            debug_log.append(f"  Found vendor: {result['vendor']}")
+            break
+
+    # 2. ดึงจำนวนเงินรวม (total_amount)
+    amount_patterns = [
+        r'รวมทั้งสิน\s*"?(\d{1,3}(?:,\d{3})*\.\d{2})"?',
+        r'รวมทั้งสิน\s*"?(\d+(?:,\d+)?(?:\.\d+)?)"?',
+        r'รวมทั้งสิ[้น]?\s*"(\d+(?:,\d+)?(?:\.\d+)?)"|รวมทั้งสิ[้น]?\s*(\d+(?:,\d+)?(?:\.\d+)?)',
+        r'รวมทั้งสิน\s*"(\d+)(?:,\d+)?(?:\.\d+)?"',
+        r'จําบวนเงินหลังพักส่วนลด.\s*(\d+(?:,\d+)?(?:\.\d+)?)',
+        r'จำนวนเงินหลังหักส่วนลด\s*(\d+(?:,\d+)?(?:\.\d+)?)',
+        r'รวมทั้งสิน\s*[\'"]\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)[\'"]\s*$',
+        r'[\'"]?\s*รวมทั้งสิน\s*[\'"]?\s*[\'"]?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)[\'"]?\s*$',
+        r'รวมทั้งสิน\s*(\d+(?:[.,]\d+)?)',
+        r'TOTAL\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)'
+    ]
+
+    debug_log.append("\nTrying amount patterns:")
+    for pattern in amount_patterns:
+        debug_log.append(f"  Pattern: {pattern}")
+        match = re.search(pattern, text, re.MULTILINE)
+        if match:
+            # Get the first non-None group
+            groups = match.groups()
+            matched_group = next((g for g in groups if g is not None), match.group(1))
+            debug_log.append(f"  Match found: {matched_group}")
+
+            # แปลงตัวเลขให้อยู่ในรูปแบบที่ถูกต้อง (ลบ comma และแปลงเป็น float)
+            amount_str = matched_group.strip().replace(',', '')
+            try:
+                result['total_amount'] = float(amount_str)
+                debug_log.append(f"  Converted to number: {result['total_amount']}")
+                break
+            except ValueError as e:
+                debug_log.append(f"  Error converting to number: {e}")
+                continue
+
+    # ถ้ายังไม่พบ ให้ลองค้นหาด้วยวิธีพิเศษสำหรับใบเสร็จ FlowAccount
+    if result['total_amount'] is None:
+        debug_log.append("\nTrying special amount extraction for FlowAccount:")
+
+        # ค้นหาบรรทัดที่มีคำว่า "รวมทั้งสิน" หรือ "รวมทั้งสิ้น"
+        total_lines = [line for line in text.split('\n') if 'รวมทั้งสิ' in line]
+        debug_log.append(f"Found total lines: {total_lines}")
+
+        if total_lines:
+            # ค้นหาตัวเลขในบรรทัดนั้น
+            for line in total_lines:
+                number_match = re.search(r'(\d+(?:[.,]\d+)?)', line)
+                if number_match:
+                    try:
+                        amount_str = number_match.group(1).replace(',', '')
+                        result['total_amount'] = float(amount_str)
+                        debug_log.append(f"Extracted amount from total line: {result['total_amount']}")
+                        break
+                    except (ValueError, AttributeError) as e:
+                        debug_log.append(f"Error extracting amount from total line: {e}")
+
+        # ถ้ายังไม่พบ ลองดูที่บรรทัด "จําบวนเงินหลังพักส่วนลด"
+        if result['total_amount'] is None:
+            discount_lines = [line for line in text.split('\n') if 'หลังพักส่วนลด' in line or 'หลังหักส่วนลด' in line]
+            debug_log.append(f"Found discount lines: {discount_lines}")
+
+            if discount_lines:
+                for line in discount_lines:
+                    number_match = re.search(r'(\d+(?:[.,]\d+)?)', line)
+                    if number_match:
+                        try:
+                            amount_str = number_match.group(1).replace(',', '')
+                            result['total_amount'] = float(amount_str)
+                            debug_log.append(f"Extracted amount from discount line: {result['total_amount']}")
+                            break
+                        except (ValueError, AttributeError) as e:
+                            debug_log.append(f"Error extracting amount from discount line: {e}")
+
+    # 3. ดึงเลขที่ใบเสร็จ (receipt_number)
+    receipt_patterns = [
+        r'([A-Z]{2}\d{10}(?:\.\d+)?)',
+        r'([A-Z]{2}\d{4}\d+)',
+        r'CA\d{10}'
+    ]
+
+    debug_log.append("\nTrying receipt number patterns:")
+    for pattern in receipt_patterns:
+        debug_log.append(f"  Pattern: {pattern}")
+        match = re.search(pattern, text)
+        if match:
+            result['receipt_number'] = match.group(0).strip()
+            debug_log.append(f"  Found receipt number: {result['receipt_number']}")
+            break
+
+    # 4. ดึงวันที่ (date) - อาจจะไม่มีในใบเสร็จ FlowAccount
+    date_patterns = [
+        r'(\d{1,2}/\d{1,2}/\d{4})',
+        r'(\d{2,4}-\d{1,2}-\d{1,2})'
+    ]
+
+    debug_log.append("\nTrying date patterns:")
+    for pattern in date_patterns:
+        debug_log.append(f"  Pattern: {pattern}")
+        match = re.search(pattern, text)
+        if match:
+            result['date'] = match.group(0).strip()
+            debug_log.append(f"  Found date: {result['date']}")
+            break
+
+    # บันทึกผลการวิเคราะห์
+    with open(os.path.join(log_dir, 'flowaccount_analysis.txt'), 'w', encoding='utf-8') as f:
+        f.write("\n".join(debug_log))
+        f.write("\n\nFinal Extracted Data:\n")
+        f.write(json.dumps(result, ensure_ascii=False, indent=2))
+
+    return result
 
 
 class ReceiptOCR:
@@ -368,13 +528,32 @@ class ReceiptOCR:
         current_app.logger.info("Extracting all data from receipt")
         current_app.logger.info(f"Full OCR text:\n{self.text}")
 
-        self.extract_date()
-        self.extract_total_amount()
-        self.extract_vendor()
-        self.extract_receipt_number()
-        items = self.extract_items()
-        if items:
-            self.extracted_data['items'] = items
+        # เพิ่มการตรวจสอบ FlowAccount โดยเฉพาะ
+        if "FlowAccount" in self.text or "โฟลว์แอคเค้า" in self.text or "FlowAccount.com" in self.text:
+            current_app.logger.info("Detected FlowAccount receipt, using specialized extraction")
+            flowaccount_data = extract_flowaccount_data(self.text)
+
+            # อัพเดทข้อมูลที่ดึงได้จาก FlowAccount
+            if flowaccount_data['vendor']:
+                self.extracted_data['vendor'] = flowaccount_data['vendor']
+
+            if flowaccount_data['total_amount']:
+                self.extracted_data['total_amount'] = flowaccount_data['total_amount']
+
+            if flowaccount_data['receipt_number']:
+                self.extracted_data['receipt_no'] = flowaccount_data['receipt_number']
+
+            if flowaccount_data['date']:
+                self.extracted_data['date'] = flowaccount_data['date']
+        else:
+            # ใช้วิธีการดึงข้อมูลแบบปกติ
+            self.extract_date()
+            self.extract_total_amount()
+            self.extract_vendor()
+            self.extract_receipt_number()
+            items = self.extract_items()
+            if items:
+                self.extracted_data['items'] = items
 
         # ตรวจสอบว่าได้ข้อมูลบ้างหรือไม่
         if all(value is None for value in self.extracted_data.values() if not isinstance(value, list)):

@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-list-ol me-2"></i>เพิ่มรูปแบบ OCR หลายรายการ</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('ocr_patterns.bulk_create') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="field_name" class="form-label">ชื่อฟิลด์ <span class="text-danger">*</span></label>
+                        <select name="field_name" id="field_name" class="form-select" required>
+                            <option value="" disabled selected>เลือกชื่อฟิลด์</option>
+                            {% for field_name in field_names %}
+                            <option value="{{ field_name }}">{{ field_name }}</option>
+                            {% endfor %}
+                            <option value="custom">ระบุเอง...</option>
+                        </select>
+                        <div id="custom-name-container" class="mt-2" style="display: none;">
+                            <input type="text" class="form-control" id="custom_field_name" name="custom_field_name" placeholder="ระบุชื่อฟิลด์">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="category" class="form-label">หมวดหมู่</label>
+                        <select name="category" id="category" class="form-select">
+                            {% for category in categories %}
+                            <option value="{{ category }}">{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="patterns" class="form-label">รูปแบบ (Regex) หลายรายการ <span class="text-danger">*</span></label>
+                        <textarea class="form-control font-monospace" id="patterns" name="patterns" rows="10" required placeholder="ใส่รูปแบบ regex หนึ่งรูปแบบต่อบรรทัด เช่น:
+วันที่\s*(\d{1,2}/\d{1,2}/\d{4})
+(\d{1,2}/\d{1,2}/\d{4})
+Date\s*:\s*(\d{1,2}[/-]\d{1,2}[/-]\d{4})"></textarea>
+                        <div class="form-text">ใส่รูปแบบ Regular Expression หนึ่งรูปแบบต่อบรรทัด กลุ่มที่ 1 (ในวงเล็บแรก) จะถูกใช้เป็นค่าที่ดึงออกมา</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="base_priority" class="form-label">ลำดับความสำคัญเริ่มต้น</label>
+                        <input type="number" class="form-control" id="base_priority" name="base_priority" value="10" min="0" max="100">
+                        <div class="form-text">
+                            รูปแบบบรรทัดแรกจะมีค่าความสำคัญเท่ากับค่านี้ และลดลงทีละ 1 สำหรับรูปแบบในบรรทัดถัดไป
+                            <br>ค่ามากมีความสำคัญมากกว่า จะถูกใช้ก่อน
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
+                        <label class="form-check-label" for="is_active">เปิดใช้งานทุกรูปแบบ</label>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>คำแนะนำในการใส่รูปแบบหลายรายการ</h6>
+                            <p>ใส่รูปแบบ regex หนึ่งรูปแบบต่อบรรทัด ตัวอย่างรูปแบบสำหรับฟิลด์ต่างๆ:</p>
+                            <ul class="mb-0">
+                                <li><strong>วันที่:</strong>
+                                    <pre class="mb-0 bg-light p-1 rounded"><code>วันที่\s*(\d{1,2}/\d{1,2}/\d{4})
+(\d{1,2}/\d{1,2}/\d{4})
+Date\s*:\s*(\d{1,2}[/-]\d{1,2}[/-]\d{4})</code></pre>
+                                </li>
+                                <li><strong>จำนวนเงิน:</strong>
+                                    <pre class="mb-0 bg-light p-1 rounded"><code>รวมทั้งสิ้น\s*(\d+(?:[.,]\d{1,2})?)
+รวมทั้งสิน\s*(\d+(?:[.,]\d{1,2})?)
+TOTAL\s*(\d+(?:[.,]\d{1,2})?)</code></pre>
+                                </li>
+                                <li><strong>ชื่อร้านค้า:</strong>
+                                    <pre class="mb-0 bg-light p-1 rounded"><code>^(บริษัท.*?จํากัด)
+^(ร้าน.+?)[\r\n]</code></pre>
+                                </li>
+                                <li><strong>เลขที่ใบเสร็จ:</strong>
+                                    <pre class="mb-0 bg-light p-1 rounded"><code>เลขที่\s*([A-Za-z0-9\-_/]+)
+([A-Z]{2}\d{4}\d+)</code></pre>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('ocr_patterns.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> ยกเลิก
+                        </a>
+                        <button type="button" class="btn btn-info" id="test-patterns-btn">
+                            <i class="fas fa-flask me-1"></i> ทดสอบรูปแบบ
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> บันทึกทั้งหมด
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal สำหรับทดสอบรูปแบบ -->
+<div class="modal fade" id="testPatternsModal" tabindex="-1" aria-labelledby="testPatternsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="testPatternsModalLabel">ทดสอบรูปแบบหลายรายการ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="testText" class="form-label">ข้อความทดสอบ</label>
+                    <textarea class="form-control" id="testText" rows="8" placeholder="ใส่ข้อความที่ต้องการทดสอบกับรูปแบบ regex"></textarea>
+                </div>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-primary" id="runTestBtn">
+                        <i class="fas fa-play me-1"></i> ทดสอบ
+                    </button>
+                </div>
+
+                <div id="testResult" class="mt-3" style="display: none;">
+                    <h6>ผลลัพธ์</h6>
+                    <div id="testResultContent" class="p-3 border rounded bg-light"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // สลับระหว่างเลือกฟิลด์และระบุเอง
+        const fieldNameSelect = document.getElementById('field_name');
+        const customNameContainer = document.getElementById('custom-name-container');
+        const customFieldNameInput = document.getElementById('custom_field_name');
+
+        if (fieldNameSelect && customNameContainer) {
+            fieldNameSelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customNameContainer.style.display = 'block';
+                    customFieldNameInput.required = true;
+                } else {
+                    customNameContainer.style.display = 'none';
+                    customFieldNameInput.required = false;
+                }
+            });
+        }
+
+        // ทดสอบรูปแบบ
+        const patternsTextarea = document.getElementById('patterns');
+        const testPatternsBtn = document.getElementById('test-patterns-btn');
+        const testPatternsModal = new bootstrap.Modal(document.getElementById('testPatternsModal'));
+        const testText = document.getElementById('testText');
+        const runTestBtn = document.getElementById('runTestBtn');
+        const testResult = document.getElementById('testResult');
+        const testResultContent = document.getElementById('testResultContent');
+
+        if (testPatternsBtn && patternsTextarea) {
+            testPatternsBtn.addEventListener('click', function() {
+                const patterns = patternsTextarea.value.trim();
+
+                if (!patterns) {
+                    alert('กรุณากรอกรูปแบบ regex อย่างน้อยหนึ่งรูปแบบ');
+                    return;
+                }
+
+                // ล้างข้อมูลทดสอบ
+                testText.value = '';
+                testResult.style.display = 'none';
+                testResultContent.innerHTML = '';
+
+                // แสดง modal
+                testPatternsModal.show();
+            });
+        }
+
+        if (runTestBtn) {
+            runTestBtn.addEventListener('click', function() {
+                const patterns = patternsTextarea.value.trim().split('\n').filter(p => p.trim() !== '');
+                const text = testText.value;
+
+                if (patterns.length === 0 || !text) {
+                    alert('กรุณากรอกรูปแบบและข้อความทดสอบ');
+                    return;
+                }
+
+                testResult.style.display = 'block';
+                testResultContent.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">กำลังทดสอบ...</span></div><p class="mt-2">กำลังทดสอบรูปแบบ ' + patterns.length + ' รูปแบบ...</p></div>';
+
+                // ทดสอบแต่ละรูปแบบ
+                const results = [];
+                let successCount = 0;
+
+                patterns.forEach((pattern, index) => {
+                    try {
+                        // คอมไพล์ regex
+                        const regex = new RegExp(pattern, 'gm');
+
+                        // ค้นหาข้อความที่ตรงกับรูปแบบ
+                        const matches = Array.from(text.matchAll(regex));
+
+                        if (matches.length > 0) {
+                            // ดึงค่าจากกลุ่มที่ 1 ของทุก match
+                            const values = matches.map(match => match[1]?.trim() || '(ไม่มีกลุ่ม 1)');
+                            results.push({
+                                pattern: pattern,
+                                success: true,
+                                values: values
+                            });
+                            successCount++;
+                        } else {
+                            results.push({
+                                pattern: pattern,
+                                success: false,
+                                message: 'ไม่พบข้อความที่ตรงกับรูปแบบ'
+                            });
+                        }
+                    } catch (e) {
+                        results.push({
+                            pattern: pattern,
+                            success: false,
+                            message: `รูปแบบ regex ไม่ถูกต้อง: ${e.message}`
+                        });
+                    }
+                });
+
+                // แสดงผลลัพธ์
+                let resultsHtml = '';
+
+                if (successCount > 0) {
+                    resultsHtml += `<div class="alert alert-success mb-3">
+                        <i class="fas fa-check-circle me-2"></i>พบข้อความที่ตรงกับ ${successCount} รูปแบบ จากทั้งหมด ${patterns.length} รูปแบบ
+                    </div>`;
+                } else {
+                    resultsHtml += `<div class="alert alert-warning mb-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>ไม่พบข้อความที่ตรงกับรูปแบบใดๆ
+                    </div>`;
+                }
+
+                resultsHtml += '<div class="accordion" id="resultsAccordion">';
+
+                results.forEach((result, index) => {
+                    const headingId = `heading${index}`;
+                    const collapseId = `collapse${index}`;
+                    const success = result.success;
+
+                    resultsHtml += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="${headingId}">
+                            <button class="accordion-button ${success ? '' : 'collapsed'}" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#${collapseId}"
+                                    aria-expanded="${success ? 'true' : 'false'}" aria-controls="${collapseId}">
+                                <span class="me-2">${index + 1}.</span>
+                                <code class="me-2">${result.pattern}</code>
+                                ${success ?
+                                    `<span class="badge bg-success ms-auto">ตรงกัน ${result.values.length} รายการ</span>` :
+                                    '<span class="badge bg-secondary ms-auto">ไม่ตรงกัน</span>'}
+                            </button>
+                        </h2>
+                        <div id="${collapseId}" class="accordion-collapse collapse ${success ? 'show' : ''}"
+                             aria-labelledby="${headingId}" data-bs-parent="#resultsAccordion">
+                            <div class="accordion-body">`;
+
+                    if (success) {
+                        resultsHtml += '<h6>ค่าที่ได้:</h6><ul>';
+                        result.values.forEach(value => {
+                            resultsHtml += `<li><code>${value}</code></li>`;
+                        });
+                        resultsHtml += '</ul>';
+                    } else {
+                        resultsHtml += `<div class="text-danger">${result.message}</div>`;
+                    }
+
+                    resultsHtml += `
+                            </div>
+                        </div>
+                    </div>`;
+                });
+
+                resultsHtml += '</div>';
+
+                testResultContent.innerHTML = resultsHtml;
+            });
+        }
+    });
+</script>
+{% endblock %}
