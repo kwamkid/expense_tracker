@@ -25,11 +25,25 @@
     <div class="card-body">
         <form id="filter-form" method="GET" action="{{ url_for('transactions.index') }}">
             <div class="row">
-                <div class="col-md-3 mb-3">
-                    <label for="date-range" class="form-label">ช่วงวันที่</label>
-                    <input type="text" id="date-range" class="form-control" placeholder="เลือกช่วงวันที่" readonly>
-                    <input type="hidden" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
-                    <input type="hidden" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+                <!-- แก้ไขส่วนวันที่ให้แยกเป็น 2 input ที่ชัดเจน -->
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">ช่วงวันที่</label>
+                    <div class="d-flex gap-2">
+                        <div class="flex-grow-1">
+                            <div class="input-group">
+                                <span class="input-group-text">จาก</span>
+                                <input type="date" id="start_date" name="start_date" class="form-control"
+                                       value="{{ request.args.get('start_date', '') }}">
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="input-group">
+                                <span class="input-group-text">ถึง</span>
+                                <input type="date" id="end_date" name="end_date" class="form-control"
+                                       value="{{ request.args.get('end_date', '') }}">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="col-md-2 mb-3">
@@ -50,7 +64,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-3 mb-3">
+                <div class="col-md-2 mb-3">
                     <label for="category_id" class="form-label">หมวดหมู่</label>
                     <select id="category_id" name="category_id" class="form-select">
                         <option value="">ทั้งหมด</option>
@@ -329,45 +343,21 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Date range picker
-        $(function() {
-            var start = moment('{{ request.args.get("start_date") }}' || moment().subtract(30, 'days'));
-            var end = moment('{{ request.args.get("end_date") }}' || moment());
+        // ตั้งค่าเริ่มต้นของวันที่ ถ้าไม่มีค่า
+        var startDateInput = document.getElementById('start_date');
+        var endDateInput = document.getElementById('end_date');
 
-            function cb(start, end) {
-                $('#date-range').val(start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY'));
-                $('#start_date').val(start.format('YYYY-MM-DD'));
-                $('#end_date').val(end.format('YYYY-MM-DD'));
-            }
+        // ถ้าไม่มีวันที่เริ่มต้น ใช้วันที่ 30 วันที่แล้ว
+        if (!startDateInput.value) {
+            var thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            startDateInput.valueAsDate = thirtyDaysAgo;
+        }
 
-            $('#date-range').daterangepicker({
-                startDate: start,
-                endDate: end,
-                opens: 'left',
-                autoApply: true,
-                ranges: {
-                    'วันนี้': [moment(), moment()],
-                    'เมื่อวาน': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    '7 วันที่ผ่านมา': [moment().subtract(6, 'days'), moment()],
-                    '30 วันที่ผ่านมา': [moment().subtract(29, 'days'), moment()],
-                    'เดือนนี้': [moment().startOf('month'), moment().endOf('month')],
-                    'เดือนที่แล้ว': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                },
-                locale: {
-                    format: 'DD/MM/YYYY',
-                    applyLabel: 'ตกลง',
-                    cancelLabel: 'ยกเลิก',
-                    customRangeLabel: 'กำหนดเอง',
-                    daysOfWeek: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
-                    monthNames: [
-                        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-                        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-                    ]
-                }
-            }, cb);
-
-            cb(start, end);
-        });
+        // ถ้าไม่มีวันที่สิ้นสุด ใช้วันที่ปัจจุบัน
+        if (!endDateInput.value) {
+            endDateInput.valueAsDate = new Date();
+        }
 
         // ดูใบเสร็จ
         const viewReceiptLinks = document.querySelectorAll('.view-receipt');

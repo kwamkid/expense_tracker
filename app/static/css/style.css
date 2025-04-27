@@ -47,8 +47,8 @@ main {
 }
 
 .form-control:focus {
-    border-color: #4299e1;
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+    border-color: var(--primary-color, #e74c3c);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
 }
 
 .form-label {
@@ -56,13 +56,13 @@ main {
 }
 
 .form-check-input:checked {
-    background-color: #4299e1;
-    border-color: #4299e1;
+    background-color: var(--primary-color, #e74c3c);
+    border-color: var(--primary-color, #e74c3c);
 }
 
 .form-check-input:focus {
-    border-color: #4299e1;
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+    border-color: var(--primary-color, #e74c3c);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
 }
 
 /* Button styles */
@@ -74,27 +74,27 @@ main {
 }
 
 .btn-primary {
-    background-color: #4299e1;
-    border-color: #4299e1;
+    background-color: var(--primary-color, #e74c3c);
+    border-color: var(--primary-color, #e74c3c);
 }
 
 .btn-primary:hover {
-    background-color: #3182ce;
-    border-color: #3182ce;
+    background-color: var(--primary-dark, #c0392b);
+    border-color: var(--primary-dark, #c0392b);
 }
 
 .btn-primary:focus {
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.3);
 }
 
 .btn-outline-primary {
-    color: #4299e1;
-    border-color: #4299e1;
+    color: var(--primary-color, #e74c3c);
+    border-color: var(--primary-color, #e74c3c);
 }
 
 .btn-outline-primary:hover {
-    background-color: #4299e1;
-    border-color: #4299e1;
+    background-color: var(--primary-color, #e74c3c);
+    border-color: var(--primary-color, #e74c3c);
 }
 
 /* Table styles */
@@ -110,7 +110,7 @@ main {
 }
 
 .table-hover tbody tr:hover {
-    background-color: rgba(66, 153, 225, 0.05);
+    background-color: rgba(231, 76, 60, 0.05);
 }
 
 /* Category badge */
@@ -288,7 +288,7 @@ canvas {
 }
 
 .icon-option.selected {
-    background-color: #4299e1;
+    background-color: var(--primary-color, #e74c3c);
     color: white;
 }
 
@@ -300,7 +300,7 @@ canvas {
 }
 
 .daterangepicker .ranges li.active {
-    background-color: #4299e1;
+    background-color: var(--primary-color, #e74c3c);
 }
 
 /* Footer */
@@ -357,4 +357,38 @@ canvas {
 @font-face {
     font-family: 'Sarabun';
     src: url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+}
+
+/* แก้ไขไอคอนบัญชีและองค์ประกอบอื่นๆ ที่เป็นสีน้ำเงิน */
+.wallet-icon,
+.fa-wallet,
+[class*="fa-"].text-primary,
+.icon-primary,
+.text-primary,
+.account-icon,
+.btn-info {
+    color: var(--primary-color, #e74c3c) !important;
+}
+
+.btn-info,
+.bg-info,
+.bg-primary {
+    background-color: var(--primary-color, #e74c3c) !important;
+    border-color: var(--primary-color, #e74c3c) !important;
+}
+
+/* แก้ไขสำหรับกรณีที่กำหนดเป็น text-color */
+[class*="fa-"].text-primary,
+.icon-primary,
+.text-primary,
+.wallet-icon,
+.account-icon {
+    background-color: transparent !important;
+}
+
+/* แก้ไขไอคอนบัญชีโดยเฉพาะ */
+.fa-wallet,
+.wallet-icon,
+.account-icon {
+    color: var(--primary-color, #e74c3c) !important;
 }

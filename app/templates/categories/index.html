@@ -1,4 +1,4 @@
-{# แก้ไขส่วนด้านบนของไฟล์ app/templates/categories/index.html #}
+{# app/templates/categories/index.html #}
 {% extends "base.html" %}
 
 {% block content %}
@@ -54,11 +54,163 @@
     </div>
 </div>
 
-<!-- หมวดหมู่รายรับ -->
-<div class="card mb-4">
-    <div class="card-header bg-success bg-opacity-10">
-        <h5 class="mb-0">
-            <i class="fas fa-hand-holding-usd me-2"></i>หมวดหมู่รายรับ
-        </h5>
+<div class="row">
+    <!-- หมวดหมู่รายรับ -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-success bg-opacity-10">
+                <h5 class="mb-0">
+                    <i class="fas fa-hand-holding-usd me-2"></i>หมวดหมู่รายรับ
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if income_categories %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>ชื่อหมวดหมู่</th>
+                                <th style="width: 100px;">การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in income_categories %}
+                            <tr>
+                                <td>
+                                    <span class="badge rounded-pill" style="background-color: {{ category.color }}">
+                                        {% if category.icon %}
+                                        <i class="fas fa-{{ category.icon }}"></i>
+                                        {% else %}
+                                        &nbsp;
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ category.name }}</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ url_for('categories.edit', id=category.id) }}" class="btn btn-sm btn-outline-primary" title="แก้ไข">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="ลบ"
+                                                data-bs-toggle="modal" data-bs-target="#deleteCategory{{ category.id }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">ยังไม่มีหมวดหมู่รายรับ</p>
+                    <a href="{{ url_for('categories.create', type='income') }}" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i> เพิ่มหมวดหมู่รายรับ
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
-    <!-- ที่เหลือคงเดิม -->
+
+    <!-- หมวดหมู่รายจ่าย -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-danger bg-opacity-10">
+                <h5 class="mb-0">
+                    <i class="fas fa-shopping-cart me-2"></i>หมวดหมู่รายจ่าย
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if expense_categories %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>ชื่อหมวดหมู่</th>
+                                <th style="width: 100px;">การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in expense_categories %}
+                            <tr>
+                                <td>
+                                    <span class="badge rounded-pill" style="background-color: {{ category.color }}">
+                                        {% if category.icon %}
+                                        <i class="fas fa-{{ category.icon }}"></i>
+                                        {% else %}
+                                        &nbsp;
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ category.name }}</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ url_for('categories.edit', id=category.id) }}" class="btn btn-sm btn-outline-primary" title="แก้ไข">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="ลบ"
+                                                data-bs-toggle="modal" data-bs-target="#deleteCategory{{ category.id }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">ยังไม่มีหมวดหมู่รายจ่าย</p>
+                    <a href="{{ url_for('categories.create', type='expense') }}" class="btn btn-danger">
+                        <i class="fas fa-plus me-1"></i> เพิ่มหมวดหมู่รายจ่าย
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals สำหรับการลบหมวดหมู่ -->
+{% for category in income_categories + expense_categories %}
+<div class="modal fade" id="deleteCategory{{ category.id }}" tabindex="-1" aria-labelledby="deleteCategoryModalLabel{{ category.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCategoryModalLabel{{ category.id }}">ยืนยันการลบหมวดหมู่</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>คุณต้องการลบหมวดหมู่ "{{ category.name }}" ใช่หรือไม่?</p>
+                {% if category.transactions.count() > 0 %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    หมวดหมู่นี้มีธุรกรรมอยู่ {{ category.transactions.count() }} รายการ
+                    คุณต้องลบธุรกรรมทั้งหมดก่อนจึงจะสามารถลบหมวดหมู่ได้
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    การลบหมวดหมู่เป็นการดำเนินการที่ไม่สามารถเรียกคืนได้
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <form action="{{ url_for('categories.delete', id=category.id) }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger" {{ 'disabled' if category.transactions.count() > 0 }}>
+                        ยืนยันการลบ
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
