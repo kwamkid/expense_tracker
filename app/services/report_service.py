@@ -86,7 +86,7 @@ def get_monthly_summary(organization_id, year, month):
     }
 
 
-def get_category_summary(user_id, year=None, month=None, transaction_type='expense'):
+def get_category_summary(organization_id, year=None, month=None, transaction_type='expense'):
     """ดึงข้อมูลสรุปตามหมวดหมู่"""
     query = db.session.query(
         Category.id,
@@ -97,7 +97,7 @@ def get_category_summary(user_id, year=None, month=None, transaction_type='expen
     ) \
         .join(Transaction, Category.id == Transaction.category_id) \
         .filter(
-        Transaction.organization_id == user_id,
+        Transaction.organization_id == organization_id,
         Transaction.type == transaction_type
     ) \
         .group_by(Category.id)
@@ -128,10 +128,10 @@ def get_category_summary(user_id, year=None, month=None, transaction_type='expen
     return categories
 
 
-def get_recent_transactions(user_id, limit=5):
+def get_recent_transactions(organization_id, limit=5):
     """ดึงรายการธุรกรรมล่าสุด"""
     transactions = Transaction.query \
-        .filter_by(user_id=user_id) \
+        .filter_by(organization_id=organization_id) \
         .order_by(Transaction.transaction_date.desc(), Transaction.created_at.desc()) \
         .limit(limit) \
         .all()
@@ -139,17 +139,17 @@ def get_recent_transactions(user_id, limit=5):
     return transactions
 
 
-def get_account_balances(user_id):
+def get_account_balances(organization_id):
     """ดึงยอดเงินคงเหลือในแต่ละบัญชี"""
     accounts = Account.query \
-        .filter_by(user_id=user_id) \
+        .filter_by(organization_id=organization_id) \
         .order_by(Account.name) \
         .all()
 
     return accounts
 
 
-def get_monthly_trend(user_id, months=6, end_year=None, end_month=None):
+def get_monthly_trend(organization_id, months=6, end_year=None, end_month=None):
     """ดึงข้อมูลแนวโน้มรายเดือน"""
     if not end_year:
         end_year = datetime.now().year
@@ -179,7 +179,7 @@ def get_monthly_trend(user_id, months=6, end_year=None, end_month=None):
     # ดึงข้อมูลธุรกรรมในช่วงวันที่
     transactions = Transaction.query \
         .filter(
-        Transaction.organization_id == user_id,
+        Transaction.organization_id == organization_id,
         Transaction.transaction_date >= start_date,
         Transaction.transaction_date <= end_date
     ) \
@@ -231,12 +231,12 @@ def get_monthly_trend(user_id, months=6, end_year=None, end_month=None):
     return result
 
 
-def get_transactions_by_date_range(user_id, start_date, end_date, category_id=None, account_id=None,
+def get_transactions_by_date_range(organization_id, start_date, end_date, category_id=None, account_id=None,
                                    transaction_type=None):
     """ดึงรายการธุรกรรมตามช่วงวันที่และเงื่อนไขอื่นๆ"""
     query = Transaction.query \
         .filter(
-        Transaction.organization_id == user_id,
+        Transaction.organization_id == organization_id,
         Transaction.transaction_date >= start_date,
         Transaction.transaction_date <= end_date
     )

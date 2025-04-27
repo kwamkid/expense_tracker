@@ -1,9 +1,10 @@
 # app/views/auth.py
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session , jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app.forms.auth import LoginForm, RegistrationForm
 from app.models.user import User
 from app.extensions import db
+import requests
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -72,4 +73,88 @@ def logout():
 
     flash('คุณได้ออกจากระบบแล้ว', 'info')
     return redirect(url_for('auth.login'))
+
+
+@auth_bp.route('/line_login')
+def line_login():
+    """เริ่มการ login ด้วย LINE"""
+    # สร้าง state token เพื่อป้องกัน CSRF
+    state = generate_random_token()
+    session['line_login_state'] = state
+
+    # กำหนด URL สำหรับ LINE Login
+    line_auth_url = "https://access.line.me/oauth2/v2.1/authorize"
+    callback_url = url_for('auth.line_callback', _external=True)
+
+    # สร้างลิงก์สำหรับเริ่มการ login
+    auth_url = f"{line_auth_url}?response_type=code&client_id={LINE_CLIENT_ID}&redirect_uri={callback_url}&state={state}&scope=profile%20openid"
+
+    return redirect(auth_url)
+
+
+@auth_bp.route('/line_callback')
+def line_callback():
+    """รับข้อมูลหลังจาก LINE Login สำเร็จ"""
+    # ตรวจสอบ state เพื่อป้องกัน CSRF
+    if request.args.get('state') != session.pop('line_login_state', None):
+        flash('ข้อผิดพลาดด้านความปลอดภัย กรุณาลองใหม่อีกครั้ง', 'danger')
+        return redirect(url_for('auth.login'))
+
+    # ดึง access token
+    code = request.args.get('code')
+    token_url = "https://api.line.me/oauth2/v2.1/token"
+    callback_url = url_for('auth.line_callback', _external=True)
+
+    token_data = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': callback_url,
+        'client_id': LINE_CLIENT_ID,
+        'client_secret': LINE_CLIENT_SECRET
+    }
+
+    token_response = requests.post(token_url, data=token_data)
+    token_info = token_response.json()
+
+    # ดึงข้อมูลผู้ใช้จาก LINE
+    profile_url = "https://api.line.me/v2/profile"
+    headers = {'Authorization': f"Bearer {token_info['access_token']}"}
+    profile_response = requests.get(profile_url, headers=headers)
+    profile = profile_response.json()
+
+    # ตรวจสอบว่ามีผู้ใช้นี้ในระบบแล้วหรือไม่
+    line_id = profile['userId']
+    user = User.query.filter_by(line_id=line_id).first()
+
+    if user:
+        # ถ้ามีผู้ใช้นี้อยู่แล้ว ให้เข้าสู่ระบบ
+        login_user(user)
+
+        # ตรวจสอบว่ามี invitation ที่รอดำเนินการหรือไม่
+        invitation_token = session.pop('invitation_token', None)
+        if invitation_token:
+            return process_invitation(invitation_token, user)
+
+        return redirect(url_for('dashboard.index'))
+    else:
+        # ถ้ายังไม่มีผู้ใช้นี้ ให้สร้างบัญชีใหม่
+        new_user = User(
+            username=profile['displayName'],
+            email=f"{line_id}@line.user",  # สร้าง email จาก line_id
+            line_id=line_id,
+            profile_image=profile['pictureUrl'],
+            password=generate_random_password()  # สร้าง password สุ่ม
+        )
+        db.session.add(new_user)
+        db.session.commit()
+
+        login_user(new_user)
+        flash('สร้างบัญชีผู้ใช้ใหม่ด้วย LINE สำเร็จ!', 'success')
+
+        # ตรวจสอบว่ามี invitation ที่รอดำเนินการหรือไม่
+        invitation_token = session.pop('invitation_token', None)
+        if invitation_token:
+            return process_invitation(invitation_token, new_user)
+
+        return redirect(url_for('organization.create'))
 

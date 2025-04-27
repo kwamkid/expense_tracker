@@ -108,14 +108,16 @@ def members(id):
 
     # ดึงรายชื่อสมาชิกพร้อมบทบาท
     from app.models.organization import organization_users
+    from sqlalchemy import text
+
     member_roles = db.session.execute(
-        """
+        text("""
         SELECT u.id, u.username, u.email, u.first_name, u.last_name, ou.role, ou.joined_at
         FROM users u
         JOIN organization_users ou ON u.id = ou.user_id
         WHERE ou.organization_id = :org_id
         ORDER BY ou.joined_at
-        """,
+        """),
         {"org_id": id}
     ).fetchall()
 
@@ -197,6 +199,8 @@ def update(id):
         return redirect(url_for('organization.index'))
 
     form = OrganizationForm(obj=organization)
+    # กำหนดค่า id ให้ฟอร์ม เพื่อใช้ในการตรวจสอบชื่อซ้ำ
+    form.id.data = organization.id
 
     if form.validate_on_submit():
         organization.name = form.name.data
@@ -395,3 +399,98 @@ def create_default_account(organization_id, user_id):
         updated_by=user_id
     )
     db.session.add(account)
+
+
+# app/views/organization.py
+
+@organization_bp.route('/generate_invite/<int:id>', methods=['POST'])
+@login_required
+def generate_invite(id):
+    """สร้างลิงก์เชิญสำหรับองค์กร"""
+    # ตรวจสอบว่าผู้ใช้เป็นแอดมินขององค์กรนี้หรือไม่
+    organization = Organization.query.get_or_404(id)
+
+    if not organization.user_has_role(current_user.id, 'admin'):
+        flash('คุณไม่มีสิทธิ์สร้างลิงก์เชิญ', 'danger')
+        return redirect(url_for('organization.members', id=id))
+
+    # สร้าง invitation token
+    role = request.form.get('role', 'member')
+    token = generate_invitation_token(organization.id, role)
+
+    # สร้าง invitation link
+    invite_url = url_for('organization.join', token=token, _external=True)
+
+    # สร้างหรืออัพเดตบันทึกการเชิญ
+    invitation = Invitation(
+        token=token,
+        organization_id=organization.id,
+        created_by=current_user.id,
+        role=role,
+        expires_at=datetime.utcnow() + timedelta(days=7)  # หมดอายุใน 7 วัน
+    )
+    db.session.add(invitation)
+    db.session.commit()
+
+    return render_template(
+        'organization/invite_link.html',
+        invite_url=invite_url,
+        organization=organization,
+        role=role
+    )
+
+
+@organization_bp.route('/join/<token>')
+def join(token):
+    """เข้าร่วมองค์กรด้วยลิงก์เชิญ"""
+    # ตรวจสอบ token
+    invitation = Invitation.query.filter_by(token=token).first()
+
+    if not invitation or invitation.is_expired():
+        flash('ลิงก์เชิญไม่ถูกต้องหรือหมดอายุแล้ว', 'danger')
+        return redirect(url_for('auth.login'))
+
+    # บันทึก token ไว้ใน session เพื่อใช้หลังจาก login
+    session['invitation_token'] = token
+
+    if current_user.is_authenticated:
+        # ถ้าผู้ใช้ login อยู่แล้ว ดำเนินการเพิ่มเข้าองค์กรทันที
+        return process_invitation(token, current_user)
+    else:
+        # ถ้ายังไม่ได้ login ให้เข้าสู่หน้า login ด้วย LINE
+        flash('กรุณาเข้าสู่ระบบด้วย LINE เพื่อเข้าร่วมองค์กร', 'info')
+        return redirect(url_for('auth.line_login'))
+
+
+def process_invitation(token, user):
+    """ดำเนินการตาม invitation หลังจาก login สำเร็จ"""
+    invitation = Invitation.query.filter_by(token=token).first()
+
+    if not invitation or invitation.is_expired():
+        flash('ลิงก์เชิญไม่ถูกต้องหรือหมดอายุแล้ว', 'danger')
+        return redirect(url_for('dashboard.index'))
+
+    organization = Organization.query.get(invitation.organization_id)
+
+    # ตรวจสอบว่าผู้ใช้เป็นสมาชิกองค์กรนี้อยู่แล้วหรือไม่
+    if organization in user.organizations:
+        flash(f'คุณเป็นสมาชิกขององค์กร {organization.name} อยู่แล้ว', 'info')
+    else:
+        # เพิ่มผู้ใช้เข้าองค์กรด้วยบทบาทที่กำหนด
+        from app.models.organization import organization_users
+        db.session.execute(
+            organization_users.insert().values(
+                user_id=user.id,
+                organization_id=organization.id,
+                role=invitation.role,
+                joined_at=datetime.utcnow()
+            )
+        )
+        db.session.commit()
+
+        flash(f'คุณได้เข้าร่วมองค์กร {organization.name} เรียบร้อยแล้ว', 'success')
+
+    # ตั้งค่าองค์กรนี้เป็นองค์กรที่ใช้งานอยู่
+    user.set_active_organization(organization.id)
+
+    return redirect(url_for('dashboard.index'))

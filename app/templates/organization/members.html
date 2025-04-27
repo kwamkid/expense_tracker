@@ -7,13 +7,13 @@
             <i class="fas fa-users text-primary me-2"></i>สมาชิกองค์กร {{ organization.name }}
         </h1>
     </div>
-    {% if current_user_role == 'admin' %}
-    <div class="col-auto">
-        <a href="{{ url_for('organization.invite', id=organization.id) }}" class="btn btn-primary">
-            <i class="fas fa-user-plus me-1"></i> เชิญสมาชิกใหม่
-        </a>
-    </div>
-    {% endif %}
+   {% if current_user_role == 'admin' %}
+<div class="col-auto">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inviteLinkModal">
+        <i class="fas fa-user-plus me-1"></i> เชิญสมาชิกใหม่
+    </button>
+</div>
+{% endif %}
 </div>
 
 <div class="card">
@@ -53,7 +53,7 @@
                             <span class="badge bg-secondary">ผู้ชม</span>
                             {% endif %}
                         </td>
-                        <td>{{ member.joined_at.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ member.joined_at.split(' ')[0] if member.joined_at else '' }}</td>
                         {% if current_user_role == 'admin' and member.id != current_user.id %}
                         <td>
                             <div class="btn-group" role="group">

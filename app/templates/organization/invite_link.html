@@ -1,0 +1,66 @@
+<!-- app/templates/organization/invite_link.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-link me-2"></i>ลิงก์เชิญสมาชิกใหม่</h4>
+            </div>
+            <div class="card-body text-center">
+                <h5 class="mb-4">สร้างลิงก์เชิญสำหรับองค์กร {{ organization.name }} สำเร็จ!</h5>
+
+                <div class="alert alert-info">
+                    <p class="mb-2">บทบาทผู้ที่จะเข้าร่วม:
+                        {% if role == 'admin' %}
+                            <span class="badge bg-danger">แอดมิน</span>
+                        {% elif role == 'member' %}
+                            <span class="badge bg-primary">สมาชิก</span>
+                        {% else %}
+                            <span class="badge bg-secondary">ผู้ชม</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-0">ลิงก์จะหมดอายุใน 7 วัน</p>
+                </div>
+
+                <div class="input-group mb-4">
+                    <input type="text" class="form-control" id="invite-url" value="{{ invite_url }}" readonly>
+                    <button class="btn btn-outline-primary" type="button" id="copy-btn" onclick="copyInviteLink()">
+                        <i class="fas fa-copy"></i> คัดลอก
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <p>หรือแชร์ผ่าน:</p>
+                    <a href="https://social-plugins.line.me/lineit/share?url={{ invite_url|urlencode }}" class="btn btn-success" target="_blank">
+                        <i class="fab fa-line me-1"></i> แชร์ผ่าน LINE
+                    </a>
+                </div>
+
+                <a href="{{ url_for('organization.members', id=organization.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> กลับไปหน้าจัดการสมาชิก
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyInviteLink() {
+    const inviteUrl = document.getElementById('invite-url');
+    inviteUrl.select();
+    document.execCommand('copy');
+
+    const copyBtn = document.getElementById('copy-btn');
+    const originalText = copyBtn.innerHTML;
+    copyBtn.innerHTML = '<i class="fas fa-check"></i> คัดลอกแล้ว';
+
+    setTimeout(() => {
+        copyBtn.innerHTML = originalText;
+    }, 2000);
+}
+</script>
+{% endblock %}

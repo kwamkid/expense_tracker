@@ -96,7 +96,9 @@ def create():
             status=form.status.data,
             organization_id=current_user.active_organization_id,
             account_id=form.account_id.data,
-            category_id=form.category_id.data
+            category_id=form.category_id.data,
+            created_by=current_user.id,   # เพิ่มการกำหนดค่า created_by
+            updated_by=current_user.id    # เพิ่มการกำหนดค่า updated_by
         )
 
         # อัพโหลดใบเสร็จ (ถ้ามี)
@@ -132,7 +134,6 @@ def create():
 
     return render_template('transactions/create.html', form=form, title=title, transaction_type=transaction_type)
 
-
 @transactions_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
@@ -166,6 +167,7 @@ def edit(id):
         transaction.status = form.status.data
         transaction.account_id = form.account_id.data
         transaction.category_id = form.category_id.data
+        transaction.updated_by = current_user.id  # เพิ่มการกำหนดค่า updated_by
 
         # อัพโหลดใบเสร็จใหม่ (ถ้ามี)
         if form.receipt.data:

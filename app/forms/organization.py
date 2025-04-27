@@ -1,7 +1,7 @@
 # app/forms/organization.py
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, TextAreaField, SubmitField, SelectField
+from wtforms import StringField, TextAreaField, SubmitField, SelectField, HiddenField
 from wtforms.validators import DataRequired, Length, Email, ValidationError, Optional
 from app.models.organization import Organization
 from app.models.user import User
@@ -10,6 +10,7 @@ from flask_login import current_user
 
 class OrganizationForm(FlaskForm):
     """ฟอร์มสำหรับสร้างหรือแก้ไของค์กร"""
+    id = HiddenField('ID')  # เพิ่ม hidden field สำหรับเก็บ ID
     name = StringField('ชื่อองค์กร', validators=[DataRequired(), Length(min=2, max=100)])
     description = TextAreaField('รายละเอียด', validators=[Optional(), Length(max=500)])
     logo = FileField('โลโก้', validators=[
@@ -20,7 +21,7 @@ class OrganizationForm(FlaskForm):
 
     def validate_name(self, name):
         # ตรวจสอบชื่อซ้ำโดยคำนึงถึงการแก้ไของค์กรเดิม
-        if hasattr(self, 'id') and self.id.data:
+        if self.id.data:
             # กรณีแก้ไของค์กรเดิม
             organization = Organization.query.filter_by(name=name.data).first()
             if organization and organization.id != int(self.id.data):
@@ -44,6 +45,7 @@ class InviteForm(FlaskForm):
     def validate_email(self, email):
         # ตรวจสอบว่าอีเมลนี้มีในระบบหรือไม่
         user = User.query.filter_by(email=email.data).first()
+
         if not user:
             raise ValidationError('ไม่พบอีเมลนี้ในระบบ ผู้ใช้ต้องลงทะเบียนในระบบก่อน')
 

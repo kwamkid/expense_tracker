@@ -19,7 +19,7 @@ class CategoryForm(FlaskForm):
             category = Category.query.filter_by(
                 name=name.data,
                 type=self.type.data,
-                user_id=current_user.id
+                organization_id=current_user.active_organization_id
             ).first()
             if category:
                 raise ValidationError(f'คุณมีหมวดหมู่ "{name.data}" ในประเภท {self.type.data} อยู่แล้ว')
