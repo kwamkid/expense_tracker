@@ -1,14 +1,16 @@
 # app/views/organization.py
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, session
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.models.organization import Organization
 from app.models.user import User
+from app.models.invitation import Invitation
 from app.extensions import db
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 
+# ประกาศ Blueprint ก่อนที่จะใช้
 organization_bp = Blueprint('organization', __name__, url_prefix='/organization')
 
 
@@ -61,6 +63,7 @@ def create():
         )
 
         # สร้างหมวดหมู่เริ่มต้นให้กับองค์กร
+        from app.views.auth import create_default_categories
         create_default_categories(organization.id, current_user.id)
 
         # สร้างบัญชีเริ่มต้นให้กับองค์กร
@@ -112,7 +115,7 @@ def members(id):
 
     member_roles = db.session.execute(
         text("""
-        SELECT u.id, u.username, u.email, u.first_name, u.last_name, ou.role, ou.joined_at
+        SELECT u.id, u.username, u.email, u.first_name, u.last_name, ou.role, ou.joined_at, u.line_id, u.line_profile_url
         FROM users u
         JOIN organization_users ou ON u.id = ou.user_id
         WHERE ou.organization_id = :org_id
@@ -127,61 +130,6 @@ def members(id):
         member_roles=member_roles,
         current_user_role=organization.get_user_role(current_user.id),
         title=f'สมาชิก {organization.name}'
-    )
-
-
-@organization_bp.route('/invite/<int:id>', methods=['GET', 'POST'])
-@login_required
-def invite(id):
-    """เชิญผู้ใช้เข้าร่วมองค์กร"""
-    from app.forms.organization import InviteForm
-
-    # ตรวจสอบว่าผู้ใช้เป็นแอดมินขององค์กรนี้หรือไม่
-    organization = Organization.query.get_or_404(id)
-
-    if not organization.user_has_role(current_user.id, 'admin'):
-        flash('คุณไม่มีสิทธิ์เชิญสมาชิกใหม่', 'danger')
-        return redirect(url_for('organization.members', id=id))
-
-    form = InviteForm()
-
-    if form.validate_on_submit():
-        email = form.email.data
-        role = form.role.data
-
-        # ตรวจสอบว่าผู้ใช้มีอยู่ในระบบหรือไม่
-        user = User.query.filter_by(email=email).first()
-
-        if not user:
-            flash(f'ไม่พบผู้ใช้ที่มีอีเมล {email} ในระบบ', 'danger')
-        else:
-            # ตรวจสอบว่าผู้ใช้เป็นสมาชิกขององค์กรนี้อยู่แล้วหรือไม่
-            if organization in user.organizations:
-                flash(f'ผู้ใช้ {email} เป็นสมาชิกขององค์กรนี้อยู่แล้ว', 'warning')
-            else:
-                # เพิ่มผู้ใช้เป็นสมาชิกขององค์กร
-                from app.models.organization import organization_users
-                db.session.execute(
-                    organization_users.insert().values(
-                        user_id=user.id,
-                        organization_id=organization.id,
-                        role=role,
-                        joined_at=datetime.utcnow()
-                    )
-                )
-                db.session.commit()
-
-                flash(f'เพิ่ม {email} เป็นสมาชิกขององค์กรแล้ว', 'success')
-
-                # TODO: ส่งอีเมลแจ้งเตือนให้ผู้ใช้ทราบ
-
-        return redirect(url_for('organization.members', id=id))
-
-    return render_template(
-        'organization/invite.html',
-        form=form,
-        organization=organization,
-        title=f'เชิญสมาชิกใหม่เข้า {organization.name}'
     )
 
 
@@ -296,9 +244,80 @@ def remove_member(org_id, user_id):
     db.session.commit()
 
     user = User.query.get(user_id)
-    flash(f'ลบ {user.email} ออกจากองค์กรแล้ว', 'success')
+    flash(f'ลบ {user.username} ออกจากองค์กรแล้ว', 'success')
 
     return redirect(url_for('organization.members', id=org_id))
+
+
+@organization_bp.route('/generate_invite/<int:id>', methods=['POST'])
+@login_required
+def generate_invite(id):
+    """สร้างลิงก์เชิญสำหรับองค์กร"""
+    # ตรวจสอบว่าผู้ใช้เป็นแอดมินขององค์กรนี้หรือไม่
+    organization = Organization.query.get_or_404(id)
+
+    if not organization.user_has_role(current_user.id, 'admin'):
+        flash('คุณไม่มีสิทธิ์สร้างลิงก์เชิญ', 'danger')
+        return redirect(url_for('organization.members', id=id))
+
+    # สร้าง invitation token
+    role = request.form.get('role', 'member')
+    from app.views.auth import generate_invitation_token
+    token = generate_invitation_token(organization.id, role)
+
+    # สร้าง invitation link
+    invite_url = url_for('organization.join', token=token, _external=True)
+
+    # สร้างหรืออัพเดตบันทึกการเชิญ
+    invitation = Invitation(
+        token=token,
+        organization_id=organization.id,
+        created_by=current_user.id,
+        role=role,
+        expires_at=datetime.utcnow() + timedelta(days=7)  # หมดอายุใน 7 วัน
+    )
+    db.session.add(invitation)
+    db.session.commit()
+
+    current_app.logger.info(f"Generated invitation link for organization {organization.id} with role {role}")
+
+    return render_template(
+        'organization/invite_link.html',
+        invite_url=invite_url,
+        organization=organization,
+        role=role
+    )
+
+
+@organization_bp.route('/join/<token>')
+def join(token):
+    """เข้าร่วมองค์กรด้วยลิงก์เชิญ"""
+    # ตรวจสอบ token
+    invitation = Invitation.query.filter_by(token=token).first()
+
+    if not invitation:
+        flash('ลิงก์เชิญไม่ถูกต้อง', 'danger')
+        return redirect(url_for('auth.login'))
+
+    if invitation.is_expired():
+        flash('ลิงก์เชิญหมดอายุแล้ว', 'danger')
+        return redirect(url_for('auth.login'))
+
+    if invitation.is_used():
+        flash('ลิงก์เชิญนี้ถูกใช้ไปแล้ว', 'warning')
+        return redirect(url_for('auth.login'))
+
+    # บันทึก token ไว้ใน session เพื่อใช้หลังจาก login
+    session['invitation_token'] = token
+
+    if current_user.is_authenticated:
+        # ถ้าผู้ใช้ login อยู่แล้ว ดำเนินการเพิ่มเข้าองค์กรทันที
+        from app.views.auth import process_invitation
+        return process_invitation(token, current_user)
+    else:
+        # ถ้ายังไม่ได้ login ให้เข้าสู่หน้า login ด้วย LINE
+        flash('กรุณาเข้าสู่ระบบด้วย LINE เพื่อเข้าร่วมองค์กร', 'info')
+        return redirect(url_for('auth.line_login'))
 
 
 # Utility functions
@@ -337,55 +356,6 @@ def delete_organization_logo(filename):
     return False
 
 
-def create_default_categories(organization_id, user_id):
-    """สร้างหมวดหมู่เริ่มต้นสำหรับองค์กรใหม่"""
-    from app.models.category import Category
-
-    # หมวดหมู่รายรับ
-    income_categories = [
-        {'name': 'ค่าคอร์ส', 'color': '#27ae60', 'icon': 'money-bill'},
-        {'name': 'ค่าคอร์ส Summer', 'color': '#2ecc71', 'icon': 'sun'},
-        {'name': 'ค่าคอร์สแข่ง', 'color': '#3498db', 'icon': 'trophy'},
-        {'name': 'อื่นๆ', 'color': '#34495e', 'icon': 'plus-circle'}
-    ]
-
-    # หมวดหมู่รายจ่าย
-    expense_categories = [
-        {'name': 'อาหาร', 'color': '#e74c3c', 'icon': 'utensils'},
-        {'name': 'ก่อสร้าง/ต่อเติม', 'color': '#d35400', 'icon': 'home'},
-        {'name': 'ค่าอุปกรณ์การสอน', 'color': '#f39c12', 'icon': 'book'},
-        {'name': 'ค่าเช่า/บิล/สาธารณูปโภค', 'color': '#f1c40f', 'icon': 'file-invoice'},
-        {'name': 'การเดินทาง', 'color': '#1abc9c', 'icon': 'car'},
-        {'name': 'อื่นๆ', 'color': '#7f8c8d', 'icon': 'tag'}
-    ]
-
-    # เพิ่มหมวดหมู่รายรับ
-    for cat in income_categories:
-        category = Category(
-            name=cat['name'],
-            type='income',
-            color=cat['color'],
-            icon=cat['icon'],
-            organization_id=organization_id,
-            created_by=user_id,
-            updated_by=user_id
-        )
-        db.session.add(category)
-
-    # เพิ่มหมวดหมู่รายจ่าย
-    for cat in expense_categories:
-        category = Category(
-            name=cat['name'],
-            type='expense',
-            color=cat['color'],
-            icon=cat['icon'],
-            organization_id=organization_id,
-            created_by=user_id,
-            updated_by=user_id
-        )
-        db.session.add(category)
-
-
 def create_default_account(organization_id, user_id):
     """สร้างบัญชีเริ่มต้นสำหรับองค์กรใหม่"""
     from app.models.account import Account
@@ -399,98 +369,3 @@ def create_default_account(organization_id, user_id):
         updated_by=user_id
     )
     db.session.add(account)
-
-
-# app/views/organization.py
-
-@organization_bp.route('/generate_invite/<int:id>', methods=['POST'])
-@login_required
-def generate_invite(id):
-    """สร้างลิงก์เชิญสำหรับองค์กร"""
-    # ตรวจสอบว่าผู้ใช้เป็นแอดมินขององค์กรนี้หรือไม่
-    organization = Organization.query.get_or_404(id)
-
-    if not organization.user_has_role(current_user.id, 'admin'):
-        flash('คุณไม่มีสิทธิ์สร้างลิงก์เชิญ', 'danger')
-        return redirect(url_for('organization.members', id=id))
-
-    # สร้าง invitation token
-    role = request.form.get('role', 'member')
-    token = generate_invitation_token(organization.id, role)
-
-    # สร้าง invitation link
-    invite_url = url_for('organization.join', token=token, _external=True)
-
-    # สร้างหรืออัพเดตบันทึกการเชิญ
-    invitation = Invitation(
-        token=token,
-        organization_id=organization.id,
-        created_by=current_user.id,
-        role=role,
-        expires_at=datetime.utcnow() + timedelta(days=7)  # หมดอายุใน 7 วัน
-    )
-    db.session.add(invitation)
-    db.session.commit()
-
-    return render_template(
-        'organization/invite_link.html',
-        invite_url=invite_url,
-        organization=organization,
-        role=role
-    )
-
-
-@organization_bp.route('/join/<token>')
-def join(token):
-    """เข้าร่วมองค์กรด้วยลิงก์เชิญ"""
-    # ตรวจสอบ token
-    invitation = Invitation.query.filter_by(token=token).first()
-
-    if not invitation or invitation.is_expired():
-        flash('ลิงก์เชิญไม่ถูกต้องหรือหมดอายุแล้ว', 'danger')
-        return redirect(url_for('auth.login'))
-
-    # บันทึก token ไว้ใน session เพื่อใช้หลังจาก login
-    session['invitation_token'] = token
-
-    if current_user.is_authenticated:
-        # ถ้าผู้ใช้ login อยู่แล้ว ดำเนินการเพิ่มเข้าองค์กรทันที
-        return process_invitation(token, current_user)
-    else:
-        # ถ้ายังไม่ได้ login ให้เข้าสู่หน้า login ด้วย LINE
-        flash('กรุณาเข้าสู่ระบบด้วย LINE เพื่อเข้าร่วมองค์กร', 'info')
-        return redirect(url_for('auth.line_login'))
-
-
-def process_invitation(token, user):
-    """ดำเนินการตาม invitation หลังจาก login สำเร็จ"""
-    invitation = Invitation.query.filter_by(token=token).first()
-
-    if not invitation or invitation.is_expired():
-        flash('ลิงก์เชิญไม่ถูกต้องหรือหมดอายุแล้ว', 'danger')
-        return redirect(url_for('dashboard.index'))
-
-    organization = Organization.query.get(invitation.organization_id)
-
-    # ตรวจสอบว่าผู้ใช้เป็นสมาชิกองค์กรนี้อยู่แล้วหรือไม่
-    if organization in user.organizations:
-        flash(f'คุณเป็นสมาชิกขององค์กร {organization.name} อยู่แล้ว', 'info')
-    else:
-        # เพิ่มผู้ใช้เข้าองค์กรด้วยบทบาทที่กำหนด
-        from app.models.organization import organization_users
-        db.session.execute(
-            organization_users.insert().values(
-                user_id=user.id,
-                organization_id=organization.id,
-                role=invitation.role,
-                joined_at=datetime.utcnow()
-            )
-        )
-        db.session.commit()
-
-        flash(f'คุณได้เข้าร่วมองค์กร {organization.name} เรียบร้อยแล้ว', 'success')
-
-    # ตั้งค่าองค์กรนี้เป็นองค์กรที่ใช้งานอยู่
-    user.set_active_organization(organization.id)
-
-    return redirect(url_for('dashboard.index'))

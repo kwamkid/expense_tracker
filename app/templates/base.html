@@ -18,6 +18,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar-theme.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -238,8 +239,8 @@
                             </li>
                             {% if active_org.get_user_role(current_user.id) == 'admin' %}
                             <li class="nav-item">
-                                <a class="nav-link submenu-link {% if request.endpoint == 'organization.invite' and id == active_org.id %}active{% endif %}"
-                                   href="{{ url_for('organization.invite', id=active_org.id) }}">
+                                <a class="nav-link submenu-link {% if request.endpoint == 'organization.members' and id == active_org.id %}active{% endif %}"
+                                   href="{{ url_for('organization.members', id=active_org.id) }}">
                                     <i class="fas fa-user-plus me-2"></i>เชิญสมาชิกใหม่
                                 </a>
                             </li>

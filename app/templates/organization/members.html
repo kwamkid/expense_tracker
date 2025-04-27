@@ -8,12 +8,12 @@
         </h1>
     </div>
    {% if current_user_role == 'admin' %}
-<div class="col-auto">
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inviteLinkModal">
-        <i class="fas fa-user-plus me-1"></i> เชิญสมาชิกใหม่
-    </button>
-</div>
-{% endif %}
+    <div class="col-auto">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inviteLineModal">
+            <i class="fab fa-line me-1"></i> เชิญสมาชิกผ่าน LINE
+        </button>
+    </div>
+    {% endif %}
 </div>
 
 <div class="card">
@@ -28,9 +28,9 @@
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
+                        <th>รูปโปรไฟล์</th>
                         <th>ชื่อผู้ใช้</th>
-                        <th>อีเมล</th>
-                        <th>ชื่อ-นามสกุล</th>
+                        <th>LINE ID</th>
                         <th>บทบาท</th>
                         <th>เข้าร่วมเมื่อ</th>
                         {% if current_user_role == 'admin' %}
@@ -41,9 +41,21 @@
                 <tbody>
                     {% for member in member_roles %}
                     <tr>
+                        <td>
+                            {% if member.line_profile_url %}
+                            <img src="{{ member.line_profile_url }}" alt="{{ member.username }}" class="rounded-circle" width="40" height="40">
+                            {% else %}
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                            {% endif %}
+                        </td>
                         <td>{{ member.username }}</td>
-                        <td>{{ member.email }}</td>
-                        <td>{{ member.first_name }} {{ member.last_name }}</td>
+                        <td>
+                            {% if member.line_id %}
+                            <i class="fab fa-line text-success me-1"></i> เชื่อมต่อแล้ว
+                            {% else %}
+                            <span class="text-muted">ยังไม่ได้เชื่อมต่อ</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if member.role == 'admin' %}
                             <span class="badge bg-danger">แอดมิน</span>
@@ -119,7 +131,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>คุณต้องการลบ <span id="memberEmail"></span> ออกจากองค์กรใช่หรือไม่?</p>
+                <p>คุณต้องการลบ <span id="memberUsername"></span> ออกจากองค์กรใช่หรือไม่?</p>
                 <p class="text-danger">การดำเนินการนี้ไม่สามารถเรียกคืนได้</p>
             </div>
             <div class="modal-footer">
@@ -127,6 +139,67 @@
                 <form id="removeMemberForm" action="" method="post">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">ยืนยันการลบ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal สำหรับเชิญผ่าน LINE -->
+<div class="modal fade" id="inviteLineModal" tabindex="-1" aria-labelledby="inviteLineModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="inviteLineModalLabel"><i class="fab fa-line me-2"></i>เชิญสมาชิกผ่าน LINE</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('organization.generate_invite', id=organization.id) }}" method="post" id="inviteLineForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label class="form-label">เลือกบทบาทสำหรับผู้ที่จะเข้าร่วม</label>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="role-admin" value="admin">
+                                    <label class="form-check-label" for="role-admin">
+                                        <span class="badge bg-danger mb-1">แอดมิน</span>
+                                        <p class="form-text mb-0">จัดการได้ทุกอย่าง รวมถึงสมาชิกและการตั้งค่าองค์กร</p>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="role-member" value="member" checked>
+                                    <label class="form-check-label" for="role-member">
+                                        <span class="badge bg-primary mb-1">สมาชิก</span>
+                                        <p class="form-text mb-0">เพิ่มและแก้ไขรายการได้ จัดการข้อมูลพื้นฐานได้</p>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="role-viewer" value="viewer">
+                                    <label class="form-check-label" for="role-viewer">
+                                        <span class="badge bg-secondary mb-1">ผู้ชม</span>
+                                        <p class="form-text mb-0">ดูข้อมูลได้อย่างเดียว ไม่สามารถแก้ไขหรือเพิ่มรายการได้</p>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        ระบบจะสร้างลิงก์เชิญที่สามารถแชร์ผ่าน LINE หรือช่องทางอื่นๆ ได้ ผู้รับเชิญไม่จำเป็นต้องมีบัญชีในระบบก่อน
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fab fa-line me-1"></i> สร้างลิงก์เชิญ
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -197,10 +270,10 @@ document.addEventListener('DOMContentLoaded', function() {
         removeMemberModal.addEventListener('show.bs.modal', function(event) {
             const button = event.relatedTarget;
             const userId = button.getAttribute('data-user-id');
-            const email = button.getAttribute('data-email');
+            const username = button.getAttribute('data-username');
 
             // อัปเดตข้อมูลใน Modal
-            document.getElementById('memberEmail').textContent = email;
+            document.getElementById('memberUsername').textContent = username;
 
             // อัปเดต URL ของฟอร์ม
             document.getElementById('removeMemberForm').action = "{{ url_for('organization.remove_member', org_id=organization.id, user_id=0) }}".replace('0', userId);

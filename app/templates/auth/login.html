@@ -1,35 +1,44 @@
 {# app/templates/auth/login.html #}
 {% extends "base.html" %}
-{% from "macros.html" import render_field, render_submit_button %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>เข้าสู่ระบบ</h4>
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fab fa-line me-2"></i>เข้าสู่ระบบด้วย LINE</h4>
             </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('auth.login') }}">
-                    {{ form.csrf_token }}
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <img src="{{ url_for('static', filename='images/line_login.png') }}" alt="LINE Login" class="img-fluid mb-3" style="max-width: 200px;">
+                    <p>เข้าสู่ระบบด้วย LINE เพื่อใช้งานระบบจัดการพนักงาน</p>
+                </div>
+                
+                <div class="d-grid">
+                    <a href="{{ url_for('auth.line_login') }}" class="btn btn-success btn-lg">
+                        <i class="fab fa-line me-2"></i>เข้าสู่ระบบด้วย LINE
+                    </a>
+                </div>
 
-                    {{ render_field(form.email) }}
-                    {{ render_field(form.password) }}
-
-                    <div class="mb-3 form-check">
-                        {{ form.remember(class='form-check-input') }}
-                        {{ form.remember.label(class='form-check-label') }}
+                <div class="mt-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <p class="mb-0">การเข้าสู่ระบบด้วย LINE จะช่วยให้คุณสามารถใช้งานระบบได้ง่ายขึ้น ไม่ต้องจดจำรหัสผ่าน</p>
                     </div>
-
-                    <div class="d-grid gap-2">
-                        {{ form.submit(class='btn btn-primary') }}
-                    </div>
-                </form>
+                </div>
             </div>
             <div class="card-footer text-center">
-                <p class="mb-0">ยังไม่มีบัญชี? <a href="{{ url_for('auth.register') }}">สมัครสมาชิก</a></p>
+                <p class="mb-0">หากคุณเพิ่งได้รับคำเชิญให้เข้าร่วมองค์กร กรุณากดเข้าสู่ระบบด้วย LINE</p>
             </div>
         </div>
+
+        {% if invitation_token %}
+        <div class="alert alert-success mt-3 text-center">
+            <i class="fas fa-envelope-open-text me-2"></i>
+            <p class="mb-0">คุณได้รับเชิญให้เข้าร่วมองค์กร กรุณาเข้าสู่ระบบด้วย LINE เพื่อดำเนินการต่อ</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
+```

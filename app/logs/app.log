@@ -703,3 +703,182 @@
  Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
  Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
  [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:38:19,719 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:38:19,719 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:38:19,719 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:38:19,787 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:38:19,811 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:39:20,724 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:39:20,724 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:39:20,725 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:39:20,796 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:39:20,820 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:42:25,088 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:42:25,088 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:42:25,088 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:42:25,152 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:42:25,173 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:43:03,043 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:43:03,043 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:43:03,043 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:43:03,106 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:43:03,127 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:43:15,683 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:43:15,683 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:43:15,683 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:43:15,714 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:43:15,722 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:43:22,825 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:43:22,825 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:43:22,825 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:43:22,857 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:43:22,865 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:43:49,632 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:43:49,632 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:43:49,632 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:43:49,662 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:43:49,673 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:43:49,969 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:43:49,969 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:43:49,969 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:43:49,999 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:43:50,007 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:46:03,722 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:46:03,722 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:46:03,722 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:46:03,768 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:46:03,790 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:46:27,225 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:46:27,225 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:46:27,226 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:46:27,257 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:46:27,265 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:46:39,920 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:46:39,920 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:46:39,920 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:46:39,951 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:46:39,960 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:46:44,524 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:46:44,525 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:46:44,525 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:46:44,558 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:46:44,567 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:46:54,797 INFO: Created new user via LINE Login: 1 [in /Users/ampstark/expense_tracker/app/views/auth.py:127]
+2025-04-27 16:49:24,104 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:49:24,104 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:49:24,104 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:49:24,147 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:49:24,168 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:49:24,870 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:49:24,870 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:49:24,870 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:49:24,901 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:49:24,908 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:49:44,459 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:49:44,460 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:49:44,460 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:49:44,503 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:49:44,523 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:49:51,103 INFO: App logging configured [in /Users/ampstark/expense_tracker/app/__init__.py:94]
+2025-04-27 16:49:51,103 INFO: Uploads directory: /Users/ampstark/expense_tracker/app/static/uploads/receipts [in /Users/ampstark/expense_tracker/app/__init__.py:37]
+2025-04-27 16:49:51,103 INFO: Organizations directory: /Users/ampstark/expense_tracker/app/static/uploads/organizations [in /Users/ampstark/expense_tracker/app/__init__.py:38]
+2025-04-27 16:49:51,136 INFO: Found Tesseract at: /opt/homebrew/bin/tesseract [in /Users/ampstark/expense_tracker/app/__init__.py:117]
+2025-04-27 16:49:51,151 INFO: Tesseract version info: tesseract 5.5.0
+ leptonica-1.85.0
+  libgif 5.2.2 : libjpeg 8d (libjpeg-turbo 3.0.4) : libpng 1.6.47 : libtiff 4.7.0 : zlib 1.2.12 : libwebp 1.5.0 : libopenjp2 2.5.3
+ Found NEON
+ Found libarchive 3.7.9 zlib/1.2.12 liblzma/5.8.1 bz2lib/1.0.8 liblz4/1.10.0 libzstd/1.5.7
+ Found libcurl/8.7.1 SecureTransport (LibreSSL/3.3.6) zlib/1.2.12 nghttp2/1.61.0
+ [in /Users/ampstark/expense_tracker/app/__init__.py:121]
+2025-04-27 16:51:29,807 INFO: Created new user via LINE Login: 1 [in /Users/ampstark/expense_tracker/app/views/auth.py:127]
+2025-04-27 16:53:40,912 INFO: Generated invitation link for organization 1 with role admin [in /Users/ampstark/expense_tracker/app/views/organization.py:282]

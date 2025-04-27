@@ -17,6 +17,9 @@ class User(UserMixin, db.Model):
     profile_image = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     active_organization_id = db.Column(db.Integer, nullable=True)  # องค์กรที่ผู้ใช้กำลังใช้งานอยู่
+    # LINE Login fields
+    line_id = db.Column(db.String(100), unique=True, nullable=True)
+    line_profile_url = db.Column(db.String(255), nullable=True)
 
     # Relationships
     organizations = db.relationship('Organization', secondary='organization_users', back_populates='users')
@@ -38,12 +41,14 @@ class User(UserMixin, db.Model):
     created_organizations = db.relationship('Organization', foreign_keys='Organization.created_by', backref='creator',
                                             lazy='dynamic')
 
-    def __init__(self, username, email, password, first_name=None, last_name=None):
+    def __init__(self, username, email, password, first_name=None, last_name=None, line_id=None, line_profile_url=None):
         self.username = username
         self.email = email
         self.set_password(password)
         self.first_name = first_name
         self.last_name = last_name
+        self.line_id = line_id
+        self.line_profile_url = line_profile_url
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
