@@ -148,7 +148,7 @@
                                         {{ transaction.category.name }}
                                     </span>
                                 </td>
-                                <td>{{ transaction.description|truncate(30) or '-' }}</td>
+                                <td>{% if transaction.description %}{{ transaction.description|truncate(30) }}{% else %}-{% endif %}</td>
                                 <td class="text-end fw-bold {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
                                     {{ "{:,.2f}".format(transaction.amount) }} ฿
                                 </td>

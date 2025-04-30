@@ -1,7 +1,7 @@
 # app/models/transaction.py
 from datetime import datetime
 from app.extensions import db
-from sqlalchemy import Index
+from sqlalchemy import Index, text, or_
 
 
 class Transaction(db.Model):
@@ -74,19 +74,50 @@ class Transaction(db.Model):
     @classmethod
     def find_potential_duplicates(cls, date, amount, organization_id, description=None):
         """ค้นหาธุรกรรมที่อาจซ้ำซ้อนโดยใช้วันที่และจำนวนเงิน"""
-        query = cls.query.filter_by(
-            transaction_date=date,
-            amount=amount,
-            organization_id=organization_id
-        )
+        try:
+            # ใช้ try-except เพื่อจัดการข้อผิดพลาดที่อาจเกิดขึ้น
+            query = cls.query.filter_by(
+                transaction_date=date,
+                amount=amount,
+                organization_id=organization_id
+            )
 
-        # ถ้ามีคำอธิบาย ให้ค้นหาแบบคร่าวๆ
-        if description:
-            from sqlalchemy import or_
-            # ค้นหาคำอธิบายที่คล้ายกัน (ดูว่ามีคำอธิบายเดิมอยู่ในคำอธิบายใหม่ หรือกลับกัน)
-            query = query.filter(or_(
-                cls.description.contains(description),
-                description.contains(cls.description)
-            ))
+            # ตรวจสอบว่ามีคำอธิบายและเป็นข้อความหรือไม่
+            if description and isinstance(description, str) and description.strip():
+                # ใช้ ILIKE ซึ่งเป็น case-insensitive LIKE ของ PostgreSQL
+                if db.engine.name == 'postgresql':
+                    query = query.filter(cls.description.ilike(f"%{description}%"))
+                else:
+                    # สำหรับฐานข้อมูลอื่นๆ เช่น SQLite ใช้ LIKE (อาจจะ case-sensitive)
+                    query = query.filter(cls.description.like(f"%{description}%"))
 
-        return query.all()
+            # ดึงรายการที่อาจซ้ำทั้งหมด
+            potential_duplicates = query.all()
+
+            # กรณีที่มีคำอธิบาย ตรวจสอบทิศทางที่สอง (description เป็นส่วนหนึ่งของ cls.description)
+            if description and isinstance(description, str) and description.strip():
+                description_lower = description.lower()
+                filtered_duplicates = []
+
+                for transaction in potential_duplicates:
+                    # ถ้ารายการมีคำอธิบาย
+                    if transaction.description and isinstance(transaction.description, str):
+                        transaction_desc_lower = transaction.description.lower()
+
+                        # ตรวจสอบทั้งสองทิศทาง
+                        if (description_lower in transaction_desc_lower or
+                                transaction_desc_lower in description_lower):
+                            filtered_duplicates.append(transaction)
+                    else:
+                        # ถ้ารายการไม่มีคำอธิบาย ให้รวมไว้ตามวันที่และจำนวนเงิน
+                        filtered_duplicates.append(transaction)
+
+                return filtered_duplicates
+
+            return potential_duplicates
+
+        except Exception as e:
+            # บันทึกข้อผิดพลาด (ถ้ามีการตั้งค่า logging)
+            # current_app.logger.error(f"Error in find_potential_duplicates: {str(e)}")
+            # หากเกิดข้อผิดพลาด ให้คืนค่าลิสต์ว่าง
+            return []

@@ -1,17 +1,91 @@
 # app/views/import_transactions.py
 import os
 import json
+import uuid
+import pickle
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, session
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.forms.import_form import ImportForm, ImportConfirmForm
-from app.models import Account, Category
+from app.models import Account, Category, Transaction
 from app.models.category_matching import ImportBatch
 from app.services.import_service import ImportService
 
 imports_bp = Blueprint('imports', __name__, url_prefix='/imports')
+
+
+# ฟังก์ชันใหม่สำหรับการจัดเก็บข้อมูลขนาดใหญ่ไว้ที่เซิร์ฟเวอร์แทนการใช้ session
+def save_import_data_to_file(data, batch_reference):
+    """
+    บันทึกข้อมูลการนำเข้าลงไฟล์ชั่วคราวบนเซิร์ฟเวอร์แทนการใช้ session
+    """
+    # สร้างโฟลเดอร์สำหรับเก็บข้อมูลชั่วคราว (ถ้ายังไม่มี)
+    temp_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'temp_imports')
+    os.makedirs(temp_dir, exist_ok=True)
+
+    # กำหนดชื่อไฟล์จาก batch_reference
+    filename = os.path.join(temp_dir, f"{batch_reference}.pkl")
+
+    # แปลงข้อมูล transaction ให้สามารถ serialize ได้
+    serializable_data = data.copy()
+
+    if 'transactions' in serializable_data:
+        serializable_transactions = []
+        for transaction in serializable_data['transactions']:
+            t = transaction.copy()
+            # แปลง datetime object เป็น string
+            if isinstance(t.get('transaction_date'), datetime):
+                t['transaction_date'] = t['transaction_date'].strftime('%Y-%m-%d')
+            serializable_transactions.append(t)
+        serializable_data['transactions'] = serializable_transactions
+
+    # บันทึกข้อมูลลงไฟล์ด้วย pickle
+    with open(filename, 'wb') as f:
+        pickle.dump(serializable_data, f)
+
+    return True
+
+
+def load_import_data_from_file(batch_reference):
+    """
+    อ่านข้อมูลการนำเข้าจากไฟล์ชั่วคราวบนเซิร์ฟเวอร์
+    """
+    temp_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'temp_imports')
+    filename = os.path.join(temp_dir, f"{batch_reference}.pkl")
+
+    if not os.path.exists(filename):
+        return None
+
+    # อ่านข้อมูลจากไฟล์
+    with open(filename, 'rb') as f:
+        data = pickle.load(f)
+
+    # แปลงข้อมูลกลับเป็น datetime object
+    if 'transactions' in data:
+        transactions = []
+        for t in data['transactions']:
+            transaction = t.copy()
+            if isinstance(transaction.get('transaction_date'), str):
+                transaction['transaction_date'] = datetime.strptime(transaction['transaction_date'], '%Y-%m-%d').date()
+            transactions.append(transaction)
+        data['transactions'] = transactions
+
+    return data
+
+
+def delete_import_data_file(batch_reference):
+    """
+    ลบไฟล์ข้อมูลชั่วคราวเมื่อเสร็จสิ้นหรือยกเลิกการนำเข้า
+    """
+    temp_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'temp_imports')
+    filename = os.path.join(temp_dir, f"{batch_reference}.pkl")
+
+    if os.path.exists(filename):
+        os.remove(filename)
+        return True
+    return False
 
 
 @imports_bp.route('/')
@@ -83,13 +157,19 @@ def new():
                 flash(f"เกิดข้อผิดพลาด: {result['error']}", 'danger')
                 return redirect(url_for('imports.new'))
 
-            # เก็บข้อมูลสำหรับหน้ายืนยัน
-            session['import_data'] = {
+            # เก็บข้อมูลสำหรับหน้ายืนยันในไฟล์ชั่วคราวแทนการใช้ session
+            import_data = {
                 'file_path': file_path,
                 'transactions': result['transactions'],
                 'batch_reference': import_batch.batch_reference,
                 'account_id': form.account_id.data
             }
+
+            # บันทึกข้อมูลลงไฟล์
+            save_import_data_to_file(import_data, import_batch.batch_reference)
+
+            # เก็บเฉพาะ batch_reference ไว้ใน session เพื่อใช้อ้างอิงในหน้าถัดไป
+            session['import_batch_reference'] = import_batch.batch_reference
 
             # อัปเดตจำนวนรายการใน batch
             ImportService.update_batch_status(
@@ -102,6 +182,7 @@ def new():
             return redirect(url_for('imports.preview'))
 
         except Exception as e:
+            current_app.logger.error(f"Error importing file: {str(e)}")
             flash(f"เกิดข้อผิดพลาดในการอัพโหลดไฟล์: {str(e)}", 'danger')
 
     return render_template(
@@ -111,18 +192,24 @@ def new():
     )
 
 
-# แก้ไขส่วนฟังก์ชัน preview ในไฟล์ app/views/import_transactions.py
-
 @imports_bp.route('/preview', methods=['GET', 'POST'])
 @login_required
 def preview():
-    # ตรวจสอบว่ามีข้อมูลในเซสชัน
-    if 'import_data' not in session:
+    # ตรวจสอบว่ามี batch_reference ในเซสชัน
+    if 'import_batch_reference' not in session:
         flash('ไม่พบข้อมูลการนำเข้า กรุณาเริ่มต้นใหม่', 'warning')
         return redirect(url_for('imports.new'))
 
-    # ดึงข้อมูลจากเซสชัน
-    import_data = session['import_data']
+    batch_reference = session['import_batch_reference']
+
+    # ดึงข้อมูลจากไฟล์ชั่วคราว
+    import_data = load_import_data_from_file(batch_reference)
+
+    if not import_data:
+        flash('ไม่พบข้อมูลการนำเข้า หรือข้อมูลอาจหมดอายุ กรุณาเริ่มต้นใหม่', 'warning')
+        session.pop('import_batch_reference', None)
+        return redirect(url_for('imports.new'))
+
     transactions = import_data['transactions']
 
     # สร้างฟอร์มสำหรับยืนยัน
@@ -175,7 +262,10 @@ def preview():
             # อัปเดตสถานะ batch เป็นยกเลิก
             ImportService.update_batch_status(import_data['batch_reference'], 'cancelled')
 
-            session.pop('import_data', None)
+            # ลบไฟล์ข้อมูลชั่วคราว
+            delete_import_data_file(batch_reference)
+            session.pop('import_batch_reference', None)
+
             flash('ยกเลิกการนำเข้าธุรกรรม', 'info')
             return redirect(url_for('imports.index'))
 
@@ -216,8 +306,9 @@ def preview():
             if os.path.exists(import_data['file_path']):
                 os.remove(import_data['file_path'])
 
-            # ลบข้อมูลจากเซสชัน
-            session.pop('import_data', None)
+            # ลบไฟล์ข้อมูลชั่วคราว
+            delete_import_data_file(batch_reference)
+            session.pop('import_batch_reference', None)
 
             if result['success']:
                 stats = result['stats']
@@ -229,6 +320,7 @@ def preview():
                 flash(f"เกิดข้อผิดพลาดในการบันทึกข้อมูล: {result['error']}", 'danger')
 
         except Exception as e:
+            current_app.logger.error(f"Error saving transactions: {str(e)}")
             flash(f"เกิดข้อผิดพลาดในการนำเข้าข้อมูล: {str(e)}", 'danger')
 
     return render_template(
@@ -261,8 +353,6 @@ def view(batch_reference):
         title=f'รายละเอียดการนำเข้า {import_batch.source}'
     )
 
-
-# เพิ่มฟังก์ชันนี้ใน app/views/import_transactions.py
 
 @imports_bp.route('/delete/<batch_reference>', methods=['POST'])
 @login_required
@@ -326,6 +416,7 @@ def delete(batch_reference):
         flash(f'ลบการนำเข้าและธุรกรรมที่เกี่ยวข้องทั้งหมด {len(transactions)} รายการสำเร็จ', 'success')
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error deleting import: {str(e)}")
         flash(f'เกิดข้อผิดพลาดในการลบข้อมูล: {str(e)}', 'danger')
 
     return redirect(url_for('imports.index'))

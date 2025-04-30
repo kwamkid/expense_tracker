@@ -28,10 +28,12 @@ def index():
 def create():
     # รับค่า type จาก query string (ถ้ามี)
     category_type = request.args.get('type', 'expense')
+
+    # สร้างฟอร์มและกำหนดค่า type เริ่มต้น
     form = CategoryForm()
 
-    # กำหนดค่าเริ่มต้นของประเภทหมวดหมู่
-    if category_type and category_type in ['income', 'expense']:
+    # สำคัญ: ต้องตั้งค่า type ก่อนการ validate ของฟอร์ม
+    if request.method == 'GET':
         form.type.data = category_type
 
     if form.validate_on_submit():
@@ -41,8 +43,8 @@ def create():
             color=form.color.data,
             icon=form.icon.data,
             organization_id=current_user.active_organization_id,
-            created_by=current_user.id,  # เพิ่มการกำหนดค่า created_by
-            updated_by=current_user.id  # เพิ่มการกำหนดค่า updated_by
+            created_by=current_user.id,
+            updated_by=current_user.id
         )
 
         db.session.add(category)
@@ -65,12 +67,16 @@ def edit(id):
     category = Category.query.filter_by(id=id, organization_id=current_user.active_organization_id).first_or_404()
     form = CategoryForm(obj=category)
 
+    # สำคัญ: เพิ่มการกำหนดค่า id ในฟอร์ม
+    if hasattr(form, 'id'):
+        form.id.data = category.id
+
     if form.validate_on_submit():
         category.name = form.name.data
         category.type = form.type.data
         category.color = form.color.data
         category.icon = form.icon.data
-        category.updated_by = current_user.id  # เพิ่มบรรทัดนี้
+        category.updated_by = current_user.id
 
         db.session.commit()
         flash(f'แก้ไขหมวดหมู่ "{form.name.data}" สำเร็จ!', 'success')
