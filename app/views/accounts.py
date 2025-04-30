@@ -23,9 +23,13 @@ def create():
     if form.validate_on_submit():
         account = Account(
             name=form.name.data,
+            account_number=form.account_number.data,
+            bank_name=form.bank_name.data,
             balance=form.balance.data,
             is_active=form.is_active.data,
-            organization_id=current_user.active_organization_id
+            organization_id=current_user.active_organization_id,
+            created_by=current_user.id,
+            updated_by=current_user.id
         )
         db.session.add(account)
         db.session.commit()
@@ -36,7 +40,6 @@ def create():
     return render_template('accounts/create.html', form=form, title='เพิ่มบัญชีใหม่')
 
 
-# แก้ไขฟังก์ชัน edit ใน app/views/accounts.py
 @accounts_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
@@ -48,8 +51,11 @@ def edit(id):
 
     if form.validate_on_submit():
         account.name = form.name.data
+        account.account_number = form.account_number.data
+        account.bank_name = form.bank_name.data
         account.balance = form.balance.data
         account.is_active = form.is_active.data
+        account.updated_by = current_user.id
 
         db.session.commit()
         flash('แก้ไขบัญชีสำเร็จ!', 'success')
@@ -63,8 +69,8 @@ def edit(id):
 def delete(id):
     account = Account.query.filter_by(id=id, organization_id=current_user.active_organization_id).first_or_404()
 
-    # ตรวจสอบว่ามีธุรกรรมในบัญชีหรือไม่
-    if account.transactions.count() > 0:
+    # ตรวจสอบว่ามีธุรกรรมในบัญชีหรือไม่โดยใช้เมธอดใหม่
+    if account.transaction_count() > 0:
         flash('ไม่สามารถลบบัญชีที่มีธุรกรรมได้ โปรดลบธุรกรรมก่อน', 'danger')
         return redirect(url_for('accounts.index'))
 

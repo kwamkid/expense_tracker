@@ -18,7 +18,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar-theme.css') }}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -39,13 +38,15 @@
                     {% if active_org and active_org.logo_path %}
                         <img src="{{ url_for('static', filename='uploads/organizations/' + active_org.logo_path) }}"
                              alt="{{ active_org.name }}"
-                             width="auto"
-                             height="30">
+                             class="organization-logo"
+                             width="36"
+                             height="36">
                     {% else %}
                         <img src="{{ url_for('static', filename='images/logo.png') }}"
                              alt="Logo"
-                             width="auto"
-                             height="30">
+                             class="organization-logo"
+                             width="36"
+                             height="36">
                     {% endif %}
                 </div>
 
@@ -70,8 +71,8 @@
                                     {% if active_org.logo_path %}
                                         <img src="{{ url_for('static', filename='uploads/organizations/' + active_org.logo_path) }}"
                                              alt="{{ active_org.name }}"
-                                             class="me-2"
-                                             style="width: 20px; height: 20px; object-fit: contain;">
+                                             class="me-2 organization-logo"
+                                             style="width: 24px; height: 24px;">
                                     {% else %}
                                         <i class="fas fa-building me-2"></i>
                                     {% endif %}
@@ -101,14 +102,18 @@
                 {% set active_org = current_user.get_active_organization() %}
                 {% if active_org and active_org.logo_path %}
                     <div class="logo-container">
-                        <img src="{{ url_for('static', filename='uploads/organizations/' + active_org.logo_path) }}"
-                             alt="{{ active_org.name }}"
-                             class="logo-img">
+                        <div class="circle-logo-container">
+                            <img src="{{ url_for('static', filename='uploads/organizations/' + active_org.logo_path) }}"
+                                 alt="{{ active_org.name }}"
+                                 class="logo-img">
+                        </div>
                     </div>
                     <div class="text-center text-white mb-2">{{ active_org.name }}</div>
                 {% else %}
                     <div class="logo-container">
-                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo-img">
+                        <div class="circle-logo-container">
+                            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo-img">
+                        </div>
                     </div>
                 {% endif %}
 
@@ -127,8 +132,8 @@
                                     {% if org.logo_path %}
                                     <img src="{{ url_for('static', filename='uploads/organizations/' + org.logo_path) }}"
                                          alt="{{ org.name }}"
-                                         class="me-2"
-                                         style="width: 20px; height: 20px; object-fit: contain;">
+                                         class="me-2 organization-logo"
+                                         style="width: 24px; height: 24px;">
                                     {% else %}
                                     <i class="fas fa-building me-2"></i>
                                     {% endif %}
@@ -167,6 +172,14 @@
                         <span>ธุรกรรม</span>
                     </a>
                 </li>
+
+                 <!-- เพิ่มเมนูนำเข้าธุรกรรม -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.endpoint.startswith('imports') %}active{% endif %}" href="{{ url_for('imports.index') }}">
+            <i class="fas fa-file-import"></i>
+            <span>นำเข้าธุรกรรม</span>
+        </a>
+    </li>
 
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint.startswith('accounts') %}active{% endif %}" href="{{ url_for('accounts.index') }}">
@@ -239,12 +252,6 @@
                             </li>
                             {% if active_org.get_user_role(current_user.id) == 'admin' %}
                             <li class="nav-item">
-                                <a class="nav-link submenu-link {% if request.endpoint == 'organization.members' and id == active_org.id %}active{% endif %}"
-                                   href="{{ url_for('organization.members', id=active_org.id) }}">
-                                    <i class="fas fa-user-plus me-2"></i>เชิญสมาชิกใหม่
-                                </a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link submenu-link {% if request.endpoint == 'organization.update' and id == active_org.id %}active{% endif %}"
                                    href="{{ url_for('organization.update', id=active_org.id) }}">
                                     <i class="fas fa-cog me-2"></i>ตั้งค่าองค์กร
@@ -270,69 +277,74 @@
                     </a>
                 </li>
             </ul>
+        </nav>
 
-            <div class="user-info d-none d-md-block">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-user-circle me-2"></i>
-                    <span>{{ current_user.username }}</span>
+        <!-- Top Navigation Bar -->
+        <div class="topbar" id="topbar">
+            <button class="toggle-sidebar" id="sidebarToggle" aria-label="Toggle Sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- User Profile -->
+            <div class="user-menu-container">
+                <button class="user-profile-btn" id="userProfileBtn">
+                    {% if current_user.line_profile_url %}
+                    <img src="{{ current_user.line_profile_url }}" alt="{{ current_user.username }}">
+                    {% else %}
+                    <i class="fas fa-user-circle fa-2x text-secondary me-2"></i>
+                    {% endif %}
+                    <span class="user-name d-none d-md-inline-block">{{ current_user.username }}</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+
+                <!-- User Dropdown Menu -->
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="user-dropdown-header border-bottom py-2 px-3">
+                        <div class="d-flex align-items-center">
+                            {% if current_user.line_profile_url %}
+                            <img src="{{ current_user.line_profile_url }}" alt="{{ current_user.username }}" class="rounded-circle me-2" width="36" height="36">
+                            {% else %}
+                            <i class="fas fa-user-circle fa-2x text-secondary me-2"></i>
+                            {% endif %}
+                            <div>
+                                <div class="fw-bold">{{ current_user.username }}</div>
+                                <div class="small text-muted">{{ current_user.email }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% set active_org = current_user.get_active_organization() %}
+                    {% if active_org %}
+                    <div class="p-2 border-bottom">
+                        <div class="small text-muted mb-1">องค์กรที่ใช้งานอยู่:</div>
+                        <div class="d-flex align-items-center">
+                            {% if active_org.logo_path %}
+                            <img src="{{ url_for('static', filename='uploads/organizations/' + active_org.logo_path) }}"
+                                 alt="{{ active_org.name }}"
+                                 class="me-2 organization-logo"
+                                 style="width: 24px; height: 24px;">
+                            {% else %}
+                            <i class="fas fa-building me-2"></i>
+                            {% endif %}
+                            <span class="fw-medium">{{ active_org.name }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <a href="{{ url_for('organization.index') }}" class="user-dropdown-item">
+                        <i class="fas fa-building me-2"></i>จัดการองค์กร
+                    </a>
+
+                    <a href="{{ url_for('auth.logout') }}" class="user-dropdown-item">
+                        <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
+                    </a>
                 </div>
             </div>
-        </nav>
+        </div>
         {% endif %}
 
         <!-- Main Content -->
         <div class="main-content" id="mainContent">
-            {% if current_user.is_authenticated %}
-            <header class="d-none d-md-flex">
-                <button class="toggle-sidebar" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div>
-                    <!-- Header content if needed -->
-                </div>
-
-                <!-- Organization Information in Header -->
-                {% if current_user.active_organization_id %}
-                {% set active_org = current_user.get_active_organization() %}
-                <div class="ms-auto d-flex align-items-center">
-                    <div class="me-3">
-                        <small class="text-muted me-2">องค์กรที่กำลังใช้งาน:</small>
-                        <span class="fw-bold">{{ active_org.name }}</span>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="headerOrgDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-exchange-alt me-1"></i> เปลี่ยน
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="headerOrgDropdown">
-                            {% for org in current_user.organizations %}
-                            <li>
-                                <a class="dropdown-item {% if current_user.active_organization_id == org.id %}active{% endif %}"
-                                   href="{{ url_for('organization.select', id=org.id) }}">
-                                    {% if org.logo_path %}
-                                    <img src="{{ url_for('static', filename='uploads/organizations/' + org.logo_path) }}"
-                                         alt="{{ org.name }}"
-                                         class="me-2"
-                                         style="width: 20px; height: 20px; object-fit: contain;">
-                                    {% else %}
-                                    <i class="fas fa-building me-2"></i>
-                                    {% endif %}
-                                    {{ org.name }}
-                                </a>
-                            </li>
-                            {% endfor %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('organization.create') }}">
-                                    <i class="fas fa-plus-circle me-2"></i> สร้างองค์กรใหม่
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                {% endif %}
-            </header>
-            {% endif %}
-
             <main>
                 <div class="container-fluid">
                     <!-- Flash Messages -->

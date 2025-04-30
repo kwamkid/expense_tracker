@@ -1,4 +1,4 @@
-/* app/static/js/main.js - ปรับปรุงประสิทธิภาพ */
+/* app/static/js/main.js - ปรับปรุงการทำงานของ sidebar และ user profile */
 
 /**
  * Debounce function - ลดจำนวนครั้งที่ฟังก์ชันจะถูกเรียกในช่วงเวลาสั้นๆ
@@ -179,10 +179,13 @@ document.addEventListener('DOMContentLoaded', function() {
   const sidebarToggle = document.getElementById('sidebarToggle');
   const sidebar = document.getElementById('sidebar');
   const mainContent = document.getElementById('mainContent');
+  const topbar = document.getElementById('topbar');
   const mobileMenuToggle = document.getElementById('mobileMenuToggle');
   const mobileUserMenuToggle = document.getElementById('mobileUserMenuToggle');
   const mobileUserDropdown = document.getElementById('mobileUserDropdown');
   const menuBackdrop = document.getElementById('menuBackdrop');
+  const userProfileBtn = document.getElementById('userProfileBtn');
+  const userDropdown = document.getElementById('userDropdown');
 
   // Initialize variables
   let isMobile = window.innerWidth <= 768;
@@ -204,6 +207,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (mobileUserDropdown) {
       mobileUserDropdown.classList.remove('show');
     }
+
+    if (userDropdown) {
+      userDropdown.classList.remove('show');
+    }
   }
 
   // เรียกฟังก์ชันเริ่มต้น
@@ -215,6 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!isMobile) {
         sidebar.classList.toggle('collapsed');
         mainContent.classList.toggle('sidebar-collapsed');
+        if (topbar) topbar.classList.toggle('sidebar-collapsed');
       }
     });
   }
@@ -255,6 +263,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Toggle desktop user dropdown
+  if (userProfileBtn && userDropdown) {
+    userProfileBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      userDropdownVisible = !userDropdownVisible;
+
+      if (userDropdownVisible) {
+        userDropdown.classList.add('show');
+      } else {
+        userDropdown.classList.remove('show');
+      }
+    });
+  }
+
   // Close sidebar when clicking on backdrop - ปรับปรุงให้ทำงานอย่างมีประสิทธิภาพ
   if (menuBackdrop && sidebar) {
     menuBackdrop.addEventListener('click', function() {
@@ -270,11 +292,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Close user dropdown when clicking outside - ปรับปรุงประสิทธิภาพ
   document.addEventListener('click', function(e) {
+    // Mobile user dropdown
     if (mobileUserDropdown && userDropdownVisible &&
         mobileUserMenuToggle && !mobileUserMenuToggle.contains(e.target) &&
         !mobileUserDropdown.contains(e.target)) {
       userDropdownVisible = false;
       mobileUserDropdown.classList.remove('show');
+    }
+
+    // Desktop user dropdown
+    if (userDropdown && userDropdownVisible &&
+        userProfileBtn && !userProfileBtn.contains(e.target) &&
+        !userDropdown.contains(e.target)) {
+      userDropdownVisible = false;
+      userDropdown.classList.remove('show');
     }
   });
 
@@ -305,8 +336,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (wasIsMobile !== isMobile) {
       if (isMobile) {
         // เปลี่ยนจาก desktop เป็นมือถือ
-        if (sidebar) sidebar.classList.remove('show');
+        if (sidebar) sidebar.classList.remove('show', 'collapsed');
         if (menuBackdrop) menuBackdrop.style.display = 'none';
+        if (mainContent) mainContent.classList.remove('sidebar-collapsed');
+        if (topbar) topbar.classList.remove('sidebar-collapsed');
         document.body.style.overflow = '';
       } else {
         // เปลี่ยนจากมือถือเป็น desktop
@@ -320,6 +353,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (mobileUserDropdown) {
         mobileUserDropdown.classList.remove('show');
+      }
+
+      if (userDropdown) {
+        userDropdown.classList.remove('show');
       }
     }
   }, 150); // debounce 150ms

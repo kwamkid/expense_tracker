@@ -34,8 +34,10 @@ def create_app(config_class=Config):
     os.makedirs(uploads_dir, exist_ok=True)
     os.makedirs(organizations_dir, exist_ok=True)
 
-    app.logger.info(f"Uploads directory: {uploads_dir}")
-    app.logger.info(f"Organizations directory: {organizations_dir}")
+    # ลดระดับการบันทึก log ลงเป็น DEBUG (เฉพาะเมื่อ app.debug เป็น True)
+    if app.debug:
+        app.logger.debug(f"Uploads directory: {uploads_dir}")
+        app.logger.debug(f"Organizations directory: {organizations_dir}")
 
     # ตรวจสอบ Tesseract
     check_tesseract(app)
@@ -61,14 +63,14 @@ def configure_logging(app):
     logs_dir = os.path.join(app.root_path, 'logs')
     os.makedirs(logs_dir, exist_ok=True)
 
-    # ตั้งค่าระดับการบันทึก log
-    log_level = logging.DEBUG if app.debug else logging.INFO
+    # ปรับระดับการบันทึก log ให้สูงขึ้น - ใช้ WARNING แทน INFO เพื่อลดปริมาณ log
+    log_level = logging.DEBUG if app.debug else logging.WARNING
 
-    # ตั้งค่าการบันทึกลงไฟล์
+    # ตั้งค่าการบันทึกลงไฟล์ - เพิ่ม maxBytes และ backupCount
     file_handler = RotatingFileHandler(
         os.path.join(logs_dir, 'app.log'),
-        maxBytes=10 * 1024 * 1024,  # 10MB
-        backupCount=10
+        maxBytes=5 * 1024 * 1024,  # 5MB (ลดลงจาก 10MB)
+        backupCount=3  # เก็บเพียง 3 ไฟล์ย้อนหลัง (ลดลงจาก 10)
     )
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
@@ -88,10 +90,15 @@ def configure_logging(app):
     app.logger.addHandler(console_handler)
     app.logger.setLevel(log_level)
 
-    # กำหนดระดับการบันทึก log สำหรับ werkzeug (หลังบ้านของ Flask)
-    logging.getLogger('werkzeug').setLevel(logging.INFO)
+    # กำหนดระดับการบันทึก log สำหรับ werkzeug (หลังบ้านของ Flask) เป็น WARNING
+    # แทน INFO เพื่อลดการบันทึก request logs
+    logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
-    app.logger.info('App logging configured')
+    # บันทึกเฉพาะเมื่อเริ่มต้นแอปครั้งแรก
+    if app.debug:
+        app.logger.debug('App logging configured')
+    else:
+        app.logger.info('App logging configured')
 
 
 def check_tesseract(app):
@@ -114,13 +121,15 @@ def check_tesseract(app):
                 break
 
         if tesseract_path:
-            app.logger.info(f"Found Tesseract at: {tesseract_path}")
-            try:
-                # ตรวจสอบเวอร์ชันด้วย subprocess
-                output = subprocess.check_output([tesseract_path, '--version']).decode('utf-8')
-                app.logger.info(f"Tesseract version info: {output.split('\\n')[0]}")
-            except Exception as e:
-                app.logger.warning(f"Failed to get Tesseract version: {str(e)}")
+            # บันทึกเฉพาะเมื่อ debug mode เท่านั้น หรือเมื่อจำเป็น
+            if app.debug:
+                app.logger.debug(f"Found Tesseract at: {tesseract_path}")
+                try:
+                    # ตรวจสอบเวอร์ชันด้วย subprocess
+                    output = subprocess.check_output([tesseract_path, '--version']).decode('utf-8')
+                    app.logger.debug(f"Tesseract version info: {output.split('\\n')[0]}")
+                except Exception as e:
+                    app.logger.warning(f"Failed to get Tesseract version: {str(e)}")
         else:
             app.logger.warning("Tesseract not found in any of the expected paths")
 
@@ -157,6 +166,8 @@ def register_blueprints(app):
     from app.views.reports import reports_bp
     from app.views.api import api_bp
     from app.views.organization import organization_bp  # เพิ่ม blueprint สำหรับองค์กร
+    from app.views.import_transactions import imports_bp
+
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -166,6 +177,8 @@ def register_blueprints(app):
     app.register_blueprint(reports_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(organization_bp)  # ลงทะเบียน blueprint องค์กร
+    app.register_blueprint(imports_bp)
+
 
 
 def register_error_handlers(app):

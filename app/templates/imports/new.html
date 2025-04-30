@@ -1,0 +1,54 @@
+{# app/templates/imports/new.html #}
+{% extends "base.html" %}
+{% from "macros.html" import render_field, render_submit_button %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('imports.index') }}">การนำเข้าธุรกรรม</a></li>
+                <li class="breadcrumb-item active" aria-current="page">นำเข้าธุรกรรมใหม่</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-file-import me-2"></i>นำเข้าธุรกรรมจากไฟล์ธนาคาร</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.csrf_token }}
+
+                    <div class="mb-4">
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>คำแนะนำในการนำเข้าข้อมูล</h5>
+                            <hr>
+                            <p>โปรดตรวจสอบว่าไฟล์ Excel ของคุณมีคอลัมน์ที่จำเป็นดังต่อไปนี้:</p>
+                            <ul>
+                                <li><strong>Date</strong> - วันที่ทำรายการ</li>
+                                <li><strong>Withdrawal</strong> - จำนวนเงินที่ถอนออก (รายจ่าย)</li>
+                                <li><strong>Deposit</strong> - จำนวนเงินที่ฝากเข้า (รายรับ)</li>
+                                <li><strong>Note</strong> - รายละเอียดธุรกรรม</li>
+                                <li><strong>Account Number</strong> - เลขบัญชีธนาคาร</li>
+                            </ul>
+                            <p class="mb-0">ระบบจะตรวจสอบรายการซ้ำโดยอัตโนมัติ และเสนอหมวดหมู่ที่เหมาะสมให้ในขั้นตอนถัดไป</p>
+                        </div>
+                    </div>
+
+                    {{ render_field(form.bank) }}
+                    {{ render_field(form.account_id) }}
+                    {{ render_field(form.file) }}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{{ url_for('imports.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> ยกเลิก
+                        </a>
+                        {{ form.submit(class='btn btn-primary') }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

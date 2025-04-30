@@ -22,6 +22,20 @@
                         </div>
                     </div>
 
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ render_field(form.account_number) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ render_field(form.bank_name) }}
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>หมายเหตุ:</strong> เลขที่บัญชีจะช่วยในการจับคู่ธุรกรรมอัตโนมัติเมื่อนำเข้าข้อมูลจากไฟล์ธนาคาร
+                    </div>
+
                     <div class="mb-3 form-check">
                         {{ form.is_active(class='form-check-input') }}
                         {{ form.is_active.label(class='form-check-label') }}

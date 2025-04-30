@@ -1,15 +1,42 @@
-/* app/static/css/style.css */
+/* app/static/css/style.css - ปรับปรุงสีและองค์ประกอบ */
 
 /* Base styles */
 body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    font-family: 'Kanit', 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 main {
     flex: 1;
+}
+
+/* ปรับขนาด font ให้เล็กลง */
+h1 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+h2 {
+    font-size: 22px;
+    font-weight: 600;
+}
+
+h3 {
+    font-size: 20px;
+}
+
+h4 {
+    font-size: 18px;
+}
+
+h5 {
+    font-size: 16px;
+}
+
+h6 {
+    font-size: 14px;
 }
 
 /* Navbar styles */
@@ -23,78 +50,91 @@ main {
 
 /* Card styles */
 .card {
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     border: none;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.07);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.07);
 }
 
 .card-header {
-    border-radius: 10px 10px 0 0 !important;
+    border-radius: 8px 8px 0 0 !important;
     font-weight: 600;
+    padding: 0.75rem 1rem;
 }
 
 /* Form styles */
 .form-control {
-    border-radius: 8px;
-    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
     border: 1px solid #e2e8f0;
 }
 
 .form-control:focus {
-    border-color: var(--primary-color, #e74c3c);
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+    border-color: var(--primary-color, #ef4136);
+    box-shadow: 0 0 0 3px rgba(239, 65, 54, 0.2);
 }
 
 .form-label {
     font-weight: 500;
+    font-size: 0.9rem;
 }
 
 .form-check-input:checked {
-    background-color: var(--primary-color, #e74c3c);
-    border-color: var(--primary-color, #e74c3c);
+    background-color: var(--primary-color, #ef4136);
+    border-color: var(--primary-color, #ef4136);
 }
 
 .form-check-input:focus {
-    border-color: var(--primary-color, #e74c3c);
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+    border-color: var(--primary-color, #ef4136);
+    box-shadow: 0 0 0 3px rgba(239, 65, 54, 0.2);
 }
 
 /* Button styles */
 .btn {
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
     font-weight: 500;
     transition: all 0.2s;
 }
 
 .btn-primary {
-    background-color: var(--primary-color, #e74c3c);
-    border-color: var(--primary-color, #e74c3c);
+    background-color: var(--primary-color, #ef4136);
+    border-color: var(--primary-color, #ef4136);
 }
 
 .btn-primary:hover {
-    background-color: var(--primary-dark, #c0392b);
-    border-color: var(--primary-dark, #c0392b);
+    background-color: var(--primary-dark, #d32f2f);
+    border-color: var(--primary-dark, #d32f2f);
 }
 
 .btn-primary:focus {
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.3);
+    box-shadow: 0 0 0 3px rgba(239, 65, 54, 0.3);
 }
 
 .btn-outline-primary {
-    color: var(--primary-color, #e74c3c);
-    border-color: var(--primary-color, #e74c3c);
+    color: var(--primary-color, #ef4136);
+    border-color: var(--primary-color, #ef4136);
 }
 
 .btn-outline-primary:hover {
-    background-color: var(--primary-color, #e74c3c);
-    border-color: var(--primary-color, #e74c3c);
+    background-color: var(--primary-color, #ef4136);
+    border-color: var(--primary-color, #ef4136);
+}
+
+/* Success button (สีเขียว) */
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
 }
 
 /* Table styles */
@@ -107,18 +147,19 @@ main {
     background-color: #f8f9fa;
     border-top: none;
     font-weight: 600;
+    font-size: 0.9rem;
 }
 
 .table-hover tbody tr:hover {
-    background-color: rgba(231, 76, 60, 0.05);
+    background-color: rgba(239, 65, 54, 0.05);
 }
 
 /* Category badge */
 .category-badge {
     display: inline-flex;
     align-items: center;
-    padding: 0.4rem 0.6rem;
-    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
     font-weight: 500;
     font-size: 0.85rem;
     color: white;
@@ -126,26 +167,27 @@ main {
 
 /* Alert styles */
 .alert {
-    border-radius: 10px;
+    border-radius: 8px;
     border: none;
+    font-size: 0.95rem;
 }
 
 /* Transaction type badges */
 .badge.bg-success {
-    background-color: #48bb78 !important;
+    background-color: #28a745 !important;
 }
 
 .badge.bg-danger {
-    background-color: #e53e3e !important;
+    background-color: #ef4136 !important;
 }
 
 /* Status indicators */
 .status-completed {
-    color: #48bb78;
+    color: #28a745;
 }
 
 .status-pending {
-    color: #ecc94b;
+    color: #ffc107;
 }
 
 /* Charts */
@@ -155,60 +197,60 @@ canvas {
 
 /* Custom icon colors */
 .text-income {
-    color: #48bb78;
+    color: #28a745;
 }
 
 .text-expense {
-    color: #e53e3e;
+    color: #ef4136;
 }
 
 /* Receipt image */
 .receipt-thumbnail {
     cursor: pointer;
-    max-height: 100px;
-    border-radius: 5px;
+    max-height: 80px;
+    border-radius: 4px;
     border: 1px solid #e2e8f0;
 }
 
 .receipt-modal-image {
     max-width: 100%;
-    border-radius: 5px;
+    border-radius: 4px;
 }
 
 /* Custom toggle switch */
 .form-switch .form-check-input {
-    width: 3em;
-    height: 1.5em;
+    width: 2.5em;
+    height: 1.25em;
 }
 
 /* Color picker */
 .color-picker {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     padding: 0;
     border: none;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 4px;
 }
 
 /* Dashboard cards */
 .summary-card {
-    border-radius: 15px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
 }
 
 .summary-card .card-body {
-    padding: 1.5rem;
+    padding: 1.25rem;
 }
 
 .summary-card h2 {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 700;
 }
 
 .summary-icon {
-    font-size: 2.5rem;
+    font-size: 2rem;
     opacity: 0.3;
     position: absolute;
     right: 1rem;
@@ -217,59 +259,42 @@ canvas {
 
 /* Animation effects */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 .card {
-    animation: fadeIn 0.5s ease-out;
-}
-
-/* Responsive font sizes */
-@media (max-width: 767.98px) {
-    h1 {
-        font-size: 1.8rem;
-    }
-    .summary-card h2 {
-        font-size: 1.5rem;
-    }
+    animation: fadeIn 0.3s ease-out;
 }
 
 /* Modal styles */
 .modal-content {
-    border-radius: 10px;
+    border-radius: 8px;
     border: none;
 }
 
 .modal-header {
-    border-radius: 10px 10px 0 0;
-}
-
-/* Custom datepicker styling */
-.datepicker-dropdown {
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px 8px 0 0;
 }
 
 /* Custom select */
 .custom-select {
     background-color: #fff;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
 }
 
 /* Font Awesome icon selector */
 .icon-selector {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-    gap: 10px;
+    gap: 8px;
     max-height: 200px;
     overflow-y: auto;
-    padding: 10px;
+    padding: 8px;
     background-color: #f8f9fa;
-    border-radius: 8px;
+    border-radius: 6px;
     margin-top: 5px;
 }
 
@@ -277,8 +302,8 @@ canvas {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 8px;
+    border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s;
 }
@@ -288,19 +313,8 @@ canvas {
 }
 
 .icon-option.selected {
-    background-color: var(--primary-color, #e74c3c);
+    background-color: var(--primary-color, #ef4136);
     color: white;
-}
-
-/* Date range picker */
-.daterangepicker {
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    border: none;
-}
-
-.daterangepicker .ranges li.active {
-    background-color: var(--primary-color, #e74c3c);
 }
 
 /* Footer */
@@ -308,13 +322,14 @@ canvas {
     margin-top: auto;
     background-color: #f8f9fa;
     border-top: 1px solid #e9ecef;
-    padding: 1rem 0;
+    padding: 0.8rem 0;
+    font-size: 0.9rem;
 }
 
 /* Report filter form */
 .report-filter {
     background-color: #f8f9fa;
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 15px;
     margin-bottom: 20px;
 }
@@ -326,7 +341,7 @@ canvas {
     }
 
     body {
-        font-size: 12pt;
+        font-size: 11pt;
     }
 
     .container {
@@ -348,18 +363,12 @@ canvas {
     }
 }
 
-/* Thai fonts */
-@font-face {
-    font-family: 'Kanit';
-    src: url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+/* ปรับแต่งสีพื้นหลังของ bg-primary */
+.bg-primary {
+    background-color: var(--primary-color, #ef4136) !important;
 }
 
-@font-face {
-    font-family: 'Sarabun';
-    src: url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
-}
-
-/* แก้ไขไอคอนบัญชีและองค์ประกอบอื่นๆ ที่เป็นสีน้ำเงิน */
+/* ปรับแต่งไอคอนบัญชีและองค์ประกอบอื่นๆ ที่เป็นสีน้ำเงิน */
 .wallet-icon,
 .fa-wallet,
 [class*="fa-"].text-primary,
@@ -367,17 +376,31 @@ canvas {
 .text-primary,
 .account-icon,
 .btn-info {
-    color: var(--primary-color, #e74c3c) !important;
+    color: var(--primary-color, #ef4136) !important;
+}
+
+/* โลโก้องค์กรวงกลม */
+.organization-logo {
+    border-radius: 50%;
+    object-fit: cover;
+    aspect-ratio: 1/1;
+}
+
+.dropdown-item img,
+.dropdown-menu img,
+.user-dropdown img {
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .btn-info,
 .bg-info,
 .bg-primary {
-    background-color: var(--primary-color, #e74c3c) !important;
-    border-color: var(--primary-color, #e74c3c) !important;
+    background-color: var(--primary-color, #ef4136) !important;
+    border-color: var(--primary-color, #ef4136) !important;
 }
 
-/* แก้ไขสำหรับกรณีที่กำหนดเป็น text-color */
+/* แก้ไขกรณีที่กำหนดเป็น text-color */
 [class*="fa-"].text-primary,
 .icon-primary,
 .text-primary,
@@ -386,9 +409,69 @@ canvas {
     background-color: transparent !important;
 }
 
-/* แก้ไขไอคอนบัญชีโดยเฉพาะ */
-.fa-wallet,
-.wallet-icon,
-.account-icon {
-    color: var(--primary-color, #e74c3c) !important;
+/* ปรับแต่ง card วันหยุด */
+.holiday-card {
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color, #ef4136);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    transition: transform 0.2s;
+}
+
+.holiday-card:hover {
+    transform: translateX(3px);
+}
+
+/* หน้า login */
+.login-card {
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border: none;
+    overflow: hidden;
+}
+
+.login-header {
+    background-color: #00B900 !important; /* สีของ LINE */
+    border-bottom: none;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.login-body {
+    padding: 2rem;
+}
+
+.line-login-btn {
+    background-color: #00B900;
+    border-color: #00B900;
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+.line-login-btn:hover {
+    background-color: #009900;
+    border-color: #009900;
+}
+
+/* ปรับแต่งรูปแบบสำหรับหน้าจอมือถือเท่านั้น */
+@media (max-width: 767.98px) {
+    h1 {
+        font-size: 20px;
+    }
+
+    .summary-card h2 {
+        font-size: 18px;
+    }
+
+    .card-header {
+        padding: 0.6rem 0.8rem;
+    }
+
+    .btn {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.9rem;
+    }
 }

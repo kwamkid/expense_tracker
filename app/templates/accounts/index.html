@@ -1,3 +1,4 @@
+{# app/templates/accounts/index.html - ปรับให้แสดงเลขที่บัญชี #}
 {% extends "base.html" %}
 
 {% block content %}
@@ -33,7 +34,19 @@
                     <h3 class="{{ 'text-success' if account.balance >= 0 else 'text-danger' }}">
                         {{ "{:,.2f}".format(account.balance) }} ฿
                     </h3>
-                    <p class="text-muted">สร้างเมื่อ {{ account.created_at.strftime('%d/%m/%Y') }}</p>
+
+                    {% if account.bank_name or account.account_number %}
+                    <div class="mt-2 mb-2">
+                        {% if account.bank_name %}
+                        <p class="mb-0"><strong>ธนาคาร:</strong> {{ account.bank_name }}</p>
+                        {% endif %}
+                        {% if account.account_number %}
+                        <p class="mb-0"><strong>เลขที่บัญชี:</strong> {{ account.account_number }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <p class="text-muted mt-2">สร้างเมื่อ {{ account.created_at.strftime('%d/%m/%Y') }}</p>
                 </div>
                 <div class="card-footer d-flex justify-content-between">
                     <a href="{{ url_for('accounts.edit', id=account.id) }}" class="btn btn-sm btn-outline-primary">
@@ -57,10 +70,10 @@
                     </div>
                     <div class="modal-body">
                         <p>คุณต้องการลบบัญชี "{{ account.name }}" ใช่หรือไม่?</p>
-                        {% if account.transactions.count() > 0 %}
+                        {% if account.transaction_count() > 0 %}
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            บัญชีนี้มีธุรกรรมอยู่ {{ account.transactions.count() }} รายการ
+                            บัญชีนี้มีธุรกรรมอยู่ {{ account.transaction_count() }} รายการ
                             คุณต้องลบธุรกรรมทั้งหมดก่อนจึงจะสามารถลบบัญชีได้
                         </div>
                         {% else %}
@@ -74,7 +87,8 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
                         <form action="{{ url_for('accounts.delete', id=account.id) }}" method="post">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-danger" {{ 'disabled' if account.transactions.count() > 0 }}>
+                            <button type="submit" class="btn btn-danger"
+                                {% if account.transaction_count() > 0 %}disabled{% endif %}>
                                 ยืนยันการลบ
                             </button>
                         </form>

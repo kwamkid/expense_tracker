@@ -23,6 +23,22 @@
                         </div>
                     </div>
 
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ render_field(form.account_number) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ render_field(form.bank_name) }}
+                        </div>
+                    </div>
+
+                    {% if not account.account_number %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>หมายเหตุ:</strong> การเพิ่มเลขที่บัญชีจะช่วยในการจับคู่ธุรกรรมอัตโนมัติเมื่อนำเข้าข้อมูลจากไฟล์ธนาคาร
+                    </div>
+                    {% endif %}
+
                     <div class="mb-3 form-check">
                         {{ form.is_active(class='form-check-input') }}
                         {{ form.is_active.label(class='form-check-label') }}
@@ -37,11 +53,11 @@
                 </form>
             </div>
 
-            {% if account.transactions.count() > 0 %}
+            {% if account.transaction_count() > 0 %}
             <div class="card-footer">
                 <div class="alert alert-info mb-0">
                     <i class="fas fa-info-circle me-2"></i>
-                    บัญชีนี้มีธุรกรรมทั้งหมด {{ account.transactions.count() }} รายการ
+                    บัญชีนี้มีธุรกรรมทั้งหมด {{ account.transaction_count() }} รายการ
                 </div>
             </div>
             {% endif %}

@@ -1,12 +1,12 @@
-/* app/static/css/sidebar-theme.css - ปรับปรุงประสิทธิภาพ */
+/* app/static/css/sidebar-theme.css - ปรับปรุงประสิทธิภาพและสีหลัก */
 
 /* Import IBM Plex Sans Thai font */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary-color: #e74c3c;
-  --primary-dark: #c0392b;
-  --primary-light: #f5b7b1;
+  --primary-color: #ef4136; /* สีแดงตามแบบ CI ในรูปที่ส่งมา */
+  --primary-dark: #d32f2f;  /* สีแดงเข้มสำหรับ hover และ active */
+  --primary-light: #ffcdd2; /* สีแดงอ่อนสำหรับพื้นหลัง */
   --text-light: #ffffff;
   --text-dark: #333333;
   --gray-light: #f8f9fa;
@@ -27,39 +27,39 @@ body {
   margin: 0; /* เพิ่ม margin: 0 เพื่อแก้ปัญหา layout shift */
 }
 
-/* Adjust heading sizes */
+/* ลดขนาด heading ลงตามความต้องการ */
 h1 {
-  font-size: 32px;
+  font-size: 24px; /* ลดจาก 32px */
+  font-weight: 600;
 }
 
 h2 {
-  font-size: 28px;
+  font-size: 22px; /* ลดจาก 28px */
 }
 
 h3 {
-  font-size: 24px;
+  font-size: 20px; /* ลดจาก 24px */
 }
 
 h4 {
-  font-size: 20px;
+  font-size: 18px; /* ลดจาก 20px */
 }
 
 h5 {
-  font-size: 18px;
+  font-size: 16px; /* ลดจาก 18px */
 }
 
 h6 {
-  font-size: 16px;
+  font-size: 14px; /* ลดจาก 16px */
 }
 
-/* ลดการใช้ hover effects ที่อาจทำให้เกิดการทำงานซ้ำ */
+/* ปรับแต่งการ์ด */
 .card {
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-radius: 8px; /* ลดจาก 10px */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   border: none;
   transition: transform 0.2s, box-shadow 0.2s;
   margin-bottom: 20px;
-  /* ลบ will-change เพื่อลดการใช้ memory */
 }
 
 /* Sidebar Styles */
@@ -72,12 +72,16 @@ h6 {
   z-index: 1000;
   background-color: var(--primary-color);
   color: var(--text-light);
-  transition: left var(--transition-speed); /* ปรับให้ animate เฉพาะ property ที่จำเป็น */
+  transition: width var(--transition-speed), left var(--transition-speed); /* ปรับให้ animate ทั้ง width และ left */
   box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   /* ใช้ will-change เฉพาะเท่าที่จำเป็น */
-  will-change: left;
+  will-change: width, left;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
 }
 
 .sidebar .sidebar-header {
@@ -88,7 +92,7 @@ h6 {
 
 .logo-container {
   width: 100%;
-  max-height: 120px;
+  max-height: 100px; /* ลดลงจาก 120px */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -96,10 +100,25 @@ h6 {
   padding: 10px;
 }
 
+/* Container สำหรับโลโก้วงกลม */
+.circle-logo-container {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* ลบ background-color: #fff; เพื่อไม่ให้มีขอบสีขาว */
+}
+
 .logo-img {
   max-width: 80%;
-  max-height: 100px;
-  object-fit: contain;
+  max-height: 80px; /* ลดลงจาก 100px */
+  object-fit: cover;
+  border-radius: 50%; /* เพิ่มให้เป็นวงกลม */
+  aspect-ratio: 1/1; /* คงอัตราส่วนเป็น 1:1 เพื่อให้เป็นวงกลมสมบูรณ์ */
 }
 
 .sidebar .nav-item {
@@ -107,18 +126,50 @@ h6 {
 }
 
 .sidebar .nav-link {
-  padding: 12px 20px;
+  padding: 10px 16px; /* ลดลงจาก 12px 20px */
   color: var(--text-light);
-  transition: background-color var(--transition-speed); /* ลด transition property */
+  transition: background-color var(--transition-speed);
   display: flex;
   align-items: center;
   border-left: 4px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative; /* เพิ่มตำแหน่งสัมพัทธ์เพื่อจัดการลูกศร */
+  justify-content: flex-start; /* เริ่มจากซ้าย */
 }
 
 .sidebar .nav-link i {
   margin-right: 15px;
   width: 20px;
   text-align: center;
+  font-size: 16px; /* ปรับขนาดไอคอนให้เหมาะสม */
+  color: var(--text-light); /* กำหนดให้ไอคอนเป็นสีขาวเสมอ */
+}
+
+.sidebar.collapsed .nav-link span {
+  display: none;
+}
+
+.sidebar.collapsed .dropdown-toggle::after {
+  display: none;
+}
+
+/* จัดการลูกศรใน dropdown toggle */
+.sidebar .dropdown-toggle::after {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  content: "\f107"; /* FontAwesome chevron-down icon */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  border: none; /* ลบลูกศรเดิมของ Bootstrap */
+  width: auto;
+  height: auto;
+  vertical-align: middle;
+  display: inline-block;
+  line-height: 1;
 }
 
 .sidebar .nav-link:hover {
@@ -137,17 +188,39 @@ h6 {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
+/* ปรับความกว้างของ submenu เพื่อให้ลูกศรอยู่ในตำแหน่งที่ถูกต้อง */
 .submenu-link {
   padding-left: 50px !important;
+  position: relative; /* เพิ่มเพื่อรองรับการจัดวาง */
 }
 
 .submenu-link.active {
   background-color: rgba(0, 0, 0, 0.2) !important;
 }
 
+/* แก้ไขให้ไอคอนทั้งหมดในเมนูเป็นสีขาว */
+.sidebar .nav-item i {
+  color: var(--text-light) !important;
+}
+
+/* เพิ่มคลาสพิเศษเพื่อจัดการกับไอคอนบัญชีและไอคอนอื่นๆ */
+.sidebar .fa-wallet,
+.sidebar .fa-tags,
+.sidebar .fa-exchange-alt,
+.sidebar .fa-chart-line,
+.sidebar .fa-file-alt,
+.sidebar .fa-building,
+.sidebar .fa-users,
+.sidebar .fa-cog,
+.sidebar .fa-sign-out-alt,
+.sidebar .fa-plus-circle,
+.sidebar .fa-list {
+  color: var(--text-light) !important;
+}
+
 .sidebar .dropdown-toggle::after {
   float: right;
-  margin-top: 8px;
+
 }
 
 .sidebar .user-info {
@@ -163,7 +236,105 @@ h6 {
   margin: 10px 0;
 }
 
-/* Top Navigation for Mobile */
+/* Top Navigation */
+.topbar {
+  height: 60px;
+  background-color: var(--text-light);
+  border-bottom: 1px solid var(--gray-medium);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: var(--sidebar-width);
+  z-index: 999;
+  transition: left var(--transition-speed);
+}
+
+.topbar.sidebar-collapsed {
+  left: var(--sidebar-collapsed-width);
+}
+
+.toggle-sidebar {
+  background: none;
+  border: none;
+  color: var(--gray-dark);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.user-menu-container {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.user-profile-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 20px;
+  transition: background-color 0.2s;
+}
+
+.user-profile-btn:hover {
+  background-color: var(--gray-light);
+}
+
+.user-profile-btn img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.user-profile-btn .user-name {
+  font-weight: 500;
+}
+
+.user-profile-btn i {
+  margin-left: 10px;
+  color: var(--gray-dark);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 10px;
+  background-color: white;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  min-width: 200px;
+  z-index: 1001;
+  display: none;
+}
+
+.user-dropdown.show {
+  display: block;
+}
+
+.user-dropdown-header {
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--gray-medium);
+}
+
+.user-dropdown-item {
+  display: block;
+  padding: 8px 15px;
+  color: var(--text-dark);
+  text-decoration: none;
+}
+
+.user-dropdown-item:hover {
+  background-color: var(--gray-light);
+}
+
+/* Mobile Topbar */
 .mobile-topbar {
   display: none; /* ซ่อนโดยค่าเริ่มต้น จะแสดงผลเฉพาะบนมือถือ */
   position: fixed;
@@ -186,8 +357,10 @@ h6 {
 }
 
 .mobile-topbar .mobile-logo-container img {
-  height: 30px;
-  object-fit: contain;
+  height: 36px;
+  width: 36px;
+  object-fit: cover;
+  border-radius: 50%; /* เพิ่มให้เป็นวงกลม */
 }
 
 .mobile-topbar .mobile-menu-toggle {
@@ -213,7 +386,7 @@ h6 {
   background-color: white;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
-  min-width: 150px;
+  min-width: 180px;
   display: none;
   z-index: 1001;
 }
@@ -242,28 +415,12 @@ h6 {
   flex-direction: column;
   min-height: 100vh;
   will-change: margin-left, width;
+  padding-top: 60px; /* ปรับให้มีพื้นที่สำหรับ topbar */
 }
 
 .main-content.sidebar-collapsed {
   width: calc(100% - var(--sidebar-collapsed-width));
   margin-left: var(--sidebar-collapsed-width);
-}
-
-header {
-  padding: 15px 20px;
-  background-color: var(--text-light);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.toggle-sidebar {
-  background: none;
-  border: none;
-  color: var(--gray-dark);
-  font-size: 1.2rem;
-  cursor: pointer;
 }
 
 main {
@@ -288,7 +445,7 @@ footer {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1001;
+  z-index: 999;
   opacity: 0;
   visibility: hidden;
   transition: opacity var(--transition-speed);
@@ -350,27 +507,16 @@ footer {
     align-items: center;
   }
 
+  /* ซ่อน desktop topbar */
+  .topbar {
+    display: none;
+  }
+
   /* ปรับ main content */
   .main-content {
     width: 100%;
     margin-left: 0;
     padding-top: 60px;
-  }
-
-  /* ปรับขนาด h1 */
-  h1 {
-    font-size: 24px;
-  }
-
-  /* ซ่อน desktop header */
-  header {
-    display: none;
-  }
-
-  /* ลบ effect hover ของ card */
-  .card:hover {
-    transform: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   }
 
   /* ซ่อน user info ใน sidebar */
@@ -381,7 +527,7 @@ footer {
 
 /* Badge and Status Styles */
 .badge.bg-success {
-  background-color: #27ae60 !important;
+  background-color: #28a745 !important;
 }
 
 .badge.bg-danger {
@@ -389,16 +535,16 @@ footer {
 }
 
 .status-completed {
-  color: #27ae60;
+  color: #28a745;
 }
 
 .status-pending {
-  color: #f39c12;
+  color: #ffc107;
 }
 
 /* Transaction type badges */
 .text-income {
-  color: #27ae60;
+  color: #28a745;
 }
 
 .text-expense {
@@ -407,7 +553,7 @@ footer {
 
 /* Progress bars */
 .progress-bar-success {
-  background-color: #27ae60;
+  background-color: #28a745;
 }
 
 .progress-bar-danger {

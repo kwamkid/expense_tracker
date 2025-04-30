@@ -1,7 +1,7 @@
 # app/views/api.py
-# เพิ่มการ import login_required
+# เพิ่มการ imports login_required
 from flask import Blueprint, jsonify, request, current_app
-from flask_login import login_required, current_user  # เพิ่ม import login_required ตรงนี้
+from flask_login import login_required, current_user  # เพิ่ม imports login_required ตรงนี้
 import os
 import uuid
 import json
