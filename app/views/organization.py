@@ -334,7 +334,7 @@ def save_organization_logo(file):
     new_filename = f"logo_{timestamp}_{uuid.uuid4().hex[:8]}.{extension}"
 
     # กำหนดพาธสำหรับบันทึกไฟล์
-    upload_folder = os.path.join(current_app.root_path, 'static/uploads/organizations')
+    upload_folder = os.path.join(current_app.static_folder, 'uploads/organizations')
     os.makedirs(upload_folder, exist_ok=True)
     file_path = os.path.join(upload_folder, new_filename)
 
@@ -349,7 +349,7 @@ def delete_organization_logo(filename):
     if not filename:
         return False
 
-    filepath = os.path.join(current_app.root_path, 'static/uploads/organizations', filename)
+    filepath = os.path.join(current_app.static_folder, 'uploads/organizations', filename)
     if os.path.exists(filepath):
         os.remove(filepath)
         return True

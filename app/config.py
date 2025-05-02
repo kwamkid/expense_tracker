@@ -10,8 +10,8 @@ class Config:
 
     # Upload settings - เพิ่มขนาดเป็น 32MB
     MAX_CONTENT_LENGTH = 32 * 1024 * 1024  # 32MB max upload (เดิมเป็น 16MB)
-    UPLOAD_FOLDER = 'static/uploads/receipts'
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf' , 'heif'}
+    UPLOAD_FOLDER = 'static/uploads/receipts'  # ใช้ path ที่อ้างอิงจาก app root
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'heif'}
 
     # Session settings
     PERMANENT_SESSION_LIFETIME = timedelta(days=14)

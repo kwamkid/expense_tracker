@@ -62,8 +62,12 @@ instance/
 # Uploaded files and cache
 app/static/uploads/receipts/*
 app/static/uploads/organizations/*
+app/static/uploads/imports/*
+app/static/uploads/temp_imports/*
 !app/static/uploads/receipts/.gitkeep
 !app/static/uploads/organizations/.gitkeep
+!app/static/uploads/imports/.gitkeep
+!app/static/uploads/temp_imports/.gitkeep
 
 # Logs
 logs/

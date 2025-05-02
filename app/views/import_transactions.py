@@ -12,6 +12,8 @@ from app.forms.import_form import ImportForm, ImportConfirmForm
 from app.models import Account, Category, Transaction
 from app.models.category_matching import ImportBatch
 from app.services.import_service import ImportService
+from app.services.cleanup_service import cleanup_import_files  # นำเข้าฟังก์ชัน cleanup
+
 
 imports_bp = Blueprint('imports', __name__, url_prefix='/imports')
 
@@ -22,7 +24,7 @@ def save_import_data_to_file(data, batch_reference):
     บันทึกข้อมูลการนำเข้าลงไฟล์ชั่วคราวบนเซิร์ฟเวอร์แทนการใช้ session
     """
     # สร้างโฟลเดอร์สำหรับเก็บข้อมูลชั่วคราว (ถ้ายังไม่มี)
-    temp_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'temp_imports')
+    temp_dir = os.path.join(current_app.static_folder, 'uploads/temp_imports')
     os.makedirs(temp_dir, exist_ok=True)
 
     # กำหนดชื่อไฟล์จาก batch_reference
@@ -48,11 +50,12 @@ def save_import_data_to_file(data, batch_reference):
     return True
 
 
+
 def load_import_data_from_file(batch_reference):
     """
     อ่านข้อมูลการนำเข้าจากไฟล์ชั่วคราวบนเซิร์ฟเวอร์
     """
-    temp_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'temp_imports')
+    temp_dir = os.path.join(current_app.static_folder, 'uploads/temp_imports')
     filename = os.path.join(temp_dir, f"{batch_reference}.pkl")
 
     if not os.path.exists(filename):
@@ -79,7 +82,7 @@ def delete_import_data_file(batch_reference):
     """
     ลบไฟล์ข้อมูลชั่วคราวเมื่อเสร็จสิ้นหรือยกเลิกการนำเข้า
     """
-    temp_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'temp_imports')
+    temp_dir = os.path.join(current_app.static_folder, 'uploads/temp_imports')
     filename = os.path.join(temp_dir, f"{batch_reference}.pkl")
 
     if os.path.exists(filename):
@@ -115,10 +118,13 @@ def new():
 
     if form.validate_on_submit():
         try:
+            # ทำความสะอาดไฟล์เก่า เก็บแค่ 3 ไฟล์ล่าสุด
+            cleanup_import_files(max_files=3)
+
             # บันทึกไฟล์ที่อัพโหลด
             file = form.file.data
             filename = secure_filename(file.filename)
-            upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'imports')
+            upload_dir = os.path.join(current_app.static_folder, 'uploads/imports')
 
             # สร้างโฟลเดอร์ถ้ายังไม่มี
             os.makedirs(upload_dir, exist_ok=True)

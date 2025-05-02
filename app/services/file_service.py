@@ -29,7 +29,7 @@ def save_receipt(file):
     new_filename = f"receipt_{timestamp}_{uuid.uuid4().hex[:8]}.{extension}"
 
     # กำหนดพาธสำหรับบันทึกไฟล์
-    upload_folder = os.path.join(current_app.root_path, 'static/uploads/receipts')
+    upload_folder = os.path.join(current_app.static_folder, 'uploads/receipts')
     os.makedirs(upload_folder, exist_ok=True)
     file_path = os.path.join(upload_folder, new_filename)
 
@@ -62,7 +62,7 @@ def delete_receipt(filename):
     if not filename:
         return False
 
-    filepath = os.path.join(current_app.root_path, 'static/uploads/receipts', filename)
+    filepath = os.path.join(current_app.static_folder, 'uploads/receipts', filename)
     if os.path.exists(filepath):
         os.remove(filepath)
         return True

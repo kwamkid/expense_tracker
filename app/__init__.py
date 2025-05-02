@@ -6,6 +6,7 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 import sys
+import shutil
 
 
 def create_app(config_class=Config):
@@ -27,17 +28,44 @@ def create_app(config_class=Config):
     # ตั้งค่า logging
     configure_logging(app)
 
-    # Ensure uploads directory exists
-    uploads_dir = os.path.join(app.static_folder, 'uploads', 'receipts')
-    organizations_dir = os.path.join(app.static_folder, 'uploads', 'organizations')
+    # Ensure uploads directory exists within app/static directory
+    uploads_base = os.path.join(app.static_folder, 'uploads')
+    try:
+        # สร้างโฟลเดอร์หลัก uploads ก่อน
+        if not os.path.exists(uploads_base):
+            os.makedirs(uploads_base)
+        elif not os.path.isdir(uploads_base):
+            # ถ้า uploads มีอยู่แล้วแต่ไม่ใช่โฟลเดอร์ ให้ลบและสร้างใหม่
+            app.logger.warning(f"Removing file {uploads_base} and creating directory instead")
+            os.remove(uploads_base)
+            os.makedirs(uploads_base)
 
-    os.makedirs(uploads_dir, exist_ok=True)
-    os.makedirs(organizations_dir, exist_ok=True)
+        # สร้างโฟลเดอร์ย่อย
+        dirs_to_create = [
+            os.path.join(uploads_base, 'receipts'),
+            os.path.join(uploads_base, 'organizations'),
+            os.path.join(uploads_base, 'imports'),
+            os.path.join(uploads_base, 'temp_imports')
+        ]
+
+        for directory in dirs_to_create:
+            try:
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+                elif not os.path.isdir(directory):
+                    # ถ้ามีอยู่แล้วแต่ไม่ใช่โฟลเดอร์ ให้ลบและสร้างใหม่
+                    app.logger.warning(f"Removing file {directory} and creating directory instead")
+                    os.remove(directory)
+                    os.makedirs(directory)
+            except Exception as e:
+                app.logger.error(f"Error creating directory {directory}: {str(e)}")
+
+    except Exception as e:
+        app.logger.error(f"Error setting up upload directories: {str(e)}")
 
     # ลดระดับการบันทึก log ลงเป็น DEBUG (เฉพาะเมื่อ app.debug เป็น True)
     if app.debug:
-        app.logger.debug(f"Uploads directory: {uploads_dir}")
-        app.logger.debug(f"Organizations directory: {organizations_dir}")
+        app.logger.debug(f"Uploads base directory: {uploads_base}")
 
     # ตรวจสอบ Tesseract
     check_tesseract(app)
@@ -53,6 +81,17 @@ def create_app(config_class=Config):
 
     # Register context processors
     register_context_processors(app)
+
+    # เริ่มต้น scheduler สำหรับงานที่ทำเป็นประจำ (เช่น ทำความสะอาดไฟล์)
+    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        try:
+            from app.services.scheduler import init_scheduler
+            init_scheduler(app)
+            app.logger.info("Scheduler initialized for maintenance tasks")
+        except ImportError:
+            app.logger.warning("Could not initialize scheduler. apscheduler may not be installed.")
+        except Exception as e:
+            app.logger.error(f"Error initializing scheduler: {str(e)}")
 
     return app
 
@@ -168,7 +207,6 @@ def register_blueprints(app):
     from app.views.organization import organization_bp  # เพิ่ม blueprint สำหรับองค์กร
     from app.views.import_transactions import imports_bp
 
-
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(accounts_bp)
@@ -178,7 +216,6 @@ def register_blueprints(app):
     app.register_blueprint(api_bp)
     app.register_blueprint(organization_bp)  # ลงทะเบียน blueprint องค์กร
     app.register_blueprint(imports_bp)
-
 
 
 def register_error_handlers(app):
