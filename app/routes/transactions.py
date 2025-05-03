@@ -14,7 +14,11 @@ bangkok_tz = pytz.timezone('Asia/Bangkok')
 @login_required
 def index():
     page = request.args.get('page', 1, type=int)
-    per_page = 20
+    per_page = request.args.get('per_page', 20, type=int)
+
+    # Validate per_page
+    if per_page not in [20, 50, 100, 200]:
+        per_page = 20
 
     query = Transaction.query.filter_by(user_id=current_user.id)
 
@@ -25,6 +29,7 @@ def index():
     bank_account_id = request.args.get('bank_account')
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
+    search = request.args.get('search')
 
     if transaction_type:
         query = query.filter_by(type=transaction_type)
@@ -38,6 +43,8 @@ def index():
         query = query.filter(Transaction.transaction_date >= start_date)
     if end_date:
         query = query.filter(Transaction.transaction_date <= end_date)
+    if search:
+        query = query.filter(Transaction.description.ilike(f'%{search}%'))
 
     transactions = query.order_by(Transaction.transaction_date.desc(), Transaction.created_at.desc()) \
         .paginate(page=page, per_page=per_page)
@@ -166,8 +173,6 @@ def delete(id):
     flash('ลบรายการเรียบร้อยแล้ว', 'success')
     return redirect(url_for('transactions.index'))
 
-
-# เฉพาะส่วนที่ปรับปรุงใน app/routes/transactions.py
 
 @transactions_bp.route('/update_status/<int:id>', methods=['POST'])
 @login_required

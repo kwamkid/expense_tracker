@@ -139,7 +139,7 @@
                             </td>
                             <td>
                                 <div class="d-flex flex-column">
-                                    <span class="fw-bold">{{ transaction.description or 'ไม่มีรายละเอียด' }}</span>
+                                    <span>{{ transaction.description or 'ไม่มีรายละเอียด' }}</span>
                                     <small class="text-muted d-md-none">
                                         {{ transaction.transaction_date.strftime('%d/%m/%Y') }}
                                         {% if transaction.transaction_time %}

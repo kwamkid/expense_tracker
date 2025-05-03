@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>รายการธุรกรรม</h1>
+    <h1 class="h3">รายการธุรกรรม</h1>
     <div>
         <a href="{{ url_for('transactions.add') }}" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>เพิ่มธุรกรรม
@@ -15,75 +15,120 @@
 <!-- Filters -->
 <div class="card mb-4">
     <div class="card-body">
-        <form method="GET" class="row g-3">
-            <div class="col-md-2">
-                <label class="form-label">ประเภท</label>
-                <select name="type" class="form-select">
-                    <option value="">ทั้งหมด</option>
-                    <option value="income" {{ 'selected' if request.args.get('type') == 'income' }}>รายรับ</option>
-                    <option value="expense" {{ 'selected' if request.args.get('type') == 'expense' }}>รายจ่าย</option>
-                </select>
+        <form method="GET" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label">ประเภท</label>
+                    <div class="btn-group w-100" role="group" aria-label="Transaction type">
+                        <input type="radio" class="btn-check" name="type" id="type-all" value="" autocomplete="off"
+                               {% if not request.args.get('type') %}checked{% endif %} onchange="submitForm()">
+                        <label class="btn btn-outline-secondary" for="type-all">All</label>
+
+                        <input type="radio" class="btn-check" name="type" id="type-income" value="income" autocomplete="off"
+                               {% if request.args.get('type') == 'income' %}checked{% endif %} onchange="submitForm()">
+                        <label class="btn btn-outline-success" for="type-income">รับ</label>
+
+                        <input type="radio" class="btn-check" name="type" id="type-expense" value="expense" autocomplete="off"
+                               {% if request.args.get('type') == 'expense' %}checked{% endif %} onchange="submitForm()">
+                        <label class="btn btn-outline-danger" for="type-expense">จ่าย</label>
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label">หมวดหมู่</label>
+                    <select name="category" class="form-select" id="categoryFilter" onchange="submitForm()">
+                        <option value="">ทั้งหมด</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}"
+                                    data-type="{{ category.type }}"
+                                    {% if request.args.get('category') and request.args.get('category')|int == category.id %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label">สถานะ</label>
+                    <select name="status" class="form-select" onchange="submitForm()">
+                        <option value="">ทั้งหมด</option>
+                        <option value="pending" {{ 'selected' if request.args.get('status') == 'pending' }}>รอดำเนินการ</option>
+                        <option value="completed" {{ 'selected' if request.args.get('status') == 'completed' }}>สำเร็จแล้ว</option>
+                        <option value="cancelled" {{ 'selected' if request.args.get('status') == 'cancelled' }}>ยกเลิก</option>
+                    </select>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label">บัญชีธนาคาร</label>
+                    <select name="bank_account" class="form-select" onchange="submitForm()">
+                        <option value="">ทั้งหมด</option>
+                        {% for account in bank_accounts %}
+                        <option value="{{ account.id }}" {% if request.args.get('bank_account')|int == account.id %}selected{% endif %}>
+                            {{ account.bank_name }} - {{ account.account_number }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label">ช่วงวันที่</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                        <select class="form-select" id="dateRangeFilter" onchange="handleDateChange(this)">
+                            <option value="all" {% if not request.args.get('start_date') and not request.args.get('end_date') %}selected{% endif %}>ทั้งหมด</option>
+                            <option value="this_month">เดือนนี้</option>
+                            <option value="last_month">เดือนที่แล้ว</option>
+                            <option value="last_3_months">3 เดือนล่าสุด</option>
+                            <option value="last_6_months">6 เดือนล่าสุด</option>
+                            <option value="this_year">ปีนี้</option>
+                            <option value="last_year">ปีที่แล้ว</option>
+                            <option value="custom">กำหนดเอง</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-2">
-                <label class="form-label">สถานะ</label>
-                <select name="status" class="form-select">
-                    <option value="">ทั้งหมด</option>
-                    <option value="pending" {{ 'selected' if request.args.get('status') == 'pending' }}>รอดำเนินการ</option>
-                    <option value="completed" {{ 'selected' if request.args.get('status') == 'completed' }}>สำเร็จแล้ว</option>
-                    <option value="cancelled" {{ 'selected' if request.args.get('status') == 'cancelled' }}>ยกเลิก</option>
-                </select>
+            <div class="row g-3 mt-1">
+                <div class="col-12">
+                    <label class="form-label">ค้นหารายละเอียด</label>
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="ค้นหารายละเอียด..."
+                               value="{{ request.args.get('search', '') }}" onkeypress="handleSearch(event)">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i> ค้นหา
+                        </button>
+                        <a href="{{ url_for('transactions.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> ล้าง
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-2">
-                <label class="form-label">หมวดหมู่</label>
-                <select name="category" class="form-select">
-                    <option value="">ทั้งหมด</option>
-                    {% for category in categories %}
-                    <option value="{{ category.id }}" {{ 'selected' if request.args.get('category')|int == category.id }}>
-                        {{ category.name }} ({{ category.type }})
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">บัญชีธนาคาร</label>
-                <select name="bank_account" class="form-select">
-                    <option value="">ทั้งหมด</option>
-                    {% for account in bank_accounts %}
-                    <option value="{{ account.id }}" {{ 'selected' if request.args.get('bank_account')|int == account.id }}>
-                        {{ account.bank_name }} - {{ account.account_number }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">วันที่เริ่มต้น</label>
-                <input type="date" name="start_date" class="form-control" value="{{ request.args.get('start_date', '') }}">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">วันที่สิ้นสุด</label>
-                <input type="date" name="end_date" class="form-control" value="{{ request.args.get('end_date', '') }}">
-            </div>
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search me-2"></i>ค้นหา
-                </button>
-                <a href="{{ url_for('transactions.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-times me-2"></i>ล้างตัวกรอง
-                </a>
-            </div>
+            <input type="hidden" name="start_date" id="startDate" value="{{ request.args.get('start_date', '') }}">
+            <input type="hidden" name="end_date" id="endDate" value="{{ request.args.get('end_date', '') }}">
+            <input type="hidden" name="per_page" id="perPage" value="{{ request.args.get('per_page', '20') }}">
         </form>
     </div>
 </div>
 
 <!-- Transaction List -->
 <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0">รายการธุรกรรม</h5>
+            <small class="text-muted">ทั้งหมด {{ transactions.total }} รายการ</small>
+        </div>
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0">แสดง</label>
+            <select class="form-select form-select-sm" id="perPageSelect" onchange="changePerPage(this.value)">
+                <option value="20" {% if request.args.get('per_page', '20') == '20' %}selected{% endif %}>20</option>
+                <option value="50" {% if request.args.get('per_page') == '50' %}selected{% endif %}>50</option>
+                <option value="100" {% if request.args.get('per_page') == '100' %}selected{% endif %}>100</option>
+                <option value="200" {% if request.args.get('per_page') == '200' %}selected{% endif %}>200</option>
+            </select>
+            <label class="ms-2 mb-0">รายการ/หน้า</label>
+        </div>
+    </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
-                <thead>
+                <thead class="table-light">
                     <tr>
-                        <th>วันที่</th>
-                        <th>เวลา</th>
+                        <th>วันที่/เวลา</th>
                         <th>รายละเอียด</th>
                         <th>หมวดหมู่</th>
                         <th>บัญชี</th>
@@ -95,14 +140,21 @@
                 </thead>
                 <tbody>
                     {% for transaction in transactions.items %}
-                    <tr>
-                        <td>{{ transaction.transaction_date.strftime('%d/%m/%Y') }}</td>
-                        <td>{{ transaction.transaction_time.strftime('%H:%M') if transaction.transaction_time else '-' }}</td>
+                    <tr class="{% if transaction.status == 'completed' %}status-completed{% elif transaction.status == 'pending' %}status-pending{% elif transaction.status == 'cancelled' %}status-cancelled{% endif %}">
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span>{{ transaction.transaction_date.strftime('%d/%m/%Y') }}</span>
+                                <small class="text-muted">
+                                    {{ transaction.transaction_time.strftime('%H:%M') if transaction.transaction_time else '-' }}
+                                </small>
+                            </div>
+                        </td>
                         <td>{{ transaction.description or '-' }}</td>
                         <td>
-                            <span class="category-badge bg-secondary">
+                            <a href="#" class="badge bg-secondary text-decoration-none"
+                               onclick="filterByCategory({{ transaction.category.id }}); return false;">
                                 {{ transaction.category.name }}
-                            </span>
+                            </a>
                         </td>
                         <td>
                             {% if transaction.bank_account %}
@@ -117,13 +169,26 @@
                             </span>
                         </td>
                         <td>
-                            <select class="form-select form-select-sm status-select"
-                                    data-transaction-id="{{ transaction.id }}"
-                                    onchange="updateStatus(this)">
-                                <option value="pending" {{ 'selected' if transaction.status == 'pending' }}>รอดำเนินการ</option>
-                                <option value="completed" {{ 'selected' if transaction.status == 'completed' }}>สำเร็จแล้ว</option>
-                                <option value="cancelled" {{ 'selected' if transaction.status == 'cancelled' }}>ยกเลิก</option>
-                            </select>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button"
+                                        class="btn {{ 'btn-secondary' if transaction.status == 'pending' else 'btn-outline-secondary' }}"
+                                        onclick="updateTransactionStatus({{ transaction.id }}, 'pending', {{ 'true' if not transaction.bank_account_id else 'false' }})"
+                                        title="รอดำเนินการ">
+                                    <i class="fas fa-clock"></i>
+                                </button>
+                                <button type="button"
+                                        class="btn {{ 'btn-success' if transaction.status == 'completed' else 'btn-outline-success' }}"
+                                        onclick="updateTransactionStatus({{ transaction.id }}, 'completed', {{ 'true' if not transaction.bank_account_id else 'false' }})"
+                                        title="สำเร็จแล้ว">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button type="button"
+                                        class="btn {{ 'btn-danger' if transaction.status == 'cancelled' else 'btn-outline-danger' }}"
+                                        onclick="updateTransactionStatus({{ transaction.id }}, 'cancelled', {{ 'true' if not transaction.bank_account_id else 'false' }})"
+                                        title="ยกเลิก">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </td>
                         <td class="text-end {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
                             {{ '+' if transaction.type == 'income' else '-' }}฿{{ "{:,.2f}".format(transaction.amount) }}
@@ -142,7 +207,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="9" class="text-center py-4">
+                        <td colspan="8" class="text-center py-4">
                             <p class="text-muted mb-0">ไม่พบรายการธุรกรรม</p>
                         </td>
                     </tr>
@@ -152,99 +217,439 @@
         </div>
     </div>
 
-{% if transactions.pages > 1 %}
-<div class="card-footer">
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center mb-0">
-            {% if transactions.has_prev %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('transactions.index', page=transactions.prev_num) }}{% if request.args %}?{% for key, value in request.args.items() if key != 'page' %}{{ key }}={{ value }}{% if not loop.last %}&{% endif %}{% endfor %}{% endif %}">
-                    <i class="fas fa-chevron-left"></i>
-                </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link"><i class="fas fa-chevron-left"></i></span>
-            </li>
-            {% endif %}
+    {% if transactions.pages > 1 %}
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <div>
+            {% set current_page_end = transactions.page * transactions.per_page %}
+            {% set show_end = current_page_end if current_page_end < transactions.total else transactions.total %}
+            แสดง {{ (transactions.page - 1) * transactions.per_page + 1 }}
+            ถึง {{ show_end }}
+            จาก {{ transactions.total }} รายการ
+        </div>
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0">
+                {% if transactions.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('transactions.index', page=transactions.prev_num, type=request.args.get('type', ''), category=request.args.get('category', ''), status=request.args.get('status', ''), bank_account=request.args.get('bank_account', ''), search=request.args.get('search', ''), start_date=request.args.get('start_date', ''), end_date=request.args.get('end_date', ''), per_page=request.args.get('per_page', '20')) }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                </li>
+                {% endif %}
 
-            {% for page_num in range(1, transactions.pages + 1) %}
-                {% if page_num %}
-                    {% if page_num != transactions.page %}
-                        {% if page_num == 1 or page_num == transactions.pages or (page_num >= transactions.page - 2 and page_num <= transactions.page + 2) %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('transactions.index', page=page_num) }}{% if request.args %}?{% for key, value in request.args.items() if key != 'page' %}{{ key }}={{ value }}{% if not loop.last %}&{% endif %}{% endfor %}{% endif %}">
+                {% for page_num in range(1, transactions.pages + 1) %}
+                    {% if page_num == 1 or page_num == transactions.pages or (page_num >= transactions.page - 2 and page_num <= transactions.page + 2) %}
+                        <li class="page-item {% if page_num == transactions.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('transactions.index', page=page_num, type=request.args.get('type', ''), category=request.args.get('category', ''), status=request.args.get('status', ''), bank_account=request.args.get('bank_account', ''), search=request.args.get('search', ''), start_date=request.args.get('start_date', ''), end_date=request.args.get('end_date', ''), per_page=request.args.get('per_page', '20')) }}">
                                 {{ page_num }}
                             </a>
                         </li>
-                        {% elif page_num == transactions.page - 3 or page_num == transactions.page + 3 %}
+                    {% elif page_num == transactions.page - 3 or page_num == transactions.page + 3 %}
                         <li class="page-item disabled">
                             <span class="page-link">...</span>
                         </li>
-                        {% endif %}
-                    {% else %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ page_num }}</span>
-                        </li>
                     {% endif %}
+                {% endfor %}
+
+                {% if transactions.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('transactions.index', page=transactions.next_num, type=request.args.get('type', ''), category=request.args.get('category', ''), status=request.args.get('status', ''), bank_account=request.args.get('bank_account', ''), search=request.args.get('search', ''), start_date=request.args.get('start_date', ''), end_date=request.args.get('end_date', ''), per_page=request.args.get('per_page', '20')) }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                </li>
                 {% endif %}
-            {% endfor %}
-
-            {% if transactions.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('transactions.index', page=transactions.next_num) }}{% if request.args %}?{% for key, value in request.args.items() if key != 'page' %}{{ key }}={{ value }}{% if not loop.last %}&{% endif %}{% endfor %}{% endif %}">
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link"><i class="fas fa-chevron-right"></i></span>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-</div>
-{% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% else %}
+    <div class="card-footer">
+        <div class="text-center text-muted">
+            แสดงทั้งหมด {{ transactions.total }} รายการ
+        </div>
+    </div>
+    {% endif %}
 </div>
 
+<!-- Bank Account Selection Modal -->
+<div class="modal fade" id="bankAccountModal" tabindex="-1" aria-labelledby="bankAccountModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="bankAccountModalLabel">เลือกบัญชีธนาคาร</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>กรุณาเลือกบัญชีธนาคารสำหรับธุรกรรมนี้</p>
+        <select class="form-select" id="modalBankAccountSelect">
+          <option value="">-- เลือกบัญชีธนาคาร --</option>
+          {% for account in bank_accounts %}
+          <option value="{{ account.id }}">{{ account.bank_name }} - {{ account.account_number }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" id="confirmBankAccountBtn">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden DateRangePicker input -->
+<input type="text" id="hiddenDateRangePicker" style="display: none;">
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<style>
+/* Category badge styling */
+.badge {
+    font-weight: normal;
+    padding: 0.35em 0.65em;
+}
+
+.clickable-badge:hover {
+    opacity: 0.8;
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+/* Date Range Picker Customization */
+.daterangepicker {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+}
+
+/* Mobile responsive filters */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 0.75rem;
+    }
+
+    .form-label {
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script>
-function updateStatus(selectElement) {
-    const transactionId = selectElement.dataset.transactionId;
-    const newStatus = selectElement.value;
+let currentTransactionId = null;
+let currentStatus = null;
+let dateRangePicker = null;
+
+// Define changePerPage early
+function changePerPage(value) {
+    $('#perPage').val(value);
+    submitForm();
+}
+
+$(document).ready(function() {
+    // Initialize hidden daterangepicker - copy from dashboard
+    dateRangePicker = $('#hiddenDateRangePicker').daterangepicker({
+        locale: {
+            format: 'DD/MM/YYYY',
+            separator: ' - ',
+            applyLabel: 'ตกลง',
+            cancelLabel: 'ยกเลิก',
+            fromLabel: 'จาก',
+            toLabel: 'ถึง',
+            customRangeLabel: 'กำหนดเอง',
+            daysOfWeek: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
+            monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
+            firstDay: 1
+        },
+        autoUpdateInput: false,
+        opens: 'left'
+    }, function(start, end) {
+        const startDate = start.format('YYYY-MM-DD');
+        const endDate = end.format('YYYY-MM-DD');
+        const displayText = start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY');
+
+        $('#startDate').val(startDate);
+        $('#endDate').val(endDate);
+
+        // เพิ่ม option ใหม่หรืออัพเดท option ที่มีอยู่
+        const customOption = $('#dateRangeFilter option[value="custom_selected"]');
+        if (customOption.length > 0) {
+            customOption.text(displayText);
+        } else {
+            $('#dateRangeFilter').append(`<option value="custom_selected">${displayText}</option>`);
+        }
+
+        $('#dateRangeFilter').val('custom_selected');
+        submitForm();
+    });
+
+    // Handle cancel on daterangepicker
+    $('#hiddenDateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
+        const customSelectedOption = $('#dateRangeFilter option[value="custom_selected"]');
+        if (customSelectedOption.length > 0) {
+            $('#dateRangeFilter').val('custom_selected');
+        } else {
+            $('#dateRangeFilter').val('all');
+        }
+    });
+
+    // Initialize category filter based on current type
+    const selectedType = $('input[name="type"]:checked').val();
+    if (selectedType) {
+        updateCategoryOptions(selectedType);
+    }
+
+    // Fix category filter selected value
+    const categoryParam = '{{ request.args.get("category", "") }}';
+    if (categoryParam) {
+        $('#categoryFilter').val(categoryParam);
+    }
+
+    // Set per_page value
+    const perPageParam = '{{ request.args.get("per_page", "20") }}';
+    $('#perPageSelect').val(perPageParam);
+
+    // Check if we have date range in URL and update select
+    const startDate = $('#startDate').val();
+    const endDate = $('#endDate').val();
+    if (startDate && endDate) {
+        // Try to match with predefined ranges
+        const today = new Date();
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        let selectedOption = null;
+
+        // Check for this month
+        const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        const thisMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        // Check for last month
+        const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+
+        // Check for this year
+        const thisYearStart = new Date(today.getFullYear(), 0, 1);
+
+        // Compare dates
+        if (start.getTime() === thisMonthStart.getTime() && end.getTime() === thisMonthEnd.getTime()) {
+            selectedOption = 'this_month';
+        } else if (start.getTime() === lastMonthStart.getTime() && end.getTime() === lastMonthEnd.getTime()) {
+            selectedOption = 'last_month';
+        } else if (start.getTime() === thisYearStart.getTime() && end <= today) {
+            selectedOption = 'this_year';
+        }
+
+        if (selectedOption) {
+            $('#dateRangeFilter').val(selectedOption);
+        } else {
+            // Custom date range
+            const displayText = moment(startDate).format('DD/MM/YYYY') + ' - ' + moment(endDate).format('DD/MM/YYYY');
+            $('#dateRangeFilter').append(`<option value="custom_selected" selected>${displayText}</option>`);
+        }
+    }
+});
+
+function submitForm() {
+    // Update per_page in form before submitting
+    const perPageValue = $('#perPageSelect').val();
+    if (perPageValue) {
+        $('#perPage').val(perPageValue);
+    }
+    $('#filterForm').submit();
+}
+
+function handleSearch(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        submitForm();
+    }
+}
+
+function handleDateChange(select) {
+    const filter = select.value;
+
+    if (filter === 'custom') {
+        $('#hiddenDateRangePicker').data('daterangepicker').show();
+    } else if (filter === 'custom_selected') {
+        $('#hiddenDateRangePicker').data('daterangepicker').show();
+    } else if (filter !== 'all') {
+        // Calculate dates based on selection
+        let startDate, endDate;
+        const today = new Date();
+
+        switch(filter) {
+            case 'this_month':
+                startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                break;
+            case 'last_month':
+                startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                break;
+            case 'last_3_months':
+                startDate = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+                endDate = today;
+                break;
+            case 'last_6_months':
+                startDate = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+                endDate = today;
+                break;
+            case 'this_year':
+                startDate = new Date(today.getFullYear(), 0, 1);
+                endDate = today;
+                break;
+            case 'last_year':
+                startDate = new Date(today.getFullYear() - 1, 0, 1);
+                endDate = new Date(today.getFullYear() - 1, 11, 31);
+                break;
+        }
+
+        if (startDate && endDate) {
+            $('#startDate').val(formatDate(startDate));
+            $('#endDate').val(formatDate(endDate));
+        }
+        submitForm();
+    } else {
+        // Clear dates for 'all'
+        $('#startDate').val('');
+        $('#endDate').val('');
+        submitForm();
+    }
+}
+
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function updateCategoryOptions(type) {
+    const categorySelect = $('#categoryFilter');
+    const selectedValue = categorySelect.val();
+
+    categorySelect.find('option').each(function() {
+        if (this.value === '') return; // Skip "ทั้งหมด" option
+
+        const optionType = $(this).data('type');
+        if (!type || optionType === type) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+
+    // Keep the selection if it's still visible
+    if (selectedValue && categorySelect.find(`option[value="${selectedValue}"]:visible`).length) {
+        categorySelect.val(selectedValue);
+    } else {
+        categorySelect.val('');
+    }
+}
+
+function filterByCategory(categoryId) {
+    // Set category filter
+    $('#categoryFilter').val(categoryId);
+
+    // Get category type from the selected option
+    const categoryOption = $(`#categoryFilter option[value="${categoryId}"]`);
+    const categoryType = categoryOption.data('type');
+
+    if (categoryType) {
+        // Set type filter
+        $(`input[name="type"][value="${categoryType}"]`).prop('checked', true);
+        // Update category options to show only matching type
+        updateCategoryOptions(categoryType);
+
+        // Force set category value again after updating options
+        $('#categoryFilter').val(categoryId);
+    }
+
+    // Submit form
+    submitForm();
+}
+
+function updateTransactionStatus(transactionId, newStatus, needBankAccount) {
+    currentTransactionId = transactionId;
+    currentStatus = newStatus;
+
+    if (newStatus === 'completed' && needBankAccount) {
+        const modal = new bootstrap.Modal(document.getElementById('bankAccountModal'));
+        modal.show();
+    } else {
+        doUpdateStatus(transactionId, newStatus, null);
+    }
+}
+
+document.getElementById('confirmBankAccountBtn').addEventListener('click', function() {
+    const bankAccountId = document.getElementById('modalBankAccountSelect').value;
+
+    if (!bankAccountId) {
+        alert('กรุณาเลือกบัญชีธนาคาร');
+        return;
+    }
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('bankAccountModal'));
+    modal.hide();
+
+    doUpdateStatus(currentTransactionId, currentStatus, bankAccountId);
+});
+
+function doUpdateStatus(transactionId, newStatus, bankAccountId) {
+    const data = { status: newStatus };
+
+    if (bankAccountId) {
+        data.bank_account_id = bankAccountId;
+    }
 
     fetch(`/transactions/update_status/${transactionId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Show success message
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
-            alertDiv.innerHTML = `
-                ${data.message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.body.appendChild(alertDiv);
-
-            // Auto dismiss after 3 seconds
+            showAlert('success', data.message);
             setTimeout(() => {
-                alertDiv.remove();
-            }, 3000);
+                location.reload();
+            }, 1500);
         } else {
-            alert('เกิดข้อผิดพลาด: ' + data.message);
+            showAlert('danger', 'เกิดข้อผิดพลาด: ' + data.message);
             location.reload();
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('เกิดข้อผิดพลาดในการอัพเดทสถานะ');
+        showAlert('danger', 'เกิดข้อผิดพลาดในการอัพเดทสถานะ');
         location.reload();
     });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
 }
 </script>
 {% endblock %}

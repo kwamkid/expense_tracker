@@ -7,6 +7,13 @@ body {
     background-color: #f8f9fa;
 }
 
+/* Override all h1 to use h3 size */
+h1 {
+    font-size: 1.75rem !important;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
 /* Primary Color - แดง */
 :root {
     --primary-color: #EC523E;
@@ -250,6 +257,32 @@ body {
     background-color: #ffe5e5 !important;
 }
 
+/* Status Row Colors for dashboard and transactions page */
+.table tbody tr.status-completed td {
+    background-color: #f8f9fa !important;
+}
+
+.table tbody tr.status-pending td {
+    background-color: #fff8e6 !important;
+}
+
+.table tbody tr.status-cancelled td {
+    background-color: #fff5f5 !important;
+}
+
+/* Status Row Hover Colors */
+.table tbody tr.status-completed:hover td {
+    background-color: #e9ecef !important;
+}
+
+.table tbody tr.status-pending:hover td {
+    background-color: #fff3d6 !important;
+}
+
+.table tbody tr.status-cancelled:hover td {
+    background-color: #ffe5e5 !important;
+}
+
 /* Status Button Groups */
 .btn-group > .btn:not(:last-child) {
     border-right: 1px solid #fff;
@@ -311,7 +344,7 @@ body {
 /* Small screens */
 @media (max-width: 576px) {
     h1 {
-        font-size: 1.5rem;
+        font-size: 1.5rem !important;
     }
 
     .card-header h5 {
