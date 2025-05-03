@@ -8,27 +8,16 @@ from logging.handlers import RotatingFileHandler
 import sys
 import shutil
 
-# เพิ่มตรงบนสุดของไฟล์
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    stream=sys.stdout
-)
 
 def create_app(config_class=Config):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_class)
-    # เพิ่ม logging ให้แสดงใน stdout
-    app.logger.addHandler(logging.StreamHandler(sys.stdout))
-    app.logger.setLevel(logging.DEBUG)
+
     # Try to load the instance config if it exists
     try:
         app.config.from_pyfile('config.py')
-        app.logger.info("Configuration loaded successfully")
-
-    except:
-        app.logger.error(f"Error loading configuration: {str(e)}")
-
+    except Exception as e:
+        # ไม่ต้องทำอะไรถ้าไม่มีไฟล์ config - ใช้ค่าจาก environment variables แทน
         pass
 
     # Ensure the instance folder exists
@@ -142,7 +131,6 @@ def configure_logging(app):
     app.logger.setLevel(log_level)
 
     # กำหนดระดับการบันทึก log สำหรับ werkzeug (หลังบ้านของ Flask) เป็น WARNING
-    # แทน INFO เพื่อลดการบันทึก request logs
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
     # บันทึกเฉพาะเมื่อเริ่มต้นแอปครั้งแรก
@@ -216,7 +204,7 @@ def register_blueprints(app):
     from app.views.transactions import transactions_bp
     from app.views.reports import reports_bp
     from app.views.api import api_bp
-    from app.views.organization import organization_bp  # เพิ่ม blueprint สำหรับองค์กร
+    from app.views.organization import organization_bp
     from app.views.import_transactions import imports_bp
 
     app.register_blueprint(auth_bp)
@@ -226,7 +214,7 @@ def register_blueprints(app):
     app.register_blueprint(transactions_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(api_bp)
-    app.register_blueprint(organization_bp)  # ลงทะเบียน blueprint องค์กร
+    app.register_blueprint(organization_bp)
     app.register_blueprint(imports_bp)
 
 
