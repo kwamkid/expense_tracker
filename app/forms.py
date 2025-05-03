@@ -35,6 +35,6 @@ class BankAccountForm(FlaskForm):
     bank_name = StringField('ชื่อธนาคาร', validators=[DataRequired(), Length(max=100)])
     account_number = StringField('เลขบัญชี', validators=[DataRequired(), Length(max=20)])
     account_name = StringField('ชื่อบัญชี', validators=[Optional(), Length(max=200)])
-    initial_balance = FloatField('ยอดเงินเริ่มต้น', validators=[Optional()], default=0)
+    initial_balance = FloatField('ยอดเงินเริ่มต้น', validators=[Optional()], default=0.0)
     is_active = BooleanField('เปิดใช้งาน', default=True)
     submit = SubmitField('บันทึก')

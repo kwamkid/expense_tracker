@@ -24,8 +24,8 @@ def add():
             bank_name=form.bank_name.data,
             account_number=form.account_number.data,
             account_name=form.account_name.data,
-            initial_balance=form.initial_balance.data,
-            current_balance=form.initial_balance.data,  # เริ่มต้นเท่ากับ initial_balance
+            initial_balance=form.initial_balance.data or 0,  # ใช้ 0 ถ้าไม่ได้กรอก
+            current_balance=form.initial_balance.data or 0,  # เริ่มต้นเท่ากับ initial_balance
             is_active=form.is_active.data,
             user_id=current_user.id
         )
@@ -50,24 +50,39 @@ def edit(id):
     form = BankAccountForm(obj=bank_account)
 
     if form.validate_on_submit():
+        # จัดการกับ initial_balance ที่อาจเป็น None
+        new_initial_balance = form.initial_balance.data if form.initial_balance.data is not None else 0
+        old_initial_balance = bank_account.initial_balance if bank_account.initial_balance is not None else 0
+
         bank_account.bank_name = form.bank_name.data
         bank_account.account_number = form.account_number.data
         bank_account.account_name = form.account_name.data
         bank_account.is_active = form.is_active.data
 
         # ถ้าเปลี่ยน initial_balance ต้องคำนวณ current_balance ใหม่
-        if bank_account.initial_balance != form.initial_balance.data:
-            old_initial = bank_account.initial_balance
-            new_initial = form.initial_balance.data
-            diff = new_initial - old_initial
-            bank_account.initial_balance = new_initial
-            bank_account.current_balance += diff
+        if old_initial_balance != new_initial_balance:
+            # คำนวณความแตกต่าง
+            diff = new_initial_balance - old_initial_balance
+            bank_account.initial_balance = new_initial_balance
+            # ปรับ current_balance ตามความแตกต่าง
+            if bank_account.current_balance is not None:
+                bank_account.current_balance += diff
+            else:
+                bank_account.current_balance = new_initial_balance
 
         db.session.commit()
+
+        # คำนวณยอดเงินใหม่
+        BalanceService.update_bank_balance(bank_account.id)
+
         flash('แก้ไขบัญชีธนาคารเรียบร้อยแล้ว', 'success')
         return redirect(url_for('bank_accounts.index'))
 
-    return render_template('bank_accounts/form.html', form=form, title='แก้ไขบัญชีธนาคาร')
+    # Set default value for form fields
+    if not form.is_submitted():
+        form.initial_balance.data = bank_account.initial_balance or 0
+
+    return render_template('bank_accounts/form.html', form=form, title='แก้ไขบัญชีธนาคาร', bank_account=bank_account)
 
 
 @bank_accounts_bp.route('/delete/<int:id>')

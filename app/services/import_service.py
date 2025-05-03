@@ -1,6 +1,6 @@
 # app/services/import_service.py
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, time
 import re
 
 
@@ -89,6 +89,41 @@ class BankImportService:
                     print(f"Error parsing date on row {index}: {e}")
                     continue
 
+                # ดึงเวลาจากไฟล์ถ้ามี
+                transaction_time = None
+                if 'time' in column_map and not pd.isna(row[column_map['time']]):
+                    time_value = row[column_map['time']]
+                    try:
+                        # พยายามแปลงเวลา
+                        if isinstance(time_value, str):
+                            # ถ้าเป็น string อาจจะเป็นรูปแบบ HH:MM:SS หรือ HH:MM
+                            time_parts = time_value.split(':')
+                            if len(time_parts) >= 2:
+                                hour = int(time_parts[0])
+                                minute = int(time_parts[1])
+                                second = int(time_parts[2]) if len(time_parts) > 2 else 0
+                                transaction_time = time(hour, minute, second)
+                        elif isinstance(time_value, datetime):
+                            # ถ้าเป็น datetime object ให้เอาเฉพาะเวลา
+                            transaction_time = time_value.time()
+                        elif isinstance(time_value, time):
+                            # ถ้าเป็น time object อยู่แล้ว
+                            transaction_time = time_value
+                        else:
+                            # ถ้าเป็นตัวเลข (Excel Serial Time)
+                            try:
+                                # Convert Excel serial time to datetime
+                                from datetime import timedelta
+                                base_date = datetime(1899, 12, 30)
+                                delta_days = float(time_value)
+                                result_datetime = base_date + timedelta(days=delta_days)
+                                transaction_time = result_datetime.time()
+                            except:
+                                print(f"Could not parse time value: {time_value}")
+                    except Exception as e:
+                        print(f"Error parsing time on row {index}: {e}")
+                        # ยังคงดำเนินการต่อแม้ไม่มีเวลา
+
                 # ดึงข้อมูลการเงิน
                 withdrawal = 0
                 deposit = 0
@@ -142,7 +177,7 @@ class BankImportService:
                     account_number = str(row[column_map['account_number']])
 
                 # สร้างรายการ transaction
-                transactions.append({
+                transaction_data = {
                     'index': index,
                     'date': transaction_date,
                     'amount': amount,
@@ -150,7 +185,13 @@ class BankImportService:
                     'description': full_description,
                     'reference': f"{time_str}",  # ใช้เวลาเป็น reference
                     'account_number': account_number
-                })
+                }
+
+                # เพิ่มเวลาถ้ามี
+                if transaction_time:
+                    transaction_data['time'] = transaction_time
+
+                transactions.append(transaction_data)
 
             if not transactions:
                 raise ValueError("ไม่พบรายการธุรกรรมในไฟล์")

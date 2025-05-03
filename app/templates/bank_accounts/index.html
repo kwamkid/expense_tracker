@@ -27,9 +27,9 @@
 
                 <div class="mb-3">
                     <strong>ยอดเงินเริ่มต้น:</strong>
-                    <span class="text-muted">฿{{ "{:,.2f}".format(account.initial_balance) }}</span><br>
+                    <span class="text-muted">฿{{ "{:,.2f}".format(account.initial_balance) if account.initial_balance is not none else "0.00" }}</span><br>
                     <strong>ยอดเงินปัจจุบัน:</strong>
-                    <span class="text-primary">฿{{ "{:,.2f}".format(account.current_balance) }}</span>
+                    <span class="text-primary">฿{{ "{:,.2f}".format(account.current_balance) if account.current_balance is not none else "0.00" }}</span>
                 </div>
 
                 <div class="d-flex gap-2">

@@ -25,13 +25,15 @@ class User(UserMixin, db.Model):
     bank_accounts = db.relationship('BankAccount', backref='user', lazy=True)
 
 
+# เฉพาะส่วนที่แก้ไขในไฟล์ app/models.py - class BankAccount
+
 class BankAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     bank_name = db.Column(db.String(100), nullable=False)
     account_number = db.Column(db.String(20), nullable=False)
     account_name = db.Column(db.String(200))
-    initial_balance = db.Column(db.Float, default=0)
-    current_balance = db.Column(db.Float, default=0)
+    initial_balance = db.Column(db.Float(precision=2), default=0.0)  # เพิ่ม precision
+    current_balance = db.Column(db.Float(precision=2), default=0.0)  # เพิ่ม precision
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(bangkok_tz))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

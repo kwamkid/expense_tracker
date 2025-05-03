@@ -16,6 +16,8 @@ imports_bp = Blueprint('imports', __name__, url_prefix='/imports')
 bangkok_tz = pytz.timezone('Asia/Bangkok')
 
 
+# เฉพาะส่วนที่แก้ไขใน upload function ของ app/routes/imports.py
+
 @imports_bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
@@ -65,8 +67,17 @@ def upload():
                 import_id = str(uuid.uuid4())
                 temp_data_file = os.path.join(current_app.config['UPLOAD_FOLDER'], f"import_{import_id}.json")
 
+                # Custom JSON serializer เพื่อจัดการกับ time objects
+                def json_serializer(obj):
+                    if hasattr(obj, 'isoformat'):  # สำหรับ date objects
+                        return obj.isoformat()
+                    elif hasattr(obj, 'strftime'):  # สำหรับ time objects
+                        return obj.strftime('%H:%M:%S')
+                    else:
+                        return str(obj)
+
                 with open(temp_data_file, 'w', encoding='utf-8') as f:
-                    json.dump(transactions_data, f, default=str)  # default=str เพื่อจัดการกับ datetime
+                    json.dump(transactions_data, f, default=json_serializer)
 
                 session['import_id'] = import_id
                 session['import_batch_id'] = str(uuid.uuid4())
@@ -89,6 +100,7 @@ def upload():
     bank_accounts = BankAccount.query.filter_by(user_id=current_user.id, is_active=True).all()
     return render_template('imports/upload.html', bank_accounts=bank_accounts)
 
+# เฉพาะส่วนที่แก้ไขใน preview function ของ app/routes/imports.py
 
 @imports_bp.route('/preview', methods=['GET', 'POST'])
 @login_required
@@ -106,10 +118,23 @@ def preview():
             import_data = json.load(f)
 
         # แปลง string กลับเป็น datetime
-        from datetime import datetime
+        from datetime import datetime, time
         for item in import_data:
             if 'date' in item and isinstance(item['date'], str):
                 item['date'] = datetime.strptime(item['date'], '%Y-%m-%d').date()
+            # แปลงเวลาถ้ามี
+            if 'time' in item and isinstance(item['time'], str):
+                try:
+                    # พยายามแปลงจาก string เป็น time object
+                    time_parts = item['time'].split(':')
+                    if len(time_parts) >= 2:
+                        hour = int(time_parts[0])
+                        minute = int(time_parts[1])
+                        second = int(time_parts[2]) if len(time_parts) > 2 else 0
+                        item['time'] = time(hour, minute, second)
+                except Exception as e:
+                    print(f"Error parsing time: {e}")
+                    item['time'] = None
 
     except FileNotFoundError:
         flash('ไม่พบข้อมูลการนำเข้า', 'error')
@@ -158,6 +183,7 @@ def preview():
                         amount=item['amount'],
                         description=item['description'],
                         transaction_date=item['date'],
+                        transaction_time=item.get('time'),  # เพิ่มเวลา
                         type=item['type'],
                         category_id=category_id,
                         user_id=current_user.id,
@@ -215,12 +241,20 @@ def preview():
         flash(message, 'success' if error_count == 0 else 'warning')
         return redirect(url_for('transactions.index'))
 
-    # Prepare data for preview
+    # Prepare data for preview - เพิ่มการแสดงเวลาด้วย
     categories = Category.query.filter_by(user_id=current_user.id).all()
     matcher = CategoryMatcher(current_user.id)
 
     for item in import_data:
         item['suggested_category_id'] = matcher.match_category(item['description'], item['type'])
+        # แปลงเวลาเป็น string เพื่อแสดงใน template
+        if 'time' in item and item['time']:
+            if hasattr(item['time'], 'strftime'):
+                item['time_display'] = item['time'].strftime('%H:%M:%S')
+            else:
+                item['time_display'] = str(item['time'])
+        else:
+            item['time_display'] = '-'
 
     return render_template('imports/preview.html',
                            import_data=import_data,

@@ -9,35 +9,71 @@
 
         <div class="card">
             <div class="card-body">
-                <form method="POST">
+                <form method="POST" id="bankAccountForm">
                     {{ form.hidden_tag() }}
 
                     <div class="mb-3">
                         {{ form.bank_name.label(class="form-label") }}
                         {{ form.bank_name(class="form-control") }}
+                        {% if form.bank_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.bank_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="mb-3">
                         {{ form.account_number.label(class="form-label") }}
                         {{ form.account_number(class="form-control") }}
+                        {% if form.account_number.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.account_number.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="mb-3">
                         {{ form.account_name.label(class="form-label") }}
                         {{ form.account_name(class="form-control") }}
+                        {% if form.account_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.account_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="mb-3">
                         {{ form.initial_balance.label(class="form-label") }}
                         <div class="input-group">
                             <span class="input-group-text">฿</span>
-                            {{ form.initial_balance(class="form-control") }}
+                            {{ form.initial_balance(class="form-control", id="initial_balance", step="0.01", value="{:.2f}".format(form.initial_balance.data) if form.initial_balance.data is not none else "0.00") }}
                         </div>
+                        <div class="form-text">กรุณาใส่ตัวเลขทศนิยมได้ เช่น 1234.56</div>
+                        {% if form.initial_balance.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.initial_balance.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="mb-3 form-check">
                         {{ form.is_active(class="form-check-input") }}
                         {{ form.is_active.label(class="form-check-label") }}
+                        {% if form.is_active.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.is_active.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="d-flex justify-content-between">
@@ -51,4 +87,52 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const initialBalanceInput = document.getElementById('initial_balance');
+
+    // ฟอร์แมตตัวเลขเมื่อผู้ใช้พิมพ์
+    initialBalanceInput.addEventListener('blur', function() {
+        let value = this.value;
+        if (value !== '') {
+            // แปลงเป็นตัวเลข
+            let numValue = parseFloat(value);
+            if (!isNaN(numValue)) {
+                // ฟอร์แมตเป็นทศนิยม 2 ตำแหน่ง
+                this.value = numValue.toFixed(2);
+            }
+        }
+    });
+
+    // ป้องกันการกรอกตัวอักษรที่ไม่ใช่ตัวเลข
+    initialBalanceInput.addEventListener('keypress', function(e) {
+        // อนุญาตให้กด - (สำหรับจำนวนติดลบ), ตัวเลข, และ . (จุดทศนิยม)
+        const allowedChars = /[\d.-]/;
+        const char = String.fromCharCode(e.which);
+
+        // ถ้าเป็น control keys ให้ผ่าน
+        if (e.which === 8 || e.which === 37 || e.which === 39) {
+            return true;
+        }
+
+        if (!allowedChars.test(char)) {
+            e.preventDefault();
+            return false;
+        }
+
+        // ป้องกันการกรอกจุดทศนิยมมากกว่า 1 ครั้ง
+        if (char === '.' && this.value.includes('.')) {
+            e.preventDefault();
+            return false;
+        }
+
+        // ป้องกันการกรอก - มากกว่า 1 ครั้ง หรือกรอกไม่ถูกตำแหน่ง
+        if (char === '-' && (this.value.includes('-') || this.selectionStart !== 0)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
 {% endblock %}

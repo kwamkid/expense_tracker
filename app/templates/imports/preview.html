@@ -19,6 +19,7 @@
                                 <input type="checkbox" class="form-check-input" id="checkAll" checked>
                             </th>
                             <th>วันที่</th>
+                            <th>เวลา</th>
                             <th>รายละเอียด</th>
                             <th>ประเภท</th>
                             <th class="text-end">จำนวนเงิน</th>
@@ -35,6 +36,7 @@
                                        {{ 'checked' if not item.is_duplicate else '' }}>
                             </td>
                             <td>{{ item.date.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ item.time_display }}</td>
                             <td>{{ item.description or '-' }}</td>
                             <td>
                                 <span class="badge {{ 'bg-success' if item.type == 'income' else 'bg-danger' }}">
