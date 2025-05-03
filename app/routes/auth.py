@@ -1,0 +1,116 @@
+# app/routes/auth.py
+from flask import Blueprint, redirect, url_for, request, session, flash
+from flask_login import login_user, logout_user, login_required
+from app.models import db, User, Category
+from app.services.line_auth import LineAuth
+import uuid
+
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+
+@auth_bp.route('/login')
+def login():
+    try:
+        state = str(uuid.uuid4())
+        session['oauth_state'] = state
+
+        # Check for invite token
+        invite_token = request.args.get('invite')
+        if invite_token:
+            session['invite_token'] = invite_token
+
+        line_auth = LineAuth()
+        login_url = line_auth.get_login_url(state)
+        return redirect(login_url)
+    except ValueError as e:
+        flash(str(e), 'error')
+        return redirect(url_for('main.index'))
+    except Exception as e:
+        flash('เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาตรวจสอบการตั้งค่า LINE Login', 'error')
+        return redirect(url_for('main.index'))
+
+
+@auth_bp.route('/callback')
+def callback():
+    code = request.args.get('code')
+    state = request.args.get('state')
+
+    if state != session.get('oauth_state'):
+        flash('Invalid state parameter', 'error')
+        return redirect(url_for('auth.login'))
+
+    try:
+        line_auth = LineAuth()
+        token_data = line_auth.get_access_token(code)
+
+        if 'access_token' not in token_data:
+            flash('Failed to get access token', 'error')
+            return redirect(url_for('auth.login'))
+
+        profile = line_auth.get_user_profile(token_data['access_token'])
+
+        # Find or create user
+        user = User.query.filter_by(line_id=profile['userId']).first()
+
+        if not user:
+            user = User(
+                line_id=profile['userId'],
+                name=profile.get('displayName'),
+                picture_url=profile.get('pictureUrl')
+            )
+            db.session.add(user)
+            db.session.commit()
+
+            # Create default categories for new user
+            create_default_categories(user.id)
+
+        login_user(user)
+
+        # Handle invite token
+        invite_token = session.pop('invite_token', None)
+        if invite_token:
+            process_invite_token(invite_token, user.id)
+
+        return redirect(url_for('main.dashboard'))
+    except Exception as e:
+        flash(f'เกิดข้อผิดพลาดในการเข้าสู่ระบบ: {str(e)}', 'error')
+        return redirect(url_for('main.index'))
+
+
+@auth_bp.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('main.index'))
+
+
+def create_default_categories(user_id):
+    default_categories = [
+        {'name': 'เงินเดือน', 'type': 'income', 'keywords': 'salary,เงินเดือน'},
+        {'name': 'ค่าอาหาร', 'type': 'expense', 'keywords': 'food,restaurant,อาหาร,ร้านอาหาร'},
+        {'name': 'ค่าเดินทาง', 'type': 'expense', 'keywords': 'transport,grab,taxi,bts,mrt,เดินทาง'},
+        {'name': 'ช้อปปิ้ง', 'type': 'expense', 'keywords': 'shopping,mall,ช้อป,ห้าง'},
+        {'name': 'อื่นๆ', 'type': 'income', 'keywords': ''},
+        {'name': 'อื่นๆ', 'type': 'expense', 'keywords': ''}
+    ]
+
+    for cat in default_categories:
+        category = Category(
+            name=cat['name'],
+            type=cat['type'],
+            keywords=cat['keywords'],
+            user_id=user_id
+        )
+        db.session.add(category)
+
+    db.session.commit()
+
+
+def process_invite_token(token, user_id):
+    from app.models import InviteToken
+
+    invite = InviteToken.query.filter_by(token=token, used=False).first()
+    if invite:
+        invite.used = True
+        invite.used_by = user_id
+        db.session.commit()

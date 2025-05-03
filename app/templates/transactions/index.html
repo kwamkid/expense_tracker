@@ -1,115 +1,52 @@
-{# app/templates/transactions/index.html #}
 {% extends "base.html" %}
 
+{% block title %}รายการธุรกรรม - {{ super() }}{% endblock %}
+
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h1 class="mb-3">
-            <i class="fas fa-exchange-alt text-primary me-2"></i>รายการธุรกรรม
-        </h1>
-    </div>
-    <div class="col-auto d-flex gap-2">
-        <a href="{{ url_for('transactions.create', type='income') }}" class="btn btn-success">
-            <i class="fas fa-plus-circle me-1"></i> เพิ่มรายได้
-        </a>
-        <a href="{{ url_for('transactions.create', type='expense') }}" class="btn btn-danger">
-            <i class="fas fa-minus-circle me-1"></i> เพิ่มรายจ่าย
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>รายการธุรกรรม</h1>
+    <div>
+        <a href="{{ url_for('transactions.add') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>เพิ่มธุรกรรม
         </a>
     </div>
 </div>
 
-<!-- Filter Form -->
+<!-- Filters -->
 <div class="card mb-4">
-    <div class="card-header">
-        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>ตัวกรอง</h5>
-    </div>
     <div class="card-body">
-        <form method="GET" action="{{ url_for('transactions.index') }}" id="filterForm">
-            <div class="row">
-                <div class="col-md-3 mb-3">
-                    <label for="start_date" class="form-label">วันที่เริ่มต้น</label>
-                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="end_date" class="form-label">วันที่สิ้นสุด</label>
-                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="type" class="form-label">ประเภท</label>
-                    <select class="form-select" id="type" name="type">
-                        <option value="">-- ทั้งหมด --</option>
-                        <option value="income" {% if request.args.get('type') == 'income' %}selected{% endif %}>รายรับ</option>
-                        <option value="expense" {% if request.args.get('type') == 'expense' %}selected{% endif %}>รายจ่าย</option>
-                    </select>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="status" class="form-label">สถานะ</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="">-- ทั้งหมด --</option>
-                        <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>เสร็จสิ้น</option>
-                        <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>รอดำเนินการ</option>
-                    </select>
-                </div>
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">ประเภท</label>
+                <select name="type" class="form-select">
+                    <option value="">ทั้งหมด</option>
+                    <option value="income" {{ 'selected' if request.args.get('type') == 'income' }}>รายรับ</option>
+                    <option value="expense" {{ 'selected' if request.args.get('type') == 'expense' }}>รายจ่าย</option>
+                </select>
             </div>
-            <div class="row">
-                <div class="col-md-3 mb-3">
-                    <label for="account" class="form-label">บัญชี</label>
-                    <select class="form-select" id="account" name="account">
-                        <option value="">-- ทั้งหมด --</option>
-                        {% for account in accounts %}
-                        <option value="{{ account.id }}" {% if request.args.get('account')|int == account.id %}selected{% endif %}>{{ account.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="category" class="form-label">หมวดหมู่</label>
-                    <select class="form-select" id="category" name="category">
-                        <option value="">-- ทั้งหมด --</option>
-                        <optgroup label="รายรับ">
-                            {% for category in income_categories %}
-                            <option value="{{ category.id }}" {% if request.args.get('category')|int == category.id %}selected{% endif %}>{{ category.name }}</option>
-                            {% endfor %}
-                        </optgroup>
-                        <optgroup label="รายจ่าย">
-                            {% for category in expense_categories %}
-                            <option value="{{ category.id }}" {% if request.args.get('category')|int == category.id %}selected{% endif %}>{{ category.name }}</option>
-                            {% endfor %}
-                        </optgroup>
-                    </select>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="min_amount" class="form-label">จำนวนเงินต่ำสุด</label>
-                    <input type="number" class="form-control" id="min_amount" name="min_amount" value="{{ request.args.get('min_amount', '') }}" min="0" step="0.01">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="max_amount" class="form-label">จำนวนเงินสูงสุด</label>
-                    <input type="number" class="form-control" id="max_amount" name="max_amount" value="{{ request.args.get('max_amount', '') }}" min="0" step="0.01">
-                </div>
+            <div class="col-md-3">
+                <label class="form-label">หมวดหมู่</label>
+                <select name="category" class="form-select">
+                    <option value="">ทั้งหมด</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {{ 'selected' if request.args.get('category')|int == category.id }}>
+                        {{ category.name }} ({{ category.type }})
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="search" class="form-label">ค้นหา</label>
-                    <input type="text" class="form-control" id="search" name="search" placeholder="ค้นหาจากรายละเอียด..." value="{{ request.args.get('search', '') }}">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="sort" class="form-label">เรียงตาม</label>
-                    <select class="form-select" id="sort" name="sort">
-                        <option value="date_desc" {% if request.args.get('sort') == 'date_desc' or not request.args.get('sort') %}selected{% endif %}>วันที่ (ล่าสุด)</option>
-                        <option value="date_asc" {% if request.args.get('sort') == 'date_asc' %}selected{% endif %}>วันที่ (เก่าสุด)</option>
-                        <option value="amount_desc" {% if request.args.get('sort') == 'amount_desc' %}selected{% endif %}>จำนวนเงิน (มาก-น้อย)</option>
-                        <option value="amount_asc" {% if request.args.get('sort') == 'amount_asc' %}selected{% endif %}>จำนวนเงิน (น้อย-มาก)</option>
-                    </select>
-                </div>
-                <div class="col-md-3 d-flex align-items-end mb-3">
-                    <div class="d-grid w-100 gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search me-1"></i> ค้นหา
-                        </button>
-                        <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-redo me-1"></i> รีเซ็ต
-                        </a>
-                    </div>
-                </div>
+            <div class="col-md-2">
+                <label class="form-label">วันที่เริ่มต้น</label>
+                <input type="date" name="start_date" class="form-control" value="{{ request.args.get('start_date', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">วันที่สิ้นสุด</label>
+                <input type="date" name="end_date" class="form-control" value="{{ request.args.get('end_date', '') }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>ค้นหา
+                </button>
             </div>
         </form>
     </div>
@@ -117,134 +54,78 @@
 
 <!-- Transaction List -->
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-list me-2"></i>รายการธุรกรรม</h5>
-        <span class="badge bg-primary">{{ transactions.total }} รายการ</span>
-    </div>
     <div class="card-body p-0">
-        {% if transactions.items|length > 0 %}
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-light">
+            <table class="table table-hover mb-0">
+                <thead>
                     <tr>
-                        <th width="50px">สถานะ</th>
                         <th>วันที่</th>
-                        <th>ประเภท</th>
-                        <th>บัญชี</th>
-                        <th>หมวดหมู่</th>
                         <th>รายละเอียด</th>
-                        <th>จำนวนเงิน</th>
-                        <th>การจัดการ</th>
+                        <th>หมวดหมู่</th>
+                        <th>ประเภท</th>
+                        <th class="text-end">จำนวนเงิน</th>
+                        <th width="100"></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for transaction in transactions.items %}
                     <tr>
-                        <td class="text-center">
-                            <div class="form-check">
-                                <input class="form-check-input status-toggle"
-                                       type="checkbox"
-                                       data-transaction-id="{{ transaction.id }}"
-                                       data-transaction-type="{{ transaction.type }}"
-                                       {% if transaction.status == 'completed' %}checked{% endif %}>
-                            </div>
-                        </td>
                         <td>{{ transaction.transaction_date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ transaction.description or '-' }}</td>
                         <td>
-                            {% if transaction.type == 'income' %}
-                            <span class="badge bg-success">รายรับ</span>
-                            {% else %}
-                            <span class="badge bg-danger">รายจ่าย</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ transaction.account.name }}</td>
-                        <td>
-                            <span class="badge" style="background-color: {{ transaction.category.color }}">
-                                {% if transaction.category.icon %}
-                                <i class="fas fa-{{ transaction.category.icon }} me-1"></i>
-                                {% endif %}
+                            <span class="category-badge bg-secondary">
                                 {{ transaction.category.name }}
                             </span>
                         </td>
-                        <td>{% if transaction.description %}{{ transaction.description|truncate(30) }}{% else %}-{% endif %}</td>
-                        <td class="text-end fw-bold {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
-                            {{ "{:,.2f}".format(transaction.amount) }} ฿
+                        <td>
+                            <span class="badge {{ 'bg-success' if transaction.type == 'income' else 'bg-danger' }}">
+                                {{ 'รายรับ' if transaction.type == 'income' else 'รายจ่าย' }}
+                            </span>
+                        </td>
+                        <td class="text-end {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
+                            {{ '+' if transaction.type == 'income' else '-' }}฿{{ "{:,.2f}".format(transaction.amount) }}
                         </td>
                         <td>
-                            <div class="d-flex gap-1">
-                                <a href="{{ url_for('transactions.view', id=transaction.id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ url_for('transactions.edit', id=transaction.id) }}" class="btn btn-sm btn-outline-secondary">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('transactions.edit', id=transaction.id) }}" class="btn btn-outline-primary">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ transaction.id }}">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
+                                <a href="{{ url_for('transactions.delete', id=transaction.id) }}" class="btn btn-outline-danger"
+                                   onclick="return confirm('ยืนยันการลบรายการนี้?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
                             </div>
-
-                            <!-- Delete Modal -->
-                            <div class="modal fade" id="deleteModal{{ transaction.id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">ยืนยันการลบรายการ</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p>คุณต้องการลบรายการนี้ใช่หรือไม่?</p>
-                                            <div class="alert alert-warning">
-                                                <i class="fas fa-exclamation-triangle me-2"></i>การลบรายการจะเปลี่ยนแปลงยอดเงินในบัญชีและไม่สามารถเรียกคืนได้
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                                            <form action="{{ url_for('transactions.delete', id=transaction.id) }}" method="post">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="btn btn-danger">ยืนยันการลบ</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <p class="text-muted mb-0">ไม่พบรายการธุรกรรม</p>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <div class="text-center py-5">
-            <div class="mb-4">
-                <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
-            </div>
-            <h4>ไม่พบรายการธุรกรรม</h4>
-            <p class="text-muted">ไม่พบรายการธุรกรรมที่ตรงกับเงื่อนไขที่คุณระบุ</p>
-            <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-redo me-1"></i> รีเซ็ตตัวกรอง
-            </a>
-        </div>
-        {% endif %}
     </div>
 
-    <!-- Pagination -->
     {% if transactions.pages > 1 %}
     <div class="card-footer">
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center mb-0">
+        <nav aria-label="Transaction pagination">
+            <ul class="pagination mb-0 justify-content-center">
                 {% if transactions.has_prev %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('transactions.index') }}?page={{ transactions.prev_num }}{% for key, value in request.args.items() %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
-                        <i class="fas fa-chevron-left"></i>
+                    <a class="page-link" href="{{ url_for('transactions.index', page=transactions.prev_num, **request.args) }}">
+                        ก่อนหน้า
                     </a>
                 </li>
                 {% else %}
                 <li class="page-item disabled">
-                    <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                    <span class="page-link">ก่อนหน้า</span>
                 </li>
                 {% endif %}
 
-                {% for page_num in transactions.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% for page_num in transactions.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
                     {% if page_num %}
                         {% if page_num == transactions.page %}
                         <li class="page-item active">
@@ -252,7 +133,9 @@
                         </li>
                         {% else %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('transactions.index') }}?page={{ page_num }}{% for key, value in request.args.items() %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ page_num }}</a>
+                            <a class="page-link" href="{{ url_for('transactions.index', page=page_num, **request.args) }}">
+                                {{ page_num }}
+                            </a>
                         </li>
                         {% endif %}
                     {% else %}
@@ -264,13 +147,13 @@
 
                 {% if transactions.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('transactions.index') }}?page={{ transactions.next_num }}{% for key, value in request.args.items() %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
-                        <i class="fas fa-chevron-right"></i>
+                    <a class="page-link" href="{{ url_for('transactions.index', page=transactions.next_num, **request.args) }}">
+                        ถัดไป
                     </a>
                 </li>
                 {% else %}
                 <li class="page-item disabled">
-                    <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                    <span class="page-link">ถัดไป</span>
                 </li>
                 {% endif %}
             </ul>
@@ -278,77 +161,4 @@
     </div>
     {% endif %}
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // สำหรับอัพเดตสถานะธุรกรรม
-        const statusToggles = document.querySelectorAll('.status-toggle');
-        statusToggles.forEach(toggle => {
-            toggle.addEventListener('change', function() {
-                const transactionId = this.getAttribute('data-transaction-id');
-                const newStatus = this.checked ? 'completed' : 'pending';
-                const row = this.closest('tr');
-
-                // แสดง loading
-                row.style.opacity = '0.5';
-
-                // ส่งคำขอ AJAX เพื่ออัพเดตสถานะ
-                fetch('/api/transactions/update-status', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        id: transactionId,
-                        status: newStatus
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    row.style.opacity = '1';
-                    if (data.success) {
-                        // แสดงข้อความแจ้งเตือน
-                        const alertHTML = `
-                            <div class="alert alert-success alert-dismissible fade show">
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                <i class="fas fa-check-circle me-2"></i>อัพเดตสถานะธุรกรรมเรียบร้อยแล้ว
-                            </div>
-                        `;
-                        document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHTML);
-
-                        // เลื่อนไปด้านบนเพื่อให้เห็นข้อความแจ้งเตือน
-                        window.scrollTo(0, 0);
-
-                        // ซ่อนข้อความแจ้งเตือนอัตโนมัติหลังจาก 3 วินาที
-                        setTimeout(function() {
-                            const alertElement = document.querySelector('.alert-success');
-                            if (alertElement) {
-                                const bsAlert = new bootstrap.Alert(alertElement);
-                                bsAlert.close();
-                            }
-                        }, 3000);
-
-                        // รีโหลดหน้าเพื่ออัพเดตยอดเงิน
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1000);
-                    } else {
-                        // แสดงข้อความแจ้งเตือนข้อผิดพลาด
-                        alert('เกิดข้อผิดพลาด: ' + data.error);
-                        this.checked = !this.checked; // กลับไปที่สถานะเดิม
-                    }
-                })
-                .catch(error => {
-                    row.style.opacity = '1';
-                    console.error('Error:', error);
-                    alert('เกิดข้อผิดพลาดในการอัพเดตสถานะ');
-                    this.checked = !this.checked; // กลับไปที่สถานะเดิม
-                });
-            });
-        });
-    });
-</script>
 {% endblock %}

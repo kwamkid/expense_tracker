@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}นำเข้าข้อมูลธนาคาร - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="mb-4">นำเข้าข้อมูลธนาคาร</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-4">
+                        <label class="form-label">เลือกธนาคาร</label>
+                        <select name="bank_type" class="form-select" required>
+                            <option value="">-- เลือกธนาคาร --</option>
+                            <option value="scb">ธนาคารไทยพาณิชย์ (SCB)</option>
+                            <option value="kbank" disabled>ธนาคารกสิกรไทย (KBANK) - เร็วๆ นี้</option>
+                            <option value="bangkok" disabled>ธนาคารกรุงเทพ (BBL) - เร็วๆ นี้</option>
+                            <option value="krungsri" disabled>ธนาคารกรุงศรี (BAY) - เร็วๆ นี้</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">ไฟล์ Excel จากธนาคาร</label>
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                            <p class="mb-2">ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</p>
+                            <p class="text-muted small">รองรับไฟล์ .xlsx, .xls</p>
+                            <input type="file" name="file" id="file" class="d-none" accept=".xlsx,.xls" required>
+                        </div>
+                        <div id="file-info" class="mt-2 text-muted"></div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>รูปแบบไฟล์ที่ต้องการ (SCB)</h6>
+                        <p class="mb-0">ไฟล์ Excel ควรมีคอลัมน์ดังนี้:</p>
+                        <ul class="mb-0">
+                            <li><strong>Account Number</strong> หรือ <strong>เลขบัญชี</strong></li>
+                            <li><strong>Account Name</strong> หรือ <strong>ชื่อบัญชี</strong></li>
+                            <li><strong>Date</strong> หรือ <strong>วันที่</strong></li>
+                            <li><strong>Time</strong> หรือ <strong>เวลา</strong></li>
+                            <li><strong>Withdrawal</strong> หรือ <strong>ถอนเงิน</strong> (รายจ่าย)</li>
+                            <li><strong>Deposit</strong> หรือ <strong>เงินเข้า</strong> (รายรับ)</li>
+                            <li><strong>Description</strong> หรือ <strong>รายละเอียด</strong></li>
+                            <li><strong>Note</strong> หรือ <strong>โน๊ต</strong> (ไม่บังคับ)</li>
+                        </ul>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-upload me-2"></i>อัปโหลดและดำเนินการต่อ
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('file');
+    const fileInfo = document.getElementById('file-info');
+    
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            fileInfo.textContent = `เลือกไฟล์: ${this.files[0].name}`;
+        }
+    });
+});
+</script>
+{% endblock %}

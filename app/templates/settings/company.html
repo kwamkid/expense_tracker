@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}ตั้งค่าบริษัท - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <!-- Settings Menu -->
+        <div class="card mb-4">
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('settings.company') }}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-building me-2"></i>ข้อมูลบริษัท
+                </a>
+                <a href="{{ url_for('settings.categories') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-tags me-2"></i>หมวดหมู่
+                </a>
+                <a href="{{ url_for('settings.invite') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user-plus me-2"></i>เชิญผู้ใช้
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <h1 class="mb-4">ตั้งค่าบริษัท</h1>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center">
+                            {% if current_user.logo_path %}
+                            <img src="{{ url_for('static', filename='uploads/logo/' + current_user.logo_path) }}"
+                                 class="img-fluid mb-3" style="max-height: 150px;">
+                            {% else %}
+                            <div class="bg-light p-4 mb-3">
+                                <i class="fas fa-building fa-4x text-muted"></i>
+                            </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                {{ form.logo.label(class="form-label") }}
+                                {{ form.logo(class="form-control") }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-9">
+                            <div class="mb-3">
+                                {{ form.company_name.label(class="form-label") }}
+                                {{ form.company_name(class="form-control") }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.tax_id.label(class="form-label") }}
+                                {{ form.tax_id(class="form-control") }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.company_address.label(class="form-label") }}
+                                {{ form.company_address(class="form-control", rows=3) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

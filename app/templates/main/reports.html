@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}รายงาน - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>รายงาน</h1>
+</div>
+
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">วันที่เริ่มต้น</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">วันที่สิ้นสุด</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>แสดงรายงาน
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card report-card">
+            <div class="card-body">
+                <h6 class="text-muted">รายรับทั้งหมด</h6>
+                <h3 class="text-success">฿{{ "{:,.2f}".format(total_income|default(0)) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card report-card">
+            <div class="card-body">
+                <h6 class="text-muted">รายจ่ายทั้งหมด</h6>
+                <h3 class="text-danger">฿{{ "{:,.2f}".format(total_expense|default(0)) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card report-card">
+            <div class="card-body">
+                <h6 class="text-muted">คงเหลือ</h6>
+                <h3 class="{{ 'text-success' if (total_income|default(0) - total_expense|default(0)) >= 0 else 'text-danger' }}">
+                    ฿{{ "{:,.2f}".format(total_income|default(0) - total_expense|default(0)) }}
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Summary -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">สรุปตามหมวดหมู่ (รายรับ)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>หมวดหมู่</th>
+                                <th class="text-end">จำนวนเงิน</th>
+                                <th class="text-end">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in category_summary if item.type == 'income' %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td class="text-end">฿{{ "{:,.2f}".format(item.total) }}</td>
+                                <td class="text-end">
+                                    {{ "{:.1f}".format((item.total / total_income * 100) if total_income > 0 else 0) }}%
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">สรุปตามหมวดหมู่ (รายจ่าย)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>หมวดหมู่</th>
+                                <th class="text-end">จำนวนเงิน</th>
+                                <th class="text-end">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in category_summary if item.type == 'expense' %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td class="text-end">฿{{ "{:,.2f}".format(item.total) }}</td>
+                                <td class="text-end">
+                                    {{ "{:.1f}".format((item.total / total_expense * 100) if total_expense > 0 else 0) }}%
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

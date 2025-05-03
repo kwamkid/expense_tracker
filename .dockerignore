@@ -1,0 +1,18 @@
+# .dockerignore
+.git
+.gitignore
+.env
+.env.*
+*.pyc
+__pycache__
+venv/
+env/
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+instance/
+*.db
+*.sqlite
+*.log
+.DS_Store

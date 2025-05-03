@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}ยินดีต้อนรับ - {{ super() }}{% endblock %}
+
+{% block main_content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6">
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-3">Simple Expense Tracker</h1>
+                <p class="lead">ระบบบันทึกรายรับรายจ่ายอย่างง่าย</p>
+            </div>
+
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4">เข้าสู่ระบบ</h3>
+
+                    <div class="d-grid">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-success btn-lg">
+                            <i class="fab fa-line me-2"></i>เข้าสู่ระบบด้วย LINE
+                        </a>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="mb-0">เข้าสู่ระบบด้วยบัญชี LINE ของคุณ</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted">© {{ current_year }} Simple Expense Tracker</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Dashboard</h1>
+    <div>
+        <a href="{{ url_for('transactions.add') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>เพิ่มธุรกรรม
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card dashboard-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">รายรับเดือนนี้</h6>
+                        <h3 class="mb-0">฿{{ "{:,.2f}".format(total_income) }}</h3>
+                    </div>
+                    <div class="card-icon">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card dashboard-card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">รายจ่ายเดือนนี้</h6>
+                        <h3 class="mb-0">฿{{ "{:,.2f}".format(total_expense) }}</h3>
+                    </div>
+                    <div class="card-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card dashboard-card {{ 'bg-primary' if balance >= 0 else 'bg-warning' }} text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">คงเหลือ</h6>
+                        <h3 class="mb-0">฿{{ "{:,.2f}".format(balance) }}</h3>
+                    </div>
+                    <div class="card-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">รายรับ-รายจ่าย 6 เดือนย้อนหลัง</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">สัดส่วนรายจ่าย</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">รายการล่าสุด</h5>
+        <a href="{{ url_for('transactions.index') }}" class="btn btn-sm btn-outline-primary">ดูทั้งหมด</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for transaction in recent_transactions %}
+            <div class="list-group-item transaction-item {{ transaction.type }}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">{{ transaction.description or 'ไม่มีรายละเอียด' }}</h6>
+                        <small class="text-muted">
+                            {{ transaction.transaction_date.strftime('%d/%m/%Y') }} • {{ transaction.category.name }}
+                        </small>
+                    </div>
+                    <div class="text-end">
+                        <h6 class="mb-0 {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
+                            {{ '+' if transaction.type == 'income' else '-' }}฿{{ "{:,.2f}".format(transaction.amount) }}
+                        </h6>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Monthly Chart
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+const monthlyData = {{ monthly_data|tojson }};
+
+new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+        labels: monthlyData.map(item => item.month),
+        datasets: [{
+            label: 'รายรับ',
+            data: monthlyData.map(item => item.income),
+            backgroundColor: 'rgba(40, 167, 69, 0.8)',
+            borderColor: 'rgba(40, 167, 69, 1)',
+            borderWidth: 1
+        }, {
+            label: 'รายจ่าย',
+            data: monthlyData.map(item => item.expense),
+            backgroundColor: 'rgba(220, 53, 69, 0.8)',
+            borderColor: 'rgba(220, 53, 69, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Expense Pie Chart
+const expenseCtx = document.getElementById('expenseChart').getContext('2d');
+// Add expense pie chart data here
+</script>
+{% endblock %}

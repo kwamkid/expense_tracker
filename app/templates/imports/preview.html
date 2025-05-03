@@ -1,202 +1,100 @@
-{# app/templates/imports/preview.html #}
 {% extends "base.html" %}
-{% from "macros.html" import render_field %}
+
+{% block title %}ตรวจสอบข้อมูลนำเข้า - {{ super() }}{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('imports.index') }}">การนำเข้าธุรกรรม</a></li>
-        <li class="breadcrumb-item active" aria-current="page">ตรวจสอบและยืนยันการนำเข้า</li>
-    </ol>
-</nav>
-
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h2 class="mb-0"><i class="fas fa-check-circle text-primary me-2"></i>ตรวจสอบรายการก่อนนำเข้า</h2>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
-                    <span>รายการทั้งหมด:</span>
-                    <strong>{{ transactions|length }}</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>รายการซ้ำที่ตรวจพบ:</span>
-                    <strong class="text-danger">{{ transactions|selectattr('is_duplicate', 'eq', true)|list|length }}</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span>อาจมีรายการซ้ำ:</span>
-                    <strong class="text-warning">{{ transactions|selectattr('potential_duplicates', 'eq', true)|list|length }}</strong>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="mb-4">
+    <h1>ตรวจสอบข้อมูลนำเข้า</h1>
+    <p class="text-muted">กรุณาตรวจสอบและเลือกหมวดหมู่สำหรับแต่ละรายการ</p>
 </div>
 
 <form method="POST">
-    {{ form.csrf_token }}
-
-    <div class="card mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">ตั้งค่าการนำเข้า</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    {{ render_field(form.account_id) }}
-                </div>
-                <div class="col-md-6">
-                    <div class="form-check mt-4">
-                        {{ form.skip_duplicates(class='form-check-input') }}
-                        {{ form.skip_duplicates.label(class='form-check-label') }}
-                        <small class="form-text text-muted d-block">
-                            เลือกตัวเลือกนี้เพื่อข้ามรายการที่มีอยู่แล้วในระบบ
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="card">
-       <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">รายการธุรกรรม</h5>
-    <div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="selectAll" checked>
-            <label class="form-check-label" for="selectAll">เลือกทั้งหมด</label>
-        </div>
-    </div>
-</div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-    <tr>
-        <th style="width: 40px;" class="text-center">นำเข้า</th>
-        <th>วันที่</th>
-        <th>ประเภท</th>
-        <th>รายละเอียด</th>
-        <th class="text-end">จำนวนเงิน</th>
-        <th>หมวดหมู่</th>
-        <th>บัญชี</th>
-        <th>สถานะ</th>
-    </tr>
-</thead>
-<tbody>
-    {% for transaction in transactions %}
-    <tr class="{% if transaction.is_duplicate %}table-danger{% elif transaction.potential_duplicates %}table-warning{% endif %}">
-        <td class="text-center">
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input transaction-checkbox"
-                        name="import_{{ loop.index0 }}" id="import_{{ loop.index0 }}"
-                        {% if not transaction.is_duplicate %}checked{% endif %}>
-            </div>
-        </td>
-        <td>{{ transaction.transaction_date.strftime('%d/%m/%Y') }}</td>
-        <td>
-            {% if transaction.type == 'income' %}
-            <span class="badge bg-success">รายรับ</span>
-            {% else %}
-            <span class="badge bg-danger">รายจ่าย</span>
-            {% endif %}
-        </td>
-        <td>{{ transaction.description or '-' }}</td>
-        <td class="text-end">{{ "{:,.2f}".format(transaction.amount) }} ฿</td>
-        <td>
-            <select name="category_{{ loop.index0 }}" class="form-select form-select-sm">
-                {% if transaction.type == 'income' %}
-                    <optgroup label="รายรับ">
-                    {% for category in income_categories %}
-                        <option value="{{ category.id }}"
-                                {% if transaction.suggested_category_id == category.id %}selected{% endif %}>
-                            {{ category.name }}
-                        </option>
-                    {% endfor %}
-                    </optgroup>
-                {% else %}
-                    <optgroup label="รายจ่าย">
-                    {% for category in expense_categories %}
-                        <option value="{{ category.id }}"
-                                {% if transaction.suggested_category_id == category.id %}selected{% endif %}>
-                            {{ category.name }}
-                        </option>
-                    {% endfor %}
-                    </optgroup>
-                {% endif %}
-            </select>
-        </td>
-        <td>
-            <select name="account_id_{{ loop.index0 }}" class="form-select form-select-sm">
-                {% for account in accounts %}
-                    <option value="{{ account.id }}"
-                            {% if transaction.matching_account_id == account.id %}
-                                selected data-matched="true"
-                            {% elif account.id == form.account_id.data|int %}
-                                selected
-                            {% endif %}>
-                        {{ account.name }}
-                        {% if account.account_number and transaction.account_number and transaction.account_number == account.account_number %}
-                            (จับคู่ได้)
-                        {% endif %}
-                    </option>
-                {% endfor %}
-            </select>
-            {% if transaction.account_number and transaction.matching_account_id %}
-                <small class="text-success d-block"><i class="fas fa-check-circle"></i> จับคู่เลขบัญชีอัตโนมัติ</small>
-            {% endif %}
-        </td>
-        <td>
-            {% if transaction.is_duplicate %}
-            <span class="badge bg-danger">รายการซ้ำ</span>
-            {% elif transaction.potential_duplicates %}
-            <span class="badge bg-warning text-dark">อาจซ้ำ</span>
-            {% else %}
-            <span class="badge bg-success">พร้อมนำเข้า</span>
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th width="50">
+                                <input type="checkbox" class="form-check-input" id="checkAll" checked>
+                            </th>
+                            <th>วันที่</th>
+                            <th>รายละเอียด</th>
+                            <th>ประเภท</th>
+                            <th class="text-end">จำนวนเงิน</th>
+                            <th>หมวดหมู่</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in import_data %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="form-check-input item-check"
+                                       name="import_{{ item.index }}" checked>
+                            </td>
+                            <td>{{ item.date.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ item.description or '-' }}</td>
+                            <td>
+                                <span class="badge {{ 'bg-success' if item.type == 'income' else 'bg-danger' }}">
+                                    {{ 'รายรับ' if item.type == 'income' else 'รายจ่าย' }}
+                                </span>
+                            </td>
+                            <td class="text-end">฿{{ "{:,.2f}".format(item.amount) }}</td>
+                            <td>
+                                <select name="category_{{ item.index }}" class="form-select form-select-sm">
+                                    {% for category in categories %}
+                                        {% if category.type == item.type %}
+                                        <option value="{{ category.id }}"
+                                                {{ 'selected' if category.id == item.suggested_category_id }}>
+                                            {{ category.name }}
+                                        </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
                 </table>
             </div>
         </div>
         <div class="card-footer">
-            <div class="d-flex justify-content-between">
-                <button type="submit" name="cancel" class="btn btn-outline-secondary" value="1">
-                    <i class="fas fa-times me-1"></i> ยกเลิกการนำเข้า
-                </button>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-check me-1"></i> ยืนยันการนำเข้า
-                </button>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span id="selectedCount">{{ import_data|length }}</span> รายการถูกเลือก
+                </div>
+                <div>
+                    <a href="{{ url_for('imports.upload') }}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-2"></i>ย้อนกลับ
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-2"></i>นำเข้าข้อมูล
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </form>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // ตัวเลือก "เลือกทั้งหมด"
-        const selectAllCheckbox = document.getElementById('selectAll');
-        const transactionCheckboxes = document.querySelectorAll('.transaction-checkbox');
+document.addEventListener('DOMContentLoaded', function() {
+    const checkAll = document.getElementById('checkAll');
+    const itemChecks = document.querySelectorAll('.item-check');
+    const selectedCount = document.getElementById('selectedCount');
 
-        selectAllCheckbox.addEventListener('change', function() {
-            const isChecked = this.checked;
-            transactionCheckboxes.forEach(checkbox => {
-                checkbox.checked = isChecked;
-            });
-        });
-
-        // ถ้าเลือกไม่ครบทุกรายการ ให้ยกเลิกเช็ค "เลือกทั้งหมด"
-        transactionCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const allChecked = Array.from(transactionCheckboxes).every(cb => cb.checked);
-                selectAllCheckbox.checked = allChecked;
-            });
-        });
+    checkAll.addEventListener('change', function() {
+        itemChecks.forEach(check => check.checked = this.checked);
+        updateSelectedCount();
     });
+
+    itemChecks.forEach(check => {
+        check.addEventListener('change', updateSelectedCount);
+    });
+
+    function updateSelectedCount() {
+        const count = document.querySelectorAll('.item-check:checked').length;
+        selectedCount.textContent = count;
+    }
+});
 </script>
 {% endblock %}
