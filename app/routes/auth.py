@@ -1,7 +1,7 @@
 # app/routes/auth.py
 from flask import Blueprint, redirect, url_for, request, session, flash
 from flask_login import login_user, logout_user, login_required
-from app.models import db, User, Category
+from app.models import db, User, Category, BankAccount
 from app.services.line_auth import LineAuth
 import uuid
 
@@ -64,6 +64,9 @@ def callback():
             # Create default categories for new user
             create_default_categories(user.id)
 
+            # Create default bank account for new user
+            create_default_bank_account(user.id)
+
         login_user(user)
 
         # Handle invite token
@@ -122,6 +125,21 @@ def create_default_categories(user_id):
         )
         db.session.add(category)
 
+    db.session.commit()
+
+
+def create_default_bank_account(user_id):
+    """สร้างบัญชีธนาคาร default สำหรับผู้ใช้ใหม่"""
+    default_account = BankAccount(
+        bank_name='ธนาคารหลัก',
+        account_number='XXXX',
+        account_name='บัญชีหลัก',
+        initial_balance=0,
+        current_balance=0,
+        is_active=True,
+        user_id=user_id
+    )
+    db.session.add(default_account)
     db.session.commit()
 
 

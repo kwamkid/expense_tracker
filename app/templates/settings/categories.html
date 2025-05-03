@@ -10,52 +10,143 @@
     </a>
 </div>
 
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>ชื่อหมวดหมู่</th>
-                        <th>ประเภท</th>
-                        <th>คำสำคัญ</th>
-                        <th width="100"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for category in categories %}
-                    <tr>
-                        <td>{{ category.name }}</td>
-                        <td>
-                            <span class="badge {{ 'bg-success' if category.type == 'income' else 'bg-danger' }}">
-                                {{ 'รายรับ' if category.type == 'income' else 'รายจ่าย' }}
-                            </span>
-                        </td>
-                        <td>{{ category.keywords or '-' }}</td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ url_for('settings.edit_category', id=category.id) }}"
-                                   class="btn btn-outline-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{{ url_for('settings.delete_category', id=category.id) }}"
-                                   class="btn btn-outline-danger"
-                                   onclick="return confirm('ยืนยันการลบหมวดหมู่นี้?')">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="text-center py-4">
-                            <p class="text-muted mb-0">ยังไม่มีหมวดหมู่</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="row">
+    <!-- รายรับ Column -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">รายรับ</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ชื่อหมวดหมู่</th>
+                            <th>คำสำคัญ</th>
+                            <th width="100"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories if category.type == 'income' %}
+                        <tr>
+                            <td>{{ category.name }}</td>
+                            <td class="text-muted">
+                                <small>{{ category.keywords or '-' }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('settings.edit_category', id=category.id) }}"
+                                       class="btn btn-outline-primary" title="แก้ไข">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('settings.delete_category', id=category.id) }}"
+                                       class="btn btn-outline-danger" title="ลบ"
+                                       onclick="return confirm('ยืนยันการลบหมวดหมู่นี้?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4">
+                                <p class="text-muted mb-0">ยังไม่มีหมวดหมู่รายรับ</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- รายจ่าย Column -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">รายจ่าย</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ชื่อหมวดหมู่</th>
+                            <th>คำสำคัญ</th>
+                            <th width="100"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories if category.type == 'expense' %}
+                        <tr>
+                            <td>{{ category.name }}</td>
+                            <td class="text-muted">
+                                <small>{{ category.keywords or '-' }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('settings.edit_category', id=category.id) }}"
+                                       class="btn btn-outline-primary" title="แก้ไข">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('settings.delete_category', id=category.id) }}"
+                                       class="btn btn-outline-danger" title="ลบ"
+                                       onclick="return confirm('ยืนยันการลบหมวดหมู่นี้?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4">
+                                <p class="text-muted mb-0">ยังไม่มีหมวดหมู่รายจ่าย</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- CSS เพิ่มเติมสำหรับ responsive -->
+<style>
+    @media (max-width: 768px) {
+        .col-md-6 {
+            margin-bottom: 1rem;
+        }
+    }
+
+    .card {
+        height: 100%;
+    }
+
+    /* จำกัดความสูงของตารางและเพิ่ม scroll ถ้ามีข้อมูลเยอะ */
+    .table-responsive {
+        max-height: calc(100vh - 300px);
+        overflow-y: auto;
+    }
+
+    /* ทำให้คำสำคัญแสดงในบรรทัดเดียว */
+    td.text-muted small {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 300px;
+    }
+
+    /* Hover effect สำหรับ full text */
+    td.text-muted small:hover {
+        overflow: visible;
+        white-space: normal;
+        position: relative;
+        z-index: 1;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+    }
+</style>
 {% endblock %}
