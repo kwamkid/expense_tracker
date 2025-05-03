@@ -12,7 +12,9 @@ import shutil
 def create_app(config_class=Config):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_class)
-
+    # เพิ่ม logging ให้แสดงใน stdout
+    app.logger.addHandler(logging.StreamHandler(sys.stdout))
+    app.logger.setLevel(logging.DEBUG)
     # Try to load the instance config if it exists
     try:
         app.config.from_pyfile('config.py')
