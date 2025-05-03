@@ -177,3 +177,21 @@ class BankImportService:
         """Parse Krungsri Excel file"""
         # TODO: Implement Krungsri parser
         raise NotImplementedError("ยังไม่รองรับการนำเข้าจาก Krungsri")
+
+    def check_duplicate_transaction(self, user_id, date, amount, description):
+        """ตรวจสอบว่ามีรายการซ้ำหรือไม่"""
+        from app.models import Transaction
+
+        # ค้นหารายการที่มีวันที่, จำนวนเงิน และรายละเอียดเหมือนกัน
+        existing = Transaction.query.filter_by(
+            user_id=user_id,
+            transaction_date=date,
+            amount=amount
+        ).all()
+
+        # ตรวจสอบรายละเอียดเพิ่มเติม
+        for trans in existing:
+            if trans.description == description:
+                return True
+
+        return False

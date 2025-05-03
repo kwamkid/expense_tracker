@@ -197,3 +197,40 @@ body {
     height: 300px;
     width: 100%;
 }
+
+/* เพิ่มใน app/static/css/style.css */
+#sidebar ul ul a {
+    font-size: 0.9em !important;
+    padding-left: 40px !important;
+    background: #2c3135;
+}
+
+#sidebar ul li a.dropdown-toggle::after {
+    content: '\f105';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    float: right;
+    transition: transform 0.3s;
+}
+
+#sidebar ul li a[aria-expanded="true"]::after {
+    transform: rotate(90deg);
+}
+
+#sidebar ul ul {
+    background: #2c3135;
+}
+
+#sidebar ul ul li a:hover {
+    background: #242729;
+}
+
+/* Active state for submenu items */
+#sidebar ul.components li.active ul li a {
+    color: #dee2e6;
+}
+
+#sidebar ul.components li.active ul li a.active {
+    color: #fff;
+    background: #007bff;
+}

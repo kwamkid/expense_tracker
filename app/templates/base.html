@@ -39,9 +39,17 @@
                     </a>
                 </li>
                 <li class="{{ 'active' if request.endpoint.startswith('imports') }}">
-                    <a href="{{ url_for('imports.upload') }}">
+                    <a href="#importsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                         <i class="fas fa-file-import"></i> นำเข้าข้อมูล
                     </a>
+                    <ul class="collapse list-unstyled" id="importsSubmenu">
+                        <li>
+                            <a href="{{ url_for('imports.upload') }}">นำเข้าใหม่</a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('imports.history') }}">ประวัติการนำเข้า</a>
+                        </li>
+                    </ul>
                 </li>
                 <li class="{{ 'active' if request.endpoint == 'main.reports' }}">
                     <a href="{{ url_for('main.reports') }}">
@@ -49,9 +57,26 @@
                     </a>
                 </li>
                 <li class="{{ 'active' if request.endpoint.startswith('settings') }}">
-                    <a href="{{ url_for('settings.company') }}">
+                    <a href="#settingsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                         <i class="fas fa-cog"></i> ตั้งค่า
                     </a>
+                    <ul class="collapse list-unstyled" id="settingsSubmenu">
+                        <li>
+                            <a href="{{ url_for('settings.company') }}">
+                                <i class="fas fa-building"></i> ข้อมูลบริษัท
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('settings.categories') }}">
+                                <i class="fas fa-tags"></i> หมวดหมู่
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('settings.invite') }}">
+                                <i class="fas fa-user-plus"></i> เชิญผู้ใช้
+                            </a>
+                        </li>
+                    </ul>
                 </li>
             </ul>
         </nav>

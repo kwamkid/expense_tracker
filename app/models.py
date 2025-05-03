@@ -57,3 +57,18 @@ class InviteToken(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(bangkok_tz))
     used = db.Column(db.Boolean, default=False)
     used_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+
+class ImportHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    batch_id = db.Column(db.String(50), unique=True, nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    bank_type = db.Column(db.String(50), nullable=False)
+    import_date = db.Column(db.DateTime, default=lambda: datetime.now(bangkok_tz))
+    transaction_count = db.Column(db.Integer, default=0)
+    total_amount = db.Column(db.Float, default=0)
+    status = db.Column(db.String(20), default='completed')  # completed, partial, failed
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # เพิ่ม relationship
+    user = db.relationship('User', backref=db.backref('import_histories', lazy=True))

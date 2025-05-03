@@ -23,14 +23,16 @@
                             <th>ประเภท</th>
                             <th class="text-end">จำนวนเงิน</th>
                             <th>หมวดหมู่</th>
+                            <th>สถานะ</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in import_data %}
-                        <tr>
+                        <tr class="{{ 'table-warning' if item.is_duplicate else '' }}">
                             <td>
                                 <input type="checkbox" class="form-check-input item-check"
-                                       name="import_{{ item.index }}" checked>
+                                       name="import_{{ item.index }}"
+                                       {{ 'checked' if not item.is_duplicate else '' }}>
                             </td>
                             <td>{{ item.date.strftime('%d/%m/%Y') }}</td>
                             <td>{{ item.description or '-' }}</td>
@@ -51,6 +53,21 @@
                                         {% endif %}
                                     {% endfor %}
                                 </select>
+                            </td>
+                            <td>
+                                {% if item.is_duplicate %}
+                                    <span class="badge bg-warning">รายการซ้ำ</span>
+                                    <div class="form-check mt-1">
+                                        <input type="checkbox" class="form-check-input"
+                                               name="import_duplicate_{{ item.index }}"
+                                               id="duplicate_{{ item.index }}">
+                                        <label class="form-check-label small" for="duplicate_{{ item.index }}">
+                                            นำเข้าต่อไป
+                                        </label>
+                                    </div>
+                                {% else %}
+                                    <span class="badge bg-success">ใหม่</span>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

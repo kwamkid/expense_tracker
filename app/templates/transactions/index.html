@@ -110,55 +110,60 @@
     </div>
 
     {% if transactions.pages > 1 %}
-    <div class="card-footer">
-        <nav aria-label="Transaction pagination">
-            <ul class="pagination mb-0 justify-content-center">
-                {% if transactions.has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('transactions.index', page=transactions.prev_num, **request.args) }}">
-                        ก่อนหน้า
-                    </a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link">ก่อนหน้า</span>
-                </li>
-                {% endif %}
+<div class="card-footer">
+    <nav aria-label="Transaction pagination">
+        <ul class="pagination mb-0 justify-content-center">
+            {% set args = dict(request.args) %}
+            {% if 'page' in args %}
+                {% set _ = args.pop('page') %}
+            {% endif %}
 
-                {% for page_num in transactions.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-                    {% if page_num %}
-                        {% if page_num == transactions.page %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ page_num }}</span>
-                        </li>
-                        {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('transactions.index', page=page_num, **request.args) }}">
-                                {{ page_num }}
-                            </a>
-                        </li>
-                        {% endif %}
+            {% if transactions.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('transactions.index', page=transactions.prev_num, **args) }}">
+                    ก่อนหน้า
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">ก่อนหน้า</span>
+            </li>
+            {% endif %}
+
+            {% for page_num in transactions.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                    {% if page_num == transactions.page %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
                     {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">...</span>
-                        </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('transactions.index', page=page_num, **args) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
                     {% endif %}
-                {% endfor %}
-
-                {% if transactions.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('transactions.index', page=transactions.next_num, **request.args) }}">
-                        ถัดไป
-                    </a>
-                </li>
                 {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link">ถัดไป</span>
-                </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
                 {% endif %}
-            </ul>
-        </nav>
-    </div>
-    {% endif %}
+            {% endfor %}
+
+            {% if transactions.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('transactions.index', page=transactions.next_num, **args) }}">
+                    ถัดไป
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">ถัดไป</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
 </div>
 {% endblock %}

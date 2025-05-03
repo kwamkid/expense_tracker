@@ -3,54 +3,33 @@
 {% block title %}เชิญผู้ใช้ - {{ super() }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-3">
-        <!-- Settings Menu -->
-        <div class="card mb-4">
-            <div class="list-group list-group-flush">
-                <a href="{{ url_for('settings.company') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-building me-2"></i>ข้อมูลบริษัท
-                </a>
-                <a href="{{ url_for('settings.categories') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-tags me-2"></i>หมวดหมู่
-                </a>
-                <a href="{{ url_for('settings.invite') }}" class="list-group-item list-group-item-action active">
-                    <i class="fas fa-user-plus me-2"></i>เชิญผู้ใช้
-                </a>
-            </div>
+<h1 class="mb-4">เชิญผู้ใช้</h1>
+
+<div class="card">
+    <div class="card-body">
+        <p>คัดลอกลิงก์ด้านล่างเพื่อเชิญผู้ใช้เข้าร่วมระบบ:</p>
+
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" id="inviteLink"
+                   value="{{ invite_url }}" readonly>
+            <button class="btn btn-primary" type="button" onclick="copyLink()">
+                <i class="fas fa-copy me-2"></i>คัดลอก
+            </button>
         </div>
-    </div>
 
-    <div class="col-md-9">
-        <h1 class="mb-4">เชิญผู้ใช้</h1>
+        <p class="text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            ลิงก์จะหมดอายุใน 24 ชั่วโมง
+        </p>
 
-        <div class="card">
-            <div class="card-body">
-                <p>คัดลอกลิงก์ด้านล่างเพื่อเชิญผู้ใช้เข้าร่วมระบบ:</p>
+        <hr>
 
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="inviteLink"
-                           value="{{ invite_url }}" readonly>
-                    <button class="btn btn-primary" type="button" onclick="copyLink()">
-                        <i class="fas fa-copy me-2"></i>คัดลอก
-                    </button>
-                </div>
-
-                <p class="text-muted">
-                    <i class="fas fa-info-circle me-1"></i>
-                    ลิงก์จะหมดอายุใน 24 ชั่วโมง
-                </p>
-
-                <hr>
-
-                <p>หรือแชร์ผ่าน:</p>
-                <div class="d-flex gap-2">
-                    <a href="https://line.me/R/msg/text/?{{ invite_url|urlencode }}"
-                       target="_blank" class="btn btn-success">
-                        <i class="fab fa-line me-2"></i>LINE
-                    </a>
-                </div>
-            </div>
+        <p>หรือแชร์ผ่าน:</p>
+        <div class="d-flex gap-2">
+            <a href="https://line.me/R/msg/text/?{{ invite_url|urlencode }}"
+               target="_blank" class="btn btn-success">
+                <i class="fab fa-line me-2"></i>LINE
+            </a>
         </div>
     </div>
 </div>

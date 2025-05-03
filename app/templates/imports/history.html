@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}ประวัติการนำเข้า - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>ประวัติการนำเข้า</h1>
+    <a href="{{ url_for('imports.upload') }}" class="btn btn-primary">
+        <i class="fas fa-file-import me-2"></i>นำเข้าใหม่
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>วันที่นำเข้า</th>
+                        <th>ไฟล์</th>
+                        <th>ธนาคาร</th>
+                        <th class="text-end">จำนวนรายการ</th>
+                        <th class="text-end">ยอดรวม</th>
+                        <th>สถานะ</th>
+                        <th width="100"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for history in histories %}
+                    <tr>
+                        <td>{{ history.import_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ history.filename }}</td>
+                        <td>{{ history.bank_type.upper() }}</td>
+                        <td class="text-end">{{ history.transaction_count }}</td>
+                        <td class="text-end">฿{{ "{:,.2f}".format(history.total_amount) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if history.status == 'completed' else 'warning' }}">
+                                {{ 'สำเร็จ' if history.status == 'completed' else 'บางส่วน' }}
+                            </span>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('imports.delete_import', batch_id=history.batch_id) }}"
+                                  class="d-inline"
+                                  onsubmit="return confirm('ยืนยันการลบรายการนำเข้านี้?\nการดำเนินการนี้จะลบธุรกรรมทั้งหมดที่นำเข้าจากไฟล์นี้');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <p class="text-muted mb-0">ยังไม่มีประวัติการนำเข้า</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from app.models import db, Category, InviteToken
+from app.models import db, Category, InviteToken, Transaction, ImportHistory
 from app.forms import CompanySettingsForm, CategoryForm
 import os
 import uuid
@@ -97,3 +97,86 @@ def invite():
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
+
+
+@settings_bp.route('/clear-data', methods=['GET', 'POST'])
+@login_required
+def clear_data():
+    if request.method == 'POST':
+        # ตรวจสอบการยืนยัน
+        confirm_text = request.form.get('confirm_text', '')
+        if confirm_text.lower() == 'ลบข้อมูลทั้งหมด':
+            try:
+                # ลบ transactions ทั้งหมดของผู้ใช้
+                transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+                for transaction in transactions:
+                    db.session.delete(transaction)
+
+                # ลบ import history ทั้งหมดของผู้ใช้
+                import_histories = ImportHistory.query.filter_by(user_id=current_user.id).all()
+                for history in import_histories:
+                    db.session.delete(history)
+
+                db.session.commit()
+                flash('ลบข้อมูลทั้งหมดเรียบร้อยแล้ว', 'success')
+                return redirect(url_for('main.dashboard'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'เกิดข้อผิดพลาดในการลบข้อมูล: {str(e)}', 'error')
+        else:
+            flash('กรุณาพิมพ์ข้อความยืนยันให้ถูกต้อง', 'error')
+
+    # นับจำนวนข้อมูลเพื่อแสดงให้ผู้ใช้เห็น
+    transaction_count = Transaction.query.filter_by(user_id=current_user.id).count()
+    import_count = ImportHistory.query.filter_by(user_id=current_user.id).count()
+
+    return render_template('settings/clear_data.html',
+                           transaction_count=transaction_count,
+                           import_count=import_count)
+
+
+@settings_bp.route('/categories/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_category(id):
+    category = Category.query.get_or_404(id)
+
+    # ตรวจสอบว่าเป็นหมวดหมู่ของผู้ใช้หรือไม่
+    if category.user_id != current_user.id:
+        flash('คุณไม่มีสิทธิ์แก้ไขหมวดหมู่นี้', 'error')
+        return redirect(url_for('settings.categories'))
+
+    form = CategoryForm(obj=category)
+
+    if form.validate_on_submit():
+        category.name = form.name.data
+        category.type = form.type.data
+        category.keywords = form.keywords.data
+
+        db.session.commit()
+        flash('แก้ไขหมวดหมู่เรียบร้อยแล้ว', 'success')
+        return redirect(url_for('settings.categories'))
+
+    return render_template('settings/category_form.html', form=form, title='แก้ไขหมวดหมู่')
+
+
+@settings_bp.route('/categories/delete/<int:id>')
+@login_required
+def delete_category(id):
+    category = Category.query.get_or_404(id)
+
+    # ตรวจสอบว่าเป็นหมวดหมู่ของผู้ใช้หรือไม่
+    if category.user_id != current_user.id:
+        flash('คุณไม่มีสิทธิ์ลบหมวดหมู่นี้', 'error')
+        return redirect(url_for('settings.categories'))
+
+    # ตรวจสอบว่ามี transactions ที่ใช้หมวดหมู่นี้หรือไม่
+    transaction_count = Transaction.query.filter_by(category_id=id).count()
+    if transaction_count > 0:
+        flash(f'ไม่สามารถลบหมวดหมู่นี้ได้ เนื่องจากมีธุรกรรม {transaction_count} รายการที่ใช้หมวดหมู่นี้', 'error')
+        return redirect(url_for('settings.categories'))
+
+    db.session.delete(category)
+    db.session.commit()
+    flash('ลบหมวดหมู่เรียบร้อยแล้ว', 'success')
+
+    return redirect(url_for('settings.categories'))

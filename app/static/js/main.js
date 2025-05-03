@@ -65,3 +65,29 @@ $(document).ready(function () {
         $('.alert').fadeOut('slow');
     }, 5000);
 });
+
+// เพิ่มใน app/static/js/main.js
+$(document).ready(function () {
+    // ... existing code ...
+
+    // Remember submenu state
+    if (localStorage.getItem('settingsSubmenuOpen') === 'true') {
+        $('#settingsSubmenu').addClass('show');
+        $('#settingsSubmenu').parent().find('a').attr('aria-expanded', 'true');
+    }
+
+    // Save submenu state
+    $('#settingsSubmenu').on('show.bs.collapse', function () {
+        localStorage.setItem('settingsSubmenuOpen', 'true');
+    });
+
+    $('#settingsSubmenu').on('hide.bs.collapse', function () {
+        localStorage.setItem('settingsSubmenuOpen', 'false');
+    });
+
+    // Auto expand if current page is in settings
+    if (window.location.href.indexOf('/settings/') > -1) {
+        $('#settingsSubmenu').addClass('show');
+        $('#settingsSubmenu').parent().find('a').attr('aria-expanded', 'true');
+    }
+});
