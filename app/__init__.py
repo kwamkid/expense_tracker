@@ -7,6 +7,10 @@ import logging
 from logging.handlers import RotatingFileHandler
 import sys
 import shutil
+from dotenv import load_dotenv
+
+# โหลด environment variables จาก .env
+load_dotenv()
 
 
 def create_app(config_class=Config):

@@ -13,9 +13,12 @@ import string
 from datetime import datetime, timedelta
 import uuid
 
-# กำหนดค่า LINE API
-LINE_CLIENT_ID = os.environ.get('LINE_CLIENT_ID', 'YOUR_LINE_CLIENT_ID')
-LINE_CLIENT_SECRET = os.environ.get('LINE_CLIENT_SECRET', 'YOUR_LINE_CLIENT_SECRET')
+# กำหนดค่า LINE API - ใช้ตัวเดียว
+LINE_CLIENT_ID = os.environ.get('LINE_CLIENT_ID', '')
+LINE_CLIENT_SECRET = os.environ.get('LINE_CLIENT_SECRET', '')
+LINE_CALLBACK_URL = os.environ.get('LINE_CALLBACK_URL', '')
+
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
