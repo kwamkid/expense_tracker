@@ -8,6 +8,12 @@ from logging.handlers import RotatingFileHandler
 import sys
 import shutil
 
+# เพิ่มตรงบนสุดของไฟล์
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
 
 def create_app(config_class=Config):
     app = Flask(__name__, instance_relative_config=True)
@@ -18,7 +24,11 @@ def create_app(config_class=Config):
     # Try to load the instance config if it exists
     try:
         app.config.from_pyfile('config.py')
+        app.logger.info("Configuration loaded successfully")
+
     except:
+        app.logger.error(f"Error loading configuration: {str(e)}")
+
         pass
 
     # Ensure the instance folder exists
