@@ -2,15 +2,18 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from app.models import db, Transaction, Category, ImportHistory
+from app.models import db, Transaction, Category, ImportHistory, BankAccount
 from app.services.import_service import BankImportService
 from app.services.category_matcher import CategoryMatcher
+from app.services.balance_service import BalanceService
 import os
 import uuid
 import json
 from datetime import datetime
+import pytz
 
 imports_bp = Blueprint('imports', __name__, url_prefix='/imports')
+bangkok_tz = pytz.timezone('Asia/Bangkok')
 
 
 @imports_bp.route('/upload', methods=['GET', 'POST'])
@@ -37,6 +40,12 @@ def upload():
 
             # Process file
             bank_type = request.form.get('bank_type')
+            bank_account_id = request.form.get('bank_account_id')
+
+            if not bank_account_id:
+                flash('กรุณาเลือกบัญชีธนาคาร', 'error')
+                return redirect(request.url)
+
             import_service = BankImportService(bank_type)
 
             try:
@@ -62,6 +71,7 @@ def upload():
                 session['import_id'] = import_id
                 session['import_batch_id'] = str(uuid.uuid4())
                 session['bank_type'] = bank_type
+                session['bank_account_id'] = bank_account_id
 
                 return redirect(url_for('imports.preview'))
             except Exception as e:
@@ -75,7 +85,9 @@ def upload():
             flash('รองรับเฉพาะไฟล์ Excel (.xlsx, .xls)', 'error')
             return redirect(request.url)
 
-    return render_template('imports/upload.html')
+    # Get bank accounts for dropdown
+    bank_accounts = BankAccount.query.filter_by(user_id=current_user.id, is_active=True).all()
+    return render_template('imports/upload.html', bank_accounts=bank_accounts)
 
 
 @imports_bp.route('/preview', methods=['GET', 'POST'])
@@ -106,6 +118,7 @@ def preview():
     if request.method == 'POST':
         batch_id = session.get('import_batch_id')
         bank_type = session.get('bank_type')
+        bank_account_id = session.get('bank_account_id')
         original_filename = session.get('original_filename', 'unknown')
 
         matcher = CategoryMatcher(current_user.id)
@@ -149,7 +162,11 @@ def preview():
                         category_id=category_id,
                         user_id=current_user.id,
                         bank_reference=item.get('reference'),
-                        import_batch_id=batch_id
+                        import_batch_id=batch_id,
+                        bank_account_id=bank_account_id,
+                        status='completed',  # รายการที่ import มาต้องเป็น completed
+                        source='import',
+                        completed_date=datetime.now(bangkok_tz)
                     )
                     db.session.add(transaction)
                     success_count += 1
@@ -168,11 +185,16 @@ def preview():
                 transaction_count=success_count,
                 total_amount=total_amount,
                 status='completed' if error_count == 0 else 'partial',
-                user_id=current_user.id
+                user_id=current_user.id,
+                bank_account_id=bank_account_id
             )
             db.session.add(import_history)
 
         db.session.commit()
+
+        # อัพเดทยอดเงินในบัญชี
+        if success_count > 0:
+            BalanceService.update_bank_balance(bank_account_id)
 
         # Clean up
         if os.path.exists(temp_data_file):
@@ -180,6 +202,7 @@ def preview():
         session.pop('import_id', None)
         session.pop('import_batch_id', None)
         session.pop('bank_type', None)
+        session.pop('bank_account_id', None)
         session.pop('original_filename', None)
 
         # แสดงข้อความสรุป
@@ -222,6 +245,8 @@ def delete_import(batch_id):
         user_id=current_user.id
     ).first_or_404()
 
+    bank_account_id = history.bank_account_id
+
     # ลบ transactions ที่เกี่ยวข้อง
     transactions = Transaction.query.filter_by(
         import_batch_id=batch_id,
@@ -234,6 +259,10 @@ def delete_import(batch_id):
     # ลบประวัติ
     db.session.delete(history)
     db.session.commit()
+
+    # อัพเดทยอดเงินในบัญชี
+    if bank_account_id:
+        BalanceService.update_bank_balance(bank_account_id)
 
     flash(f'ลบรายการนำเข้าจากไฟล์ {history.filename} เรียบร้อยแล้ว ({len(transactions)} รายการ)', 'success')
     return redirect(url_for('imports.history'))

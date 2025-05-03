@@ -1,0 +1,108 @@
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask_login import login_required, current_user
+from app.models import db, BankAccount, Transaction
+from app.forms import BankAccountForm
+from app.services.balance_service import BalanceService
+
+bank_accounts_bp = Blueprint('bank_accounts', __name__, url_prefix='/bank_accounts')
+
+
+@bank_accounts_bp.route('/')
+@login_required
+def index():
+    bank_accounts = BankAccount.query.filter_by(user_id=current_user.id).all()
+    return render_template('bank_accounts/index.html', bank_accounts=bank_accounts)
+
+
+@bank_accounts_bp.route('/add', methods=['GET', 'POST'])
+@login_required
+def add():
+    form = BankAccountForm()
+
+    if form.validate_on_submit():
+        bank_account = BankAccount(
+            bank_name=form.bank_name.data,
+            account_number=form.account_number.data,
+            account_name=form.account_name.data,
+            initial_balance=form.initial_balance.data,
+            current_balance=form.initial_balance.data,  # เริ่มต้นเท่ากับ initial_balance
+            is_active=form.is_active.data,
+            user_id=current_user.id
+        )
+        db.session.add(bank_account)
+        db.session.commit()
+
+        flash('เพิ่มบัญชีธนาคารเรียบร้อยแล้ว', 'success')
+        return redirect(url_for('bank_accounts.index'))
+
+    return render_template('bank_accounts/form.html', form=form, title='เพิ่มบัญชีธนาคาร')
+
+
+@bank_accounts_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit(id):
+    bank_account = BankAccount.query.get_or_404(id)
+
+    if bank_account.user_id != current_user.id:
+        flash('คุณไม่มีสิทธิ์แก้ไขบัญชีนี้', 'error')
+        return redirect(url_for('bank_accounts.index'))
+
+    form = BankAccountForm(obj=bank_account)
+
+    if form.validate_on_submit():
+        bank_account.bank_name = form.bank_name.data
+        bank_account.account_number = form.account_number.data
+        bank_account.account_name = form.account_name.data
+        bank_account.is_active = form.is_active.data
+
+        # ถ้าเปลี่ยน initial_balance ต้องคำนวณ current_balance ใหม่
+        if bank_account.initial_balance != form.initial_balance.data:
+            old_initial = bank_account.initial_balance
+            new_initial = form.initial_balance.data
+            diff = new_initial - old_initial
+            bank_account.initial_balance = new_initial
+            bank_account.current_balance += diff
+
+        db.session.commit()
+        flash('แก้ไขบัญชีธนาคารเรียบร้อยแล้ว', 'success')
+        return redirect(url_for('bank_accounts.index'))
+
+    return render_template('bank_accounts/form.html', form=form, title='แก้ไขบัญชีธนาคาร')
+
+
+@bank_accounts_bp.route('/delete/<int:id>')
+@login_required
+def delete(id):
+    bank_account = BankAccount.query.get_or_404(id)
+
+    if bank_account.user_id != current_user.id:
+        flash('คุณไม่มีสิทธิ์ลบบัญชีนี้', 'error')
+        return redirect(url_for('bank_accounts.index'))
+
+    # ตรวจสอบว่ามี transaction ที่ใช้บัญชีนี้หรือไม่
+    transaction_count = Transaction.query.filter_by(bank_account_id=id).count()
+    if transaction_count > 0:
+        flash(f'ไม่สามารถลบบัญชีนี้ได้ เนื่องจากมีธุรกรรม {transaction_count} รายการที่ใช้บัญชีนี้', 'error')
+        return redirect(url_for('bank_accounts.index'))
+
+    db.session.delete(bank_account)
+    db.session.commit()
+    flash('ลบบัญชีธนาคารเรียบร้อยแล้ว', 'success')
+
+    return redirect(url_for('bank_accounts.index'))
+
+
+@bank_accounts_bp.route('/recalculate/<int:id>')
+@login_required
+def recalculate(id):
+    """คำนวณยอดคงเหลือใหม่สำหรับบัญชีที่เลือก"""
+    bank_account = BankAccount.query.get_or_404(id)
+
+    if bank_account.user_id != current_user.id:
+        flash('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error')
+        return redirect(url_for('bank_accounts.index'))
+
+    BalanceService.update_bank_balance(id)
+    flash('คำนวณยอดคงเหลือใหม่เรียบร้อยแล้ว', 'success')
+
+    return redirect(url_for('bank_accounts.index'))

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="mb-4">{{ title }}</h1>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        {{ form.bank_name.label(class="form-label") }}
+                        {{ form.bank_name(class="form-control") }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.account_number.label(class="form-label") }}
+                        {{ form.account_number(class="form-control") }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.account_name.label(class="form-label") }}
+                        {{ form.account_name(class="form-control") }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.initial_balance.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">฿</span>
+                            {{ form.initial_balance(class="form-control") }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.is_active(class="form-check-input") }}
+                        {{ form.is_active.label(class="form-check-label") }}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('bank_accounts.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>ย้อนกลับ
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

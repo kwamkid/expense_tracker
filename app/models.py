@@ -22,6 +22,21 @@ class User(UserMixin, db.Model):
     logo_path = db.Column(db.String(255))
 
     transactions = db.relationship('Transaction', backref='user', lazy=True)
+    bank_accounts = db.relationship('BankAccount', backref='user', lazy=True)
+
+
+class BankAccount(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bank_name = db.Column(db.String(100), nullable=False)
+    account_number = db.Column(db.String(20), nullable=False)
+    account_name = db.Column(db.String(200))
+    initial_balance = db.Column(db.Float, default=0)
+    current_balance = db.Column(db.Float, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(bangkok_tz))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    transactions = db.relationship('Transaction', backref='bank_account', lazy=True)
 
 
 class Category(db.Model):
@@ -40,6 +55,15 @@ class Transaction(db.Model):
     description = db.Column(db.Text)
     transaction_date = db.Column(db.Date, nullable=False)
     type = db.Column(db.String(10), nullable=False)  # 'income' or 'expense'
+
+    # New fields for status and timing
+    status = db.Column(db.String(20), default='pending')  # pending, completed, cancelled
+    transaction_time = db.Column(db.Time)  # เวลาที่ทำรายการ
+    completed_date = db.Column(db.DateTime)  # วันเวลาที่รายการสำเร็จ
+    source = db.Column(db.String(20), default='manual')  # manual, import
+
+    # Bank account relationship
+    bank_account_id = db.Column(db.Integer, db.ForeignKey('bank_account.id'))
 
     # Import tracking
     bank_reference = db.Column(db.String(100))
@@ -70,5 +94,9 @@ class ImportHistory(db.Model):
     status = db.Column(db.String(20), default='completed')  # completed, partial, failed
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
+    # Add relationship to bank account
+    bank_account_id = db.Column(db.Integer, db.ForeignKey('bank_account.id'))
+
     # เพิ่ม relationship
     user = db.relationship('User', backref=db.backref('import_histories', lazy=True))
+    bank_account = db.relationship('BankAccount', backref=db.backref('import_histories', lazy=True))

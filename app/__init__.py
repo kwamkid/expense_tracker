@@ -25,12 +25,13 @@ def create_app(config_class=Config):
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'logo'), exist_ok=True)
 
     # Register blueprints
-    from app.routes import auth_bp, main_bp, transactions_bp, imports_bp, settings_bp
+    from app.routes import auth_bp, main_bp, transactions_bp, imports_bp, settings_bp, bank_accounts_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(transactions_bp)
     app.register_blueprint(imports_bp)
     app.register_blueprint(settings_bp)
+    app.register_blueprint(bank_accounts_bp)
 
     @login_manager.user_loader
     def load_user(user_id):
