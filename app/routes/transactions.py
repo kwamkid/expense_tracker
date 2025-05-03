@@ -188,3 +188,18 @@ def update_status(id):
         return jsonify({'success': True, 'message': 'อัพเดทสถานะเรียบร้อย'})
     else:
         return jsonify({'success': False, 'message': 'เกิดข้อผิดพลาด'}), 500
+
+
+@transactions_bp.route('/api/categories')
+@login_required
+def get_categories():
+    transaction_type = request.args.get('type', 'expense')
+    categories = Category.query.filter_by(
+        user_id=current_user.id,
+        type=transaction_type
+    ).all()
+
+    return jsonify([{
+        'id': cat.id,
+        'name': cat.name
+    } for cat in categories])

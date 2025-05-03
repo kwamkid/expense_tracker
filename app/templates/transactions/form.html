@@ -30,8 +30,20 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                {{ form.type.label(class="form-label") }}
-                                {{ form.type(class="form-select") }}
+                                <label class="form-label">ประเภท</label>
+                                <div class="transaction-type-toggle">
+                                    <input type="radio" class="btn-check" name="type" id="type-income" value="income"
+                                           {% if form.type.data == 'income' %}checked{% endif %}>
+                                    <label class="btn" for="type-income">
+                                        <i class="fas fa-arrow-up me-1"></i>รายรับ
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="type" id="type-expense" value="expense"
+                                           {% if form.type.data == 'expense' or not form.type.data %}checked{% endif %}>
+                                    <label class="btn" for="type-expense">
+                                        <i class="fas fa-arrow-down me-1"></i>รายจ่าย
+                                    </label>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -92,4 +104,34 @@
         </div>
     </div>
 </div>
+
+<script>
+// เมื่อเปลี่ยนประเภทธุรกรรม ให้อัพเดทหมวดหมู่ที่เกี่ยวข้อง
+document.addEventListener('DOMContentLoaded', function() {
+    const typeRadios = document.querySelectorAll('input[name="type"]');
+    const categorySelect = document.getElementById('category_id');
+
+    typeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            updateCategoryOptions(this.value);
+        });
+    });
+
+    function updateCategoryOptions(type) {
+        // ส่ง AJAX request เพื่อดึงหมวดหมู่ตามประเภท
+        fetch(`/api/categories?type=${type}`)
+            .then(response => response.json())
+            .then(data => {
+                categorySelect.innerHTML = '';
+                data.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+});
+</script>
 {% endblock %}

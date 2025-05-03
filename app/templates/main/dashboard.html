@@ -3,220 +3,249 @@
 {% block title %}Dashboard - {{ super() }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Dashboard</h1>
-    <div>
-        <a href="{{ url_for('transactions.add') }}" class="btn btn-primary me-2">
-            <i class="fas fa-plus me-2"></i>เพิ่มธุรกรรม
-        </a>
-        <a href="{{ url_for('imports.upload') }}" class="btn btn-success me-2">
-            <i class="fas fa-file-import me-2"></i>นำเข้าข้อมูล
-        </a>
-    </div>
-</div>
-
-<!-- Bank Account Summary -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">สรุปบัญชีธนาคาร</h5>
-                <a href="{{ url_for('bank_accounts.index') }}" class="btn btn-sm btn-outline-primary">
-                    จัดการบัญชี
+<div class="container-fluid px-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Dashboard</h1>
+        <div class="row g-2 d-none d-md-flex">
+            <div class="col-auto">
+                <a href="{{ url_for('transactions.add') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>เพิ่มธุรกรรม
                 </a>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    {% for account in bank_accounts %}
-                    <div class="col-md-3">
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title">{{ account.bank_name }}</h6>
-                                <p class="card-text mb-1">{{ account.account_number }}</p>
-                                <h4 class="mb-0">฿{{ "{:,.2f}".format(account.current_balance) }}</h4>
+            <div class="col-auto">
+                <a href="{{ url_for('imports.upload') }}" class="btn btn-success">
+                    <i class="fas fa-file-import me-2"></i>นำเข้าข้อมูล
+                </a>
+            </div>
+        </div>
+    </div>
+
+<!-- Mobile Action Buttons - Horizontal Layout -->
+<div class="row g-3 mb-4 d-md-none">
+    <div class="col-6">
+        <a href="{{ url_for('transactions.add') }}" class="btn btn-primary btn-lg w-100 py-3">
+            <i class="fas fa-plus me-2"></i>
+            เพิ่มธุรกรรม
+        </a>
+    </div>
+    <div class="col-6">
+        <a href="{{ url_for('imports.upload') }}" class="btn btn-success btn-lg w-100 py-3">
+            <i class="fas fa-file-import me-2"></i>
+            นำเข้าข้อมูล
+        </a>
+    </div>
+</div>
+
+    <!-- Bank Account Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">สรุปบัญชีธนาคาร</h5>
+                    <a href="{{ url_for('bank_accounts.index') }}" class="btn btn-sm btn-outline-primary">
+                        จัดการบัญชี
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for account in bank_accounts %}
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ account.bank_name }}</h6>
+                                    <p class="card-text mb-1">{{ account.account_number }}</p>
+                                    <h4 class="mb-0">฿{{ "{:,.2f}".format(account.current_balance) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                            <div class="card h-100 bg-primary text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">ยอดรวมทั้งหมด</h6>
+                                    <p class="card-text mb-1">&nbsp;</p>
+                                    <h4 class="mb-0">฿{{ "{:,.2f}".format(total_bank_balance) }}</h4>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
-                    <div class="col-md-3">
-                        <div class="card mb-3 bg-primary text-white">
-                            <div class="card-body">
-                                <h6 class="card-title">ยอดรวมทั้งหมด</h6>
-                                <p class="card-text mb-1">&nbsp;</p>
-                                <h4 class="mb-0">฿{{ "{:,.2f}".format(total_bank_balance) }}</h4>
-                            </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card dashboard-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50">รายรับเดือนนี้ (สำเร็จ)</h6>
+                            <h3 class="mb-0">฿{{ "{:,.2f}".format(total_income) }}</h3>
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card dashboard-card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50">รายจ่ายเดือนนี้ (สำเร็จ)</h6>
+                            <h3 class="mb-0">฿{{ "{:,.2f}".format(total_expense) }}</h3>
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card dashboard-card {{ 'bg-primary' if balance >= 0 else 'bg-warning' }} text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50">คงเหลือ</h6>
+                            <h3 class="mb-0">฿{{ "{:,.2f}".format(balance) }}</h3>
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card dashboard-card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50">รอดำเนินการ</h6>
+                            <p class="mb-0">รับ: ฿{{ "{:,.2f}".format(pending_income) }}</p>
+                            <p class="mb-0">จ่าย: ฿{{ "{:,.2f}".format(pending_expense) }}</p>
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-clock"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card dashboard-card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-white-50">รายรับเดือนนี้ (สำเร็จ)</h6>
-                        <h3 class="mb-0">฿{{ "{:,.2f}".format(total_income) }}</h3>
-                    </div>
-                    <div class="card-icon">
-                        <i class="fas fa-arrow-up"></i>
-                    </div>
-                </div>
-            </div>
+    <!-- Recent Transactions -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">รายการล่าสุด</h5>
+            <a href="{{ url_for('transactions.index') }}" class="btn btn-sm btn-outline-primary">ดูทั้งหมด</a>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card dashboard-card bg-danger text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-white-50">รายจ่ายเดือนนี้ (สำเร็จ)</h6>
-                        <h3 class="mb-0">฿{{ "{:,.2f}".format(total_expense) }}</h3>
-                    </div>
-                    <div class="card-icon">
-                        <i class="fas fa-arrow-down"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card dashboard-card {{ 'bg-primary' if balance >= 0 else 'bg-warning' }} text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-white-50">คงเหลือ</h6>
-                        <h3 class="mb-0">฿{{ "{:,.2f}".format(balance) }}</h3>
-                    </div>
-                    <div class="card-icon">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card dashboard-card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-white-50">รอดำเนินการ</h6>
-                        <p class="mb-0">รับ: ฿{{ "{:,.2f}".format(pending_income) }}</p>
-                        <p class="mb-0">จ่าย: ฿{{ "{:,.2f}".format(pending_expense) }}</p>
-                    </div>
-                    <div class="card-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Charts -->
-<div class="row mb-4">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">รายรับ-รายจ่าย 6 เดือนย้อนหลัง (สำเร็จแล้ว)</h5>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="monthlyChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">สัดส่วนรายจ่าย</h5>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="expenseChart"></canvas>
-                </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="d-none d-md-table-header-group">
+                        <tr>
+                            <th>วันที่</th>
+                            <th>รายละเอียด</th>
+                            <th>ประเภท</th>
+                            <th>สถานะ</th>
+                            <th class="text-end">จำนวนเงิน</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in recent_transactions %}
+                        <tr>
+                            <td class="d-none d-md-table-cell">{{ transaction.transaction_date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">{{ transaction.description or 'ไม่มีรายละเอียด' }}</span>
+                                    <small class="text-muted d-md-none">
+                                        {{ transaction.transaction_date.strftime('%d/%m/%Y') }} •
+                                        {{ transaction.category.name }}
+                                    </small>
+                                    <small class="text-muted d-none d-md-inline">
+                                        {{ transaction.category.name }} •
+                                        {{ transaction.bank_account.bank_name if transaction.bank_account else 'ไม่ระบุบัญชี' }}
+                                    </small>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <span class="badge {{ 'bg-success' if transaction.type == 'income' else 'bg-danger' }}">
+                                    {{ 'รายรับ' if transaction.type == 'income' else 'รายจ่าย' }}
+                                </span>
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm status-select"
+                                        data-transaction-id="{{ transaction.id }}"
+                                        onchange="updateStatus(this)">
+                                    <option value="pending" {{ 'selected' if transaction.status == 'pending' }}>รอดำเนินการ</option>
+                                    <option value="completed" {{ 'selected' if transaction.status == 'completed' }}>สำเร็จแล้ว</option>
+                                    <option value="cancelled" {{ 'selected' if transaction.status == 'cancelled' }}>ยกเลิก</option>
+                                </select>
+                            </td>
+                            <td class="text-end {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
+                                <div class="d-flex justify-content-end align-items-center">
+                                    <span class="d-md-none me-2 badge {{ 'bg-success' if transaction.type == 'income' else 'bg-danger' }}">
+                                        {{ 'รายรับ' if transaction.type == 'income' else 'รายจ่าย' }}
+                                    </span>
+                                    <span>{{ '+' if transaction.type == 'income' else '-' }}฿{{ "{:,.2f}".format(transaction.amount) }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Recent Transactions -->
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">รายการล่าสุด</h5>
-        <a href="{{ url_for('transactions.index') }}" class="btn btn-sm btn-outline-primary">ดูทั้งหมด</a>
-    </div>
-    <div class="card-body p-0">
-        <div class="list-group list-group-flush">
-            {% for transaction in recent_transactions %}
-            <div class="list-group-item transaction-item {{ transaction.type }}">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1">
-                            {{ transaction.description or 'ไม่มีรายละเอียด' }}
-                            <span class="badge bg-{{ 'success' if transaction.status == 'completed' else 'warning' if transaction.status == 'pending' else 'secondary' }} ms-2">
-                                {{ 'สำเร็จ' if transaction.status == 'completed' else 'รอดำเนินการ' if transaction.status == 'pending' else 'ยกเลิก' }}
-                            </span>
-                        </h6>
-                        <small class="text-muted">
-                            {{ transaction.transaction_date.strftime('%d/%m/%Y') }} •
-                            {{ transaction.category.name }} •
-                            {{ transaction.bank_account.bank_name if transaction.bank_account else 'ไม่ระบุบัญชี' }}
-                        </small>
-                    </div>
-                    <div class="text-end">
-                        <h6 class="mb-0 {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
-                            {{ '+' if transaction.type == 'income' else '-' }}฿{{ "{:,.2f}".format(transaction.amount) }}
-                        </h6>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Monthly Chart
-const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-const monthlyData = {{ monthly_data|tojson }};
+function updateStatus(selectElement) {
+    const transactionId = selectElement.dataset.transactionId;
+    const newStatus = selectElement.value;
 
-new Chart(monthlyCtx, {
-    type: 'bar',
-    data: {
-        labels: monthlyData.map(item => item.month),
-        datasets: [{
-            label: 'รายรับ',
-            data: monthlyData.map(item => item.income),
-            backgroundColor: 'rgba(40, 167, 69, 0.8)',
-            borderColor: 'rgba(40, 167, 69, 1)',
-            borderWidth: 1
-        }, {
-            label: 'รายจ่าย',
-            data: monthlyData.map(item => item.expense),
-            backgroundColor: 'rgba(220, 53, 69, 0.8)',
-            borderColor: 'rgba(220, 53, 69, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true
-            }
+    fetch(`/transactions/update_status/${transactionId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+                ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            // Auto dismiss after 3 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+                // Reload page to update balances
+                location.reload();
+            }, 1500);
+        } else {
+            alert('เกิดข้อผิดพลาด: ' + data.message);
+            location.reload();
         }
-    }
-});
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการอัพเดทสถานะ');
+        location.reload();
+    });
+}
 </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, FloatField, TextAreaField, DateField, TimeField, SelectField, SubmitField, BooleanField
+from wtforms import StringField, FloatField, TextAreaField, DateField, TimeField, SelectField, SubmitField, BooleanField, RadioField
 from wtforms.validators import DataRequired, Optional, Length, NumberRange
 from datetime import date, datetime
 
@@ -9,7 +9,7 @@ class TransactionForm(FlaskForm):
     description = TextAreaField('รายละเอียด', validators=[Optional(), Length(max=500)])
     transaction_date = DateField('วันที่', validators=[DataRequired()], default=date.today)
     transaction_time = TimeField('เวลา', validators=[Optional()], default=datetime.now().time)
-    type = SelectField('ประเภท', choices=[('income', 'รายรับ'), ('expense', 'รายจ่าย')], validators=[DataRequired()])
+    type = RadioField('ประเภท', choices=[('income', 'รายรับ'), ('expense', 'รายจ่าย')], validators=[DataRequired()], default='expense')
     category_id = SelectField('หมวดหมู่', coerce=int, validators=[DataRequired()])
     bank_account_id = SelectField('บัญชีธนาคาร', coerce=int, validators=[Optional()])
     status = SelectField('สถานะ',
