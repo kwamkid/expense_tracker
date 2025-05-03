@@ -167,6 +167,8 @@ def delete(id):
     return redirect(url_for('transactions.index'))
 
 
+# เฉพาะส่วนที่ปรับปรุงใน app/routes/transactions.py
+
 @transactions_bp.route('/update_status/<int:id>', methods=['POST'])
 @login_required
 def update_status(id):
@@ -178,13 +180,23 @@ def update_status(id):
 
     data = request.get_json()
     new_status = data.get('status')
+    bank_account_id = data.get('bank_account_id')
 
     if new_status not in ['pending', 'completed', 'cancelled']:
         return jsonify({'success': False, 'message': 'สถานะไม่ถูกต้อง'}), 400
 
+    # ถ้ามีการส่ง bank_account_id มา ให้อัพเดทด้วย
+    if bank_account_id:
+        bank_account = BankAccount.query.get(bank_account_id)
+        if bank_account and bank_account.user_id == current_user.id:
+            transaction.bank_account_id = bank_account_id
+        else:
+            return jsonify({'success': False, 'message': 'บัญชีธนาคารไม่ถูกต้อง'}), 400
+
     success = BalanceService.update_transaction_status(transaction.id, new_status)
 
     if success:
+        db.session.commit()
         return jsonify({'success': True, 'message': 'อัพเดทสถานะเรียบร้อย'})
     else:
         return jsonify({'success': False, 'message': 'เกิดข้อผิดพลาด'}), 500

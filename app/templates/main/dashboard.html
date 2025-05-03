@@ -36,39 +36,21 @@
     </div>
 </div>
 
-    <!-- Bank Account Summary -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">สรุปบัญชีธนาคาร</h5>
-                    <a href="{{ url_for('bank_accounts.index') }}" class="btn btn-sm btn-outline-primary">
-                        จัดการบัญชี
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        {% for account in bank_accounts %}
-                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h6 class="card-title">{{ account.bank_name }}</h6>
-                                    <p class="card-text mb-1">{{ account.account_number }}</p>
-                                    <h4 class="mb-0">฿{{ "{:,.2f}".format(account.current_balance) }}</h4>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                            <div class="card h-100 bg-primary text-white">
-                                <div class="card-body">
-                                    <h6 class="card-title">ยอดรวมทั้งหมด</h6>
-                                    <p class="card-text mb-1">&nbsp;</p>
-                                    <h4 class="mb-0">฿{{ "{:,.2f}".format(total_bank_balance) }}</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Date Range Filter - No Card Border -->
+    <div class="mb-4">
+        <div class="row align-items-center justify-content-end">
+            <div class="col-md-4 col-lg-3">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                    <select class="form-select" id="dateRangeFilter">
+                        <option value="this_month" selected>เดือนนี้</option>
+                        <option value="last_month">เดือนที่แล้ว</option>
+                        <option value="last_3_months">3 เดือนล่าสุด</option>
+                        <option value="last_6_months">6 เดือนล่าสุด</option>
+                        <option value="this_year">ปีนี้</option>
+                        <option value="last_year">ปีที่แล้ว</option>
+                        <option value="custom">กำหนดเอง</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -76,13 +58,14 @@
 
     <!-- Summary Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-4">
             <div class="card dashboard-card bg-success text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white-50">รายรับเดือนนี้ (สำเร็จ)</h6>
-                            <h3 class="mb-0">฿{{ "{:,.2f}".format(total_income) }}</h3>
+                            <h6 class="text-white-50">รายรับ (สำเร็จ)</h6>
+                            <h3 class="mb-0" id="totalIncome">฿{{ "{:,.2f}".format(total_income) }}</h3>
+                            <small class="text-white-75">รอดำเนินการ: ฿{{ "{:,.2f}".format(all_pending_income) }}</small>
                         </div>
                         <div class="card-icon">
                             <i class="fas fa-arrow-up"></i>
@@ -91,13 +74,14 @@
                 </div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-4">
             <div class="card dashboard-card bg-danger text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white-50">รายจ่ายเดือนนี้ (สำเร็จ)</h6>
-                            <h3 class="mb-0">฿{{ "{:,.2f}".format(total_expense) }}</h3>
+                            <h6 class="text-white-50">รายจ่าย (สำเร็จ)</h6>
+                            <h3 class="mb-0" id="totalExpense">฿{{ "{:,.2f}".format(total_expense) }}</h3>
+                            <small class="text-white-75">รอดำเนินการ: ฿{{ "{:,.2f}".format(all_pending_expense) }}</small>
                         </div>
                         <div class="card-icon">
                             <i class="fas fa-arrow-down"></i>
@@ -106,32 +90,17 @@
                 </div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card dashboard-card {{ 'bg-primary' if balance >= 0 else 'bg-warning' }} text-white">
+        <div class="col-12 col-lg-4">
+            <div id="profitLossCard" class="card dashboard-card {{ 'bg-success' if balance >= 0 else 'bg-danger' }} text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white-50">คงเหลือ</h6>
-                            <h3 class="mb-0">฿{{ "{:,.2f}".format(balance) }}</h3>
+                            <h6 class="text-white-50">กำไร - ขาดทุน</h6>
+                            <h3 class="mb-0" id="profitLoss">฿{{ "{:,.2f}".format(balance) }}</h3>
+                            <small class="text-white-75">รายรับ - รายจ่าย (สำเร็จ)</small>
                         </div>
                         <div class="card-icon">
-                            <i class="fas fa-wallet"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card dashboard-card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">รอดำเนินการ</h6>
-                            <p class="mb-0">รับ: ฿{{ "{:,.2f}".format(pending_income) }}</p>
-                            <p class="mb-0">จ่าย: ฿{{ "{:,.2f}".format(pending_expense) }}</p>
-                        </div>
-                        <div class="card-icon">
-                            <i class="fas fa-clock"></i>
+                            <i class="fas fa-chart-line"></i>
                         </div>
                     </div>
                 </div>
@@ -140,7 +109,7 @@
     </div>
 
     <!-- Recent Transactions -->
-    <div class="card">
+    <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">รายการล่าสุด</h5>
             <a href="{{ url_for('transactions.index') }}" class="btn btn-sm btn-outline-primary">ดูทั้งหมด</a>
@@ -150,7 +119,7 @@
                 <table class="table table-hover mb-0">
                     <thead class="d-none d-md-table-header-group">
                         <tr>
-                            <th>วันที่</th>
+                            <th>วันที่/เวลา</th>
                             <th>รายละเอียด</th>
                             <th>ประเภท</th>
                             <th>สถานะ</th>
@@ -159,14 +128,24 @@
                     </thead>
                     <tbody>
                         {% for transaction in recent_transactions %}
-                        <tr>
-                            <td class="d-none d-md-table-cell">{{ transaction.transaction_date.strftime('%d/%m/%Y') }}</td>
+                        <tr class="{% if transaction.status == 'completed' %}status-completed{% elif transaction.status == 'pending' %}status-pending{% elif transaction.status == 'cancelled' %}status-cancelled{% endif %}">
+                            <td class="d-none d-md-table-cell">
+                                <div class="d-flex flex-column">
+                                    <span>{{ transaction.transaction_date.strftime('%d/%m/%Y') }}</span>
+                                    <small class="text-muted transaction-time">
+                                        {{ transaction.transaction_time.strftime('%H:%M') if transaction.transaction_time else '-' }}
+                                    </small>
+                                </div>
+                            </td>
                             <td>
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold">{{ transaction.description or 'ไม่มีรายละเอียด' }}</span>
                                     <small class="text-muted d-md-none">
-                                        {{ transaction.transaction_date.strftime('%d/%m/%Y') }} •
-                                        {{ transaction.category.name }}
+                                        {{ transaction.transaction_date.strftime('%d/%m/%Y') }}
+                                        {% if transaction.transaction_time %}
+                                            {{ transaction.transaction_time.strftime('%H:%M') }}
+                                        {% endif %}
+                                        • {{ transaction.category.name }}
                                     </small>
                                     <small class="text-muted d-none d-md-inline">
                                         {{ transaction.category.name }} •
@@ -180,13 +159,26 @@
                                 </span>
                             </td>
                             <td>
-                                <select class="form-select form-select-sm status-select"
-                                        data-transaction-id="{{ transaction.id }}"
-                                        onchange="updateStatus(this)">
-                                    <option value="pending" {{ 'selected' if transaction.status == 'pending' }}>รอดำเนินการ</option>
-                                    <option value="completed" {{ 'selected' if transaction.status == 'completed' }}>สำเร็จแล้ว</option>
-                                    <option value="cancelled" {{ 'selected' if transaction.status == 'cancelled' }}>ยกเลิก</option>
-                                </select>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button"
+                                            class="btn {{ 'btn-secondary' if transaction.status == 'pending' else 'btn-outline-secondary' }}"
+                                            onclick="updateTransactionStatus({{ transaction.id }}, 'pending', {{ 'true' if not transaction.bank_account_id else 'false' }})"
+                                            title="รอดำเนินการ">
+                                        <i class="fas fa-clock"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="btn {{ 'btn-success' if transaction.status == 'completed' else 'btn-outline-success' }}"
+                                            onclick="updateTransactionStatus({{ transaction.id }}, 'completed', {{ 'true' if not transaction.bank_account_id else 'false' }})"
+                                            title="สำเร็จแล้ว">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="btn {{ 'btn-danger' if transaction.status == 'cancelled' else 'btn-outline-danger' }}"
+                                            onclick="updateTransactionStatus({{ transaction.id }}, 'cancelled', {{ 'true' if not transaction.bank_account_id else 'false' }})"
+                                            title="ยกเลิก">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
                             </td>
                             <td class="text-end {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
                                 <div class="d-flex justify-content-end align-items-center">
@@ -203,49 +195,293 @@
             </div>
         </div>
     </div>
+
+    <!-- Bank Account Summary (moved to bottom) -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">สรุปบัญชีธนาคาร</h5>
+            <a href="{{ url_for('bank_accounts.index') }}" class="btn btn-sm btn-outline-primary">
+                จัดการบัญชี
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for account in bank_accounts %}
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ account.bank_name }}</h6>
+                            <p class="card-text mb-1">{{ account.account_number }}</p>
+                            <h4 class="mb-0">฿{{ "{:,.2f}".format(account.current_balance) }}</h4>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
 
+<!-- Bank Account Selection Modal -->
+<div class="modal fade" id="bankAccountModal" tabindex="-1" aria-labelledby="bankAccountModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="bankAccountModalLabel">เลือกบัญชีธนาคาร</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>กรุณาเลือกบัญชีธนาคารสำหรับธุรกรรมนี้</p>
+        <select class="form-select" id="modalBankAccountSelect">
+          <option value="">-- เลือกบัญชีธนาคาร --</option>
+          {% for account in bank_accounts %}
+          <option value="{{ account.id }}">{{ account.bank_name }} - {{ account.account_number }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" id="confirmBankAccountBtn">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden DateRangePicker input -->
+<input type="text" id="hiddenDateRangePicker" style="display: none;">
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<style>
+.text-white-75 {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.btn-group > .btn:not(:last-child) {
+    border-right: 1px solid #fff;
+}
+
+.btn-group > .btn {
+    padding: 0.25rem 0.5rem;
+}
+
+.btn-group > .btn i {
+    font-size: 0.875rem;
+}
+
+/* Transaction Time Display */
+.transaction-time {
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+/* Status Colors for Transaction Rows */
+.status-completed {
+    background-color: #f8f9fa !important;
+}
+
+.status-pending {
+    background-color: #fff8e6 !important;
+}
+
+.status-cancelled {
+    background-color: #fff5f5 !important;
+}
+
+/* Status Hover Colors */
+.status-completed:hover {
+    background-color: #e9ecef !important;
+}
+
+.status-pending:hover {
+    background-color: #fff3d6 !important;
+}
+
+.status-cancelled:hover {
+    background-color: #ffe5e5 !important;
+}
+
+/* Date Range Picker Customization */
+.daterangepicker {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script>
-function updateStatus(selectElement) {
-    const transactionId = selectElement.dataset.transactionId;
-    const newStatus = selectElement.value;
+let currentTransactionId = null;
+let currentStatus = null;
+let dateRangePicker = null;
+
+$(document).ready(function() {
+    // Initialize hidden daterangepicker
+    dateRangePicker = $('#hiddenDateRangePicker').daterangepicker({
+        locale: {
+            format: 'DD/MM/YYYY',
+            separator: ' - ',
+            applyLabel: 'ตกลง',
+            cancelLabel: 'ยกเลิก',
+            fromLabel: 'จาก',
+            toLabel: 'ถึง',
+            customRangeLabel: 'กำหนดเอง',
+            daysOfWeek: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
+            monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
+            firstDay: 1
+        },
+        autoUpdateInput: false,
+        opens: 'left'
+    }, function(start, end) {
+        // จะถูกเรียกเมื่อ apply
+        const startDate = start.format('YYYY-MM-DD');
+        const endDate = end.format('YYYY-MM-DD');
+        const displayText = start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY');
+
+        // เพิ่ม option ใหม่หรืออัพเดท option ที่มีอยู่
+        const customOption = $('#dateRangeFilter option[value="custom_selected"]');
+        if (customOption.length > 0) {
+            customOption.text(displayText);
+        } else {
+            $('#dateRangeFilter').append(`<option value="custom_selected">${displayText}</option>`);
+        }
+
+        // อัพเดท select ให้แสดงช่วงวันที่ที่เลือก
+        $('#dateRangeFilter').val('custom_selected');
+
+        // Fetch data
+        fetchDashboardData('custom', startDate, endDate);
+    });
+
+    // Handle date range filter change
+    $('#dateRangeFilter').on('change', function() {
+        const filter = this.value;
+
+        if (filter === 'custom') {
+            // Trigger DateRangePicker to open
+            $('#hiddenDateRangePicker').data('daterangepicker').show();
+        } else if (filter === 'custom_selected') {
+            // ถ้าเลือก custom_selected ให้แสดง DateRangePicker เพื่อแก้ไข
+            $('#hiddenDateRangePicker').data('daterangepicker').show();
+        } else {
+            fetchDashboardData(filter);
+        }
+    });
+
+    // Handle cancel on daterangepicker
+    $('#hiddenDateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
+        // ถ้ามี custom_selected ให้กลับไปใช้ค่านั้น
+        const customSelectedOption = $('#dateRangeFilter option[value="custom_selected"]');
+        if (customSelectedOption.length > 0) {
+            $('#dateRangeFilter').val('custom_selected');
+        } else {
+            // ถ้าไม่มี ให้กลับไปที่เดือนนี้
+            $('#dateRangeFilter').val('this_month');
+            fetchDashboardData('this_month');
+        }
+    });
+});
+
+function fetchDashboardData(filter, startDate = null, endDate = null) {
+    let url = `/api/dashboard-data?filter=${filter}`;
+    if (filter === 'custom' && startDate && endDate) {
+        url += `&start_date=${startDate}&end_date=${endDate}`;
+    }
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            // Update summary cards
+            document.getElementById('totalIncome').textContent = '฿' + formatNumber(data.total_income);
+            document.getElementById('totalExpense').textContent = '฿' + formatNumber(data.total_expense);
+            document.getElementById('profitLoss').textContent = '฿' + formatNumber(data.profit_loss);
+
+            // Update profit/loss card color
+            const profitLossCard = document.getElementById('profitLossCard');
+            profitLossCard.classList.remove('bg-success', 'bg-danger');
+            profitLossCard.classList.add(data.profit_loss >= 0 ? 'bg-success' : 'bg-danger');
+        })
+        .catch(error => console.error('Error fetching dashboard data:', error));
+}
+
+function formatNumber(number) {
+    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
+}
+
+function updateTransactionStatus(transactionId, newStatus, needBankAccount) {
+    currentTransactionId = transactionId;
+    currentStatus = newStatus;
+
+    if (newStatus === 'completed' && needBankAccount) {
+        const modal = new bootstrap.Modal(document.getElementById('bankAccountModal'));
+        modal.show();
+    } else {
+        doUpdateStatus(transactionId, newStatus, null);
+    }
+}
+
+document.getElementById('confirmBankAccountBtn').addEventListener('click', function() {
+    const bankAccountId = document.getElementById('modalBankAccountSelect').value;
+
+    if (!bankAccountId) {
+        alert('กรุณาเลือกบัญชีธนาคาร');
+        return;
+    }
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('bankAccountModal'));
+    modal.hide();
+
+    doUpdateStatus(currentTransactionId, currentStatus, bankAccountId);
+});
+
+function doUpdateStatus(transactionId, newStatus, bankAccountId) {
+    const data = { status: newStatus };
+
+    if (bankAccountId) {
+        data.bank_account_id = bankAccountId;
+    }
 
     fetch(`/transactions/update_status/${transactionId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Show success message
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
-            alertDiv.style.zIndex = '9999';
-            alertDiv.innerHTML = `
-                ${data.message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.body.appendChild(alertDiv);
-
-            // Auto dismiss after 3 seconds
+            showAlert('success', data.message);
             setTimeout(() => {
-                alertDiv.remove();
-                // Reload page to update balances
                 location.reload();
             }, 1500);
         } else {
-            alert('เกิดข้อผิดพลาด: ' + data.message);
+            showAlert('danger', 'เกิดข้อผิดพลาด: ' + data.message);
             location.reload();
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('เกิดข้อผิดพลาดในการอัพเดทสถานะ');
+        showAlert('danger', 'เกิดข้อผิดพลาดในการอัพเดทสถานะ');
         location.reload();
     });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
 }
 </script>
 {% endblock %}
