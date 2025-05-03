@@ -1,0 +1,20 @@
+cat > app/templates/errors/404.html << 'EOF'
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <h1 class="display-1">404</h1>
+                <h2 class="mb-4">ไม่พบหน้าที่คุณกำลังค้นหา</h2>
+                <p class="lead mb-4">หน้าที่คุณกำลังค้นหาอาจถูกย้าย ลบ หรือไม่มีอยู่จริง</p>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-home me-2"></i>กลับไปยังหน้าหลัก
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+EOF
