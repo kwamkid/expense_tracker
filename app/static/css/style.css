@@ -198,23 +198,30 @@ body {
     width: 100%;
 }
 
-/* เพิ่มใน app/static/css/style.css */
+/* Submenu Styles */
 #sidebar ul ul a {
     font-size: 0.9em !important;
     padding-left: 40px !important;
     background: #2c3135;
 }
 
+/* Dropdown toggle arrow - NO FONT AWESOME ICON */
 #sidebar ul li a.dropdown-toggle::after {
-    content: '\f105';
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
+    display: inline-block;
+    margin-left: 0.255em;
+    vertical-align: 0.255em;
+    content: "";
+    border-top: 0.3em solid;
+    border-right: 0.3em solid transparent;
+    border-bottom: 0;
+    border-left: 0.3em solid transparent;
     float: right;
-    transition: transform 0.3s;
+    margin-top: 8px;
 }
 
+/* Rotate arrow when expanded */
 #sidebar ul li a[aria-expanded="true"]::after {
-    transform: rotate(90deg);
+    transform: rotate(180deg);
 }
 
 #sidebar ul ul {
@@ -233,4 +240,9 @@ body {
 #sidebar ul.components li.active ul li a.active {
     color: #fff;
     background: #007bff;
+}
+
+/* Remove the i icon from submenu items */
+#sidebar ul ul li a i {
+    display: none;
 }

@@ -24,7 +24,7 @@ def upgrade():
         sa.Column('account_number', sa.String(length=20), nullable=False),
         sa.Column('account_name', sa.String(length=200), nullable=True),
         sa.Column('initial_balance', sa.Float(), nullable=True),
-        sa.Column('current_balance', sa.Float(), nullable=True),
+        sa.Column('current_balance', sa.Float(), nullable=True),  
         sa.Column('is_active', sa.Boolean(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('user_id', sa.Integer(), nullable=False),
@@ -32,7 +32,7 @@ def upgrade():
         sa.PrimaryKeyConstraint('id')
     )
 
-    # Update transaction table
+    # Update transaction table - ใช้ double quotes รอบชื่อ table
     with op.batch_alter_table('transaction', schema=None) as batch_op:
         batch_op.add_column(sa.Column('status', sa.String(length=20), nullable=True))
         batch_op.add_column(sa.Column('transaction_time', sa.Time(), nullable=True))
@@ -46,11 +46,11 @@ def upgrade():
         batch_op.add_column(sa.Column('bank_account_id', sa.Integer(), nullable=True))
         batch_op.create_foreign_key('fk_import_history_bank_account', 'bank_account', ['bank_account_id'], ['id'])
 
-    # Set default values
-    op.execute("UPDATE transaction SET status = 'completed' WHERE status IS NULL")
-    op.execute("UPDATE transaction SET source = 'manual' WHERE source IS NULL")
+    # Set default values - ใช้ double quotes รอบชื่อ table
+    op.execute('UPDATE "transaction" SET status = \'completed\' WHERE status IS NULL')
+    op.execute('UPDATE "transaction" SET source = \'manual\' WHERE source IS NULL')
     # สำหรับ transaction ที่ import มา ให้ set status เป็น completed
-    op.execute("UPDATE transaction SET status = 'completed', source = 'import' WHERE import_batch_id IS NOT NULL")
+    op.execute('UPDATE "transaction" SET status = \'completed\', source = \'import\' WHERE import_batch_id IS NOT NULL')
 
 
 def downgrade():
