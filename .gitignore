@@ -11,9 +11,9 @@ ENV/
 .venv/
 
 # Flask
-instance/
-*.db
-*.sqlite
+#instance/
+#*.db
+#*.sqlite
 
 # Environment variables
 .env

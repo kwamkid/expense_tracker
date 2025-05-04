@@ -28,12 +28,7 @@
                                     <p class="text-muted">ระบบบันทึกรายรับรายจ่ายอย่างง่าย</p>
                                 </div>
 
-                                <div class="login-button">
-                                    <a href="{{ url_for('auth.login') }}" class="btn btn-line btn-lg w-100">
-                                        <i class="fab fa-line me-2"></i>
-                                        เข้าสู่ระบบด้วย LINE
-                                    </a>
-                                </div>
+
 
                                 <div class="divider">
                                     <span>Login with</span>
@@ -42,11 +37,17 @@
                                 <p class="text-center text-muted">
                                     เข้าสู่ระบบด้วยบัญชี LINE ของคุณ
                                 </p>
+                                <div class="login-button">
+                                    <a href="{{ url_for('auth.login') }}" class="btn btn-line btn-lg w-100">
+                                        <i class="fab fa-line me-2"></i>
+                                        เข้าสู่ระบบด้วย LINE
+                                    </a>
+                                </div>
 
                                 <hr class="my-4">
 
                                 <p class="text-center mt-4 text-muted small mb-0">
-                                    © {{ current_year }} Simple Expense Tracker
+                                    © {{ current_year }} Amp Tech - Expense Tracker
                                 </p>
                             </div>
                         </div>
@@ -261,6 +262,7 @@ body {
     .landing-page {
         position: relative;
         overflow-y: auto;
+        padding: 0 20px 0 20px;
     }
 
     .login-card {
@@ -302,6 +304,10 @@ body {
 
     .mobile-header p {
         font-size: 0.9rem;
+    }
+
+    .container {
+    --bs-gutter-x : 0!important;
     }
 }
 
