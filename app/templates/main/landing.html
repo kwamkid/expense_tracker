@@ -3,36 +3,339 @@
 {% block title %}ยินดีต้อนรับ - {{ super() }}{% endblock %}
 
 {% block main_content %}
-<div class="container">
-    <div class="row justify-content-center align-items-center min-vh-100">
-        <div class="col-md-6">
-            <div class="text-center mb-5">
-                <h1 class="display-4 mb-3">Simple Expense Tracker</h1>
-                <p class="lead">ระบบบันทึกรายรับรายจ่ายอย่างง่าย</p>
-            </div>
+<div class="landing-page">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-10 col-lg-8">
+                <div class="login-card shadow-lg">
+                    <div class="row g-0">
+                        <!-- Mobile Header - Show on mobile only -->
+                        <div class="col-12 d-md-none">
+                            <div class="mobile-header">
+                                <div class="mobile-header-content">
+                                    <i class="fas fa-chart-line fa-3x text-white mb-3"></i>
+                                    <h4 class="text-white">จัดการการเงินอย่างชาญฉลาด</h4>
+                                    <p class="text-white-50 mb-0">บันทึกรายรับรายจ่าย วิเคราะห์ข้อมูล วางแผนการเงิน</p>
+                                </div>
+                            </div>
+                        </div>
 
-            <div class="card shadow-lg">
-                <div class="card-body p-5">
-                    <h3 class="text-center mb-4">เข้าสู่ระบบ</h3>
+                        <!-- Left Panel -->
+                        <div class="col-md-6">
+                            <div class="login-form p-4 p-md-5">
+                                <div class="text-center mb-4">
+                                    <h2 class="fw-bold">เข้าสู่ระบบ</h2>
+                                    <p class="text-muted">ระบบบันทึกรายรับรายจ่ายอย่างง่าย</p>
+                                </div>
 
-                    <div class="d-grid">
-                        <a href="{{ url_for('auth.login') }}" class="btn btn-success btn-lg">
-                            <i class="fab fa-line me-2"></i>เข้าสู่ระบบด้วย LINE
-                        </a>
-                    </div>
+                                <div class="login-button">
+                                    <a href="{{ url_for('auth.login') }}" class="btn btn-line btn-lg w-100">
+                                        <i class="fab fa-line me-2"></i>
+                                        เข้าสู่ระบบด้วย LINE
+                                    </a>
+                                </div>
 
-                    <hr class="my-4">
+                                <div class="divider">
+                                    <span>Login with</span>
+                                </div>
 
-                    <div class="text-center">
-                        <p class="mb-0">เข้าสู่ระบบด้วยบัญชี LINE ของคุณ</p>
+                                <p class="text-center text-muted">
+                                    เข้าสู่ระบบด้วยบัญชี LINE ของคุณ
+                                </p>
+
+                                <hr class="my-4">
+
+                                <p class="text-center mt-4 text-muted small mb-0">
+                                    © {{ current_year }} Simple Expense Tracker
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel - Desktop only -->
+                        <div class="col-md-6 d-none d-md-block">
+                            <div class="login-image">
+                                <div class="image-content">
+                                    <div class="illustration-placeholder">
+                                        <i class="fas fa-chart-line fa-4x text-white mb-4"></i>
+                                        <h3 class="text-white">จัดการการเงินอย่างชาญฉลาด</h3>
+                                        <p class="text-white-50">บันทึกรายรับรายจ่าย วิเคราะห์ข้อมูล วางแผนการเงิน</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div class="text-center mt-4">
-                <p class="text-muted">© {{ current_year }} Simple Expense Tracker</p>
-            </div>
         </div>
     </div>
+
+    <!-- Background decoration -->
+    <div class="background-decoration">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
 </div>
+
+<style>
+/* Reset for full-screen background */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+/* Remove any default margins/padding from base template */
+body {
+    background: none !important;
+}
+
+/* Landing Page Styles */
+.landing-page {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+    min-height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Container standard width */
+.landing-page .container {
+    max-width: 1140px;
+}
+
+.login-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.login-form {
+    position: relative;
+    z-index: 2;
+}
+
+.login-form h2 {
+    color: #2d3436;
+    font-size: 2rem;
+}
+
+.btn-line {
+    background-color: #00B900;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-line:hover {
+    background-color: #00a000;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 185, 0, 0.3);
+}
+
+.btn-line i {
+    font-size: 1.5rem;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 25px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.divider span {
+    padding: 0 15px;
+    color: #757575;
+    font-size: 0.9rem;
+}
+
+.login-image {
+    background: linear-gradient(45deg, #EC523E, #d64632);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    position: relative;
+}
+
+.image-content {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+.illustration-placeholder {
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Mobile header */
+.mobile-header {
+    background: linear-gradient(45deg, #EC523E, #d64632);
+    padding: 2rem 1rem;
+    text-align: center;
+    border-radius: 20px 20px 0 0;
+}
+
+.mobile-header-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Background decoration */
+.background-decoration {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.circle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(236, 82, 62, 0.1);
+}
+
+.circle-1 {
+    width: 300px;
+    height: 300px;
+    top: -150px;
+    left: -150px;
+}
+
+.circle-2 {
+    width: 200px;
+    height: 200px;
+    bottom: -100px;
+    right: -100px;
+}
+
+.circle-3 {
+    width: 150px;
+    height: 150px;
+    top: 50%;
+    right: 10%;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .landing-page {
+        position: relative;
+        overflow-y: auto;
+    }
+
+    .login-card {
+        margin: 1rem 0;
+        border-radius: 20px;
+    }
+
+    .login-form {
+        padding: 1.5rem !important;
+    }
+
+    .login-form h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .login-form p {
+        font-size: 0.9rem;
+        margin-bottom: 1rem !important;
+    }
+
+    .divider {
+        margin: 1.5rem 0;
+    }
+
+    .btn-line {
+        font-size: 1rem;
+        padding: 10px 15px;
+    }
+
+    hr {
+        margin: 1rem 0 !important;
+    }
+
+    .mobile-header h4 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .mobile-header p {
+        font-size: 0.9rem;
+    }
+}
+
+/* Small devices (landscape phones) */
+@media (max-width: 576px) and (max-height: 400px) {
+    .mobile-header {
+        padding: 1.5rem 1rem;
+    }
+
+    .login-form {
+        padding: 1rem !important;
+    }
+
+    .login-form h2 {
+        font-size: 1.25rem;
+    }
+
+    .divider {
+        margin: 1rem 0;
+    }
+}
+</style>
+
+<script>
+// Add loading state to login button
+document.addEventListener('DOMContentLoaded', function() {
+    const loginButton = document.querySelector('.btn-line');
+    if (loginButton) {
+        loginButton.addEventListener('click', function(e) {
+            // Don't prevent default as we want the link to work
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>กำลังเข้าสู่ระบบ...';
+            this.classList.add('disabled');
+        });
+    }
+});
+</script>
 {% endblock %}
