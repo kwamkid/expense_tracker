@@ -2,10 +2,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from app.models import db, Category, InviteToken, Transaction, ImportHistory
+from app.models import db, Category, InviteToken, Transaction, ImportHistory , User
 from app.forms import CompanySettingsForm, CategoryForm
 import os
 import uuid
+from datetime import date
 
 settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
 
@@ -180,3 +181,24 @@ def delete_category(id):
     flash('ลบหมวดหมู่เรียบร้อยแล้ว', 'success')
 
     return redirect(url_for('settings.categories'))
+
+
+from datetime import date
+
+
+@settings_bp.route('/users')
+@login_required
+def users():
+    # ดึงข้อมูลผู้ใช้ทั้งหมด
+    users = User.query.order_by(User.created_at.desc()).all()
+
+    # ดึงข้อมูล invite tokens
+    invite_tokens = InviteToken.query.order_by(InviteToken.created_at.desc()).all()
+
+    # ส่งวันที่ปัจจุบันไปด้วย
+    today = date.today()
+
+    return render_template('settings/users.html',
+                           users=users,
+                           invite_tokens=invite_tokens,
+                           today=today)

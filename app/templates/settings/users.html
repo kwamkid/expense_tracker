@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}จัดการผู้ใช้ - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>จัดการผู้ใช้</h1>
+    <a href="{{ url_for('settings.invite') }}" class="btn btn-primary">
+        <i class="fas fa-user-plus me-2"></i>เชิญผู้ใช้ใหม่
+    </a>
+</div>
+
+<!-- ผู้ใช้ปัจจุบัน -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">ผู้ใช้ในระบบ ({{ users|length }} คน)</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>รูปภาพ</th>
+                        <th>ชื่อ</th>
+                        <th>LINE ID</th>
+                        <th>เข้าร่วมเมื่อ</th>
+                        <th>สถานะ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            {% if user.picture_url %}
+                                <img src="{{ user.picture_url }}" class="rounded-circle"
+                                     width="40" height="40" alt="{{ user.name }}">
+                            {% else %}
+                                <i class="fas fa-user-circle fa-2x text-muted"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ user.name or '-' }}
+                            {% if user.id == current_user.id %}
+                                <span class="badge bg-primary ms-2">คุณ</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <code>{{ user.line_id }}</code>
+                        </td>
+                        <td>{{ user.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <span class="badge bg-success">Active</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ประวัติการเชิญ -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">ประวัติการเชิญ</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Token</th>
+                        <th>เชิญโดย</th>
+                        <th>สร้างเมื่อ</th>
+                        <th>สถานะ</th>
+                        <th>ใช้โดย</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for token in invite_tokens %}
+                    <tr>
+                        <td>
+                            <code>{{ token.token[:8] }}...</code>
+                        </td>
+                        <td>
+                            {% set creator = users|selectattr('id', 'equalto', token.created_by)|first %}
+                            {{ creator.name if creator else 'Unknown' }}
+                        </td>
+                        <td>{{ token.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            {% if token.used %}
+                                <span class="badge bg-secondary">ใช้แล้ว</span>
+                            {% else %}
+                                <span class="badge bg-success">ยังไม่ได้ใช้</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if token.used %}
+                                {% set used_by_user = users|selectattr('id', 'equalto', token.used_by)|first %}
+                                {{ used_by_user.name if used_by_user else 'Unknown' }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <p class="text-muted mb-0">ยังไม่มีประวัติการเชิญ</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- สถิติการใช้งาน -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6 class="card-title">ผู้ใช้ทั้งหมด</h6>
+                <h2>{{ users|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6 class="card-title">เข้าร่วมวันนี้</h6>
+                <h2>{{ users|selectattr('created_at.date', 'equalto', today)|list|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h6 class="card-title">การเชิญทั้งหมด</h6>
+                <h2>{{ invite_tokens|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h6 class="card-title">ยังไม่ได้ใช้</h6>
+                <h2>{{ invite_tokens|rejectattr('used')|list|length }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

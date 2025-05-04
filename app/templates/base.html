@@ -68,37 +68,38 @@
                     </a>
                 </li>
                 <li class="{{ 'active' if request.endpoint.startswith('settings') }}">
-                    <a href="#settingsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                        <i class="fas fa-cog"></i> ตั้งค่า
-                    </a>
-                    <ul class="collapse list-unstyled" id="settingsSubmenu">
-                        <li>
-                            <a href="{{ url_for('settings.company') }}">
-                                <i class="fas fa-building"></i> ข้อมูลบริษัท
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ url_for('settings.categories') }}">
-                                <i class="fas fa-tags"></i> หมวดหมู่
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ url_for('settings.invite') }}">
-                                <i class="fas fa-user-plus"></i> เชิญผู้ใช้
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+    <a href="#settingsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+        <i class="fas fa-cog"></i> ตั้งค่า
+    </a>
+    <ul class="collapse list-unstyled" id="settingsSubmenu">
+        <li>
+            <a href="{{ url_for('settings.company') }}">
+                <i class="fas fa-building"></i> ข้อมูลบริษัท
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('settings.categories') }}">
+                <i class="fas fa-tags"></i> หมวดหมู่
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('settings.users') }}">
+                <i class="fas fa-users"></i> จัดการผู้ใช้
+            </a>
+        </li>
+
+    </ul>
+</li>
             </ul>
         </nav>
 
         <!-- Page Content -->
         <div id="content">
-            <!-- Top Bar -->
+          <!-- Top Bar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light topbar">
     <div class="container-fluid">
-        <button type="button" id="sidebarCollapse" class="btn btn-info">
-            <i class="fas fa-bars"></i>
+        <button type="button" id="sidebarCollapse" class="btn btn-link text-primary p-0">
+            <i class="fas fa-bars fa-lg"></i>
         </button>
 
         <div class="ms-auto">

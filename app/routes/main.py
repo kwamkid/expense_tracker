@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for,jsonify
 from flask_login import login_required, current_user
 from app.models import db, Transaction, Category, BankAccount
-from sqlalchemy import func
+from sqlalchemy import func, case
 from datetime import datetime, timedelta
 import calendar
 
@@ -133,52 +133,117 @@ def dashboard_data_api():
 @main_bp.route('/reports')
 @login_required
 def reports():
-    # Get date range from query params
+    # Get filter parameters
+    transaction_type = request.args.get('type')
+    category_id = request.args.get('category')
+    status_filter = request.args.get('status', 'completed')  # default to completed
+    bank_account_id = request.args.get('bank_account')
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
-    status_filter = request.args.get('status', 'completed')  # default to completed
 
+    # Default date range (current month)
     if not start_date:
         start_date = datetime.now().replace(day=1).strftime('%Y-%m-%d')
     if not end_date:
         end_date = datetime.now().strftime('%Y-%m-%d')
 
-    # Get transactions in date range
+    # Build query
     query = Transaction.query.filter_by(user_id=current_user.id)
 
+    if transaction_type:
+        query = query.filter_by(type=transaction_type)
+    if category_id:
+        query = query.filter_by(category_id=category_id)
     if status_filter:
         query = query.filter_by(status=status_filter)
+    if bank_account_id:
+        query = query.filter_by(bank_account_id=bank_account_id)
 
-    transactions = query.filter(Transaction.transaction_date.between(start_date, end_date)) \
-        .order_by(Transaction.transaction_date.desc()) \
-        .all()
+    # Apply date range
+    query = query.filter(Transaction.transaction_date.between(start_date, end_date))
+
+    transactions = query.order_by(Transaction.transaction_date.desc()).all()
 
     # Calculate totals
     total_income = sum(t.amount for t in transactions if t.type == 'income')
     total_expense = sum(t.amount for t in transactions if t.type == 'expense')
+    net_profit = total_income - total_expense
 
-    # Calculate category summaries
-    category_summary = db.session.query(
+    # Category breakdown
+    category_breakdown = db.session.query(
         Category.name,
         Category.type,
-        func.sum(Transaction.amount).label('total')
+        func.sum(Transaction.amount).label('total'),
+        func.count(Transaction.id).label('count')
     ).join(Transaction) \
         .filter(Transaction.user_id == current_user.id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
     if status_filter:
-        category_summary = category_summary.filter(Transaction.status == status_filter)
+        category_breakdown = category_breakdown.filter(Transaction.status == status_filter)
 
-    category_summary = category_summary.group_by(Category.id).all()
+    category_breakdown = category_breakdown.group_by(Category.id).all()
+
+    # Bank account breakdown - แก้ไขการใช้ case()
+    bank_breakdown = db.session.query(
+        BankAccount.bank_name,
+        BankAccount.account_number,
+        func.sum(case(
+            (Transaction.type == 'income', Transaction.amount),
+            else_=0
+        )).label('income'),
+        func.sum(case(
+            (Transaction.type == 'expense', Transaction.amount),
+            else_=0
+        )).label('expense'),
+        func.count(Transaction.id).label('count')
+    ).join(Transaction, Transaction.bank_account_id == BankAccount.id) \
+        .filter(Transaction.user_id == current_user.id) \
+        .filter(Transaction.transaction_date.between(start_date, end_date))
+
+    if status_filter:
+        bank_breakdown = bank_breakdown.filter(Transaction.status == status_filter)
+
+    bank_breakdown = bank_breakdown.group_by(BankAccount.id).all()
+
+    # Daily summary - แก้ไขการใช้ case()
+    daily_summary = db.session.query(
+        Transaction.transaction_date,
+        func.sum(case(
+            (Transaction.type == 'income', Transaction.amount),
+            else_=0
+        )).label('income'),
+        func.sum(case(
+            (Transaction.type == 'expense', Transaction.amount),
+            else_=0
+        )).label('expense')
+    ).filter(Transaction.user_id == current_user.id) \
+        .filter(Transaction.transaction_date.between(start_date, end_date))
+
+    if status_filter:
+        daily_summary = daily_summary.filter(Transaction.status == status_filter)
+
+    daily_summary = daily_summary.group_by(Transaction.transaction_date) \
+        .order_by(Transaction.transaction_date).all()
+
+    # Get categories and bank accounts for filters
+    categories = Category.query.filter_by(user_id=current_user.id).all()
+    bank_accounts = BankAccount.query.filter_by(user_id=current_user.id).all()
 
     return render_template('main/reports.html',
                            transactions=transactions,
-                           category_summary=category_summary,
+                           categories=categories,
+                           bank_accounts=bank_accounts,
+                           category_breakdown=category_breakdown,
+                           bank_breakdown=bank_breakdown,
+                           daily_summary=daily_summary,
                            start_date=start_date,
                            end_date=end_date,
                            total_income=total_income,
                            total_expense=total_expense,
-                           status_filter=status_filter)
+                           net_profit=net_profit,
+                           status_filter=status_filter,
+                           filters=request.args)
 
 
 def get_monthly_data():

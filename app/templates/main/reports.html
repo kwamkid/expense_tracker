@@ -3,125 +3,641 @@
 {% block title %}รายงาน - {{ super() }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>รายงาน</h1>
-</div>
+<div class="container-fluid px-3 px-md-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">รายงาน</h1>
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-primary" onclick="exportPDF()">
+                <i class="fas fa-file-pdf"></i>
+                <span class="d-none d-sm-inline ms-1">PDF</span>
+            </button>
+            <button type="button" class="btn btn-success" onclick="exportExcel()">
+                <i class="fas fa-file-excel"></i>
+                <span class="d-none d-sm-inline ms-1">Excel</span>
+            </button>
+        </div>
+    </div>
 
-<!-- Date Range Filter -->
+    <!-- Filter Section -->
 <div class="card mb-4">
     <div class="card-body">
-        <form method="GET" class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label">วันที่เริ่มต้น</label>
-                <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+        <form method="GET" id="filterForm">
+            <div class="row g-3">
+                <!-- Row 1: Type, Category, Status, Bank Account -->
+                <div class="col-12 col-md-3">
+                    <label class="form-label">ประเภท</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="type" id="type-all" value="" autocomplete="off"
+                               {% if not request.args.get('type') %}checked{% endif %} onchange="updateCategoryAndSubmit()">
+                        <label class="btn btn-outline-secondary" for="type-all">All</label>
+
+                        <input type="radio" class="btn-check" name="type" id="type-income" value="income" autocomplete="off"
+                               {% if request.args.get('type') == 'income' %}checked{% endif %} onchange="updateCategoryAndSubmit()">
+                        <label class="btn btn-outline-success" for="type-income">รับ</label>
+
+                        <input type="radio" class="btn-check" name="type" id="type-expense" value="expense" autocomplete="off"
+                               {% if request.args.get('type') == 'expense' %}checked{% endif %} onchange="updateCategoryAndSubmit()">
+                        <label class="btn btn-outline-danger" for="type-expense">จ่าย</label>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">หมวดหมู่</label>
+                    <select name="category" id="categorySelect" class="form-select" onchange="submitForm()">
+                        <option value="">ทั้งหมด</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}"
+                                data-type="{{ category.type }}"
+                                {% if request.args.get('category')|int == category.id %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">สถานะ</label>
+                    <select name="status" class="form-select" onchange="submitForm()">
+                        <option value="">ทั้งหมด</option>
+                        <option value="completed" {{ 'selected' if request.args.get('status') == 'completed' }}>สำเร็จแล้ว</option>
+                        <option value="pending" {{ 'selected' if request.args.get('status') == 'pending' }}>รอดำเนินการ</option>
+                        <option value="cancelled" {{ 'selected' if request.args.get('status') == 'cancelled' }}>ยกเลิก</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">บัญชีธนาคาร</label>
+                    <select name="bank_account" class="form-select" onchange="submitForm()">
+                        <option value="">ทั้งหมด</option>
+                        {% for account in bank_accounts %}
+                        <option value="{{ account.id }}" {{ 'selected' if request.args.get('bank_account')|int == account.id }}>
+                            {{ account.bank_name }} - {{ account.account_number }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-            <div class="col-md-4">
-                <label class="form-label">วันที่สิ้นสุด</label>
-                <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
-            </div>
-            <div class="col-md-4 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search me-2"></i>แสดงรายงาน
-                </button>
+
+            <!-- Row 2: Date Range and Reset -->
+            <div class="row g-3 mt-2">
+                <div class="col-12 col-md-9">
+                    <label class="form-label">ช่วงวันที่</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                        <input type="text" class="form-control" id="dateRangePicker">
+                        <input type="hidden" name="start_date" id="startDate" value="{{ start_date }}">
+                        <input type="hidden" name="end_date" id="endDate" value="{{ end_date }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label d-none d-md-block">&nbsp;</label>
+                    <a href="{{ url_for('main.reports') }}" class="btn btn-secondary w-100">
+                        <i class="fas fa-redo me-2"></i>รีเซ็ต
+                    </a>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card report-card">
-            <div class="card-body">
-                <h6 class="text-muted">รายรับทั้งหมด</h6>
-                <h3 class="text-success">฿{{ "{:,.2f}".format(total_income|default(0)) }}</h3>
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card bg-success text-white h-100">
+                <div class="card-body p-3">
+                    <h6 class="text-white-50 small mb-1">รายรับทั้งหมด</h6>
+                    <h4 class="mb-0">฿{{ "{:,.2f}".format(total_income) }}</h4>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card report-card">
-            <div class="card-body">
-                <h6 class="text-muted">รายจ่ายทั้งหมด</h6>
-                <h3 class="text-danger">฿{{ "{:,.2f}".format(total_expense|default(0)) }}</h3>
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card bg-danger text-white h-100">
+                <div class="card-body p-3">
+                    <h6 class="text-white-50 small mb-1">รายจ่ายทั้งหมด</h6>
+                    <h4 class="mb-0">฿{{ "{:,.2f}".format(total_expense) }}</h4>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card report-card">
-            <div class="card-body">
-                <h6 class="text-muted">คงเหลือ</h6>
-                <h3 class="{{ 'text-success' if (total_income|default(0) - total_expense|default(0)) >= 0 else 'text-danger' }}">
-                    ฿{{ "{:,.2f}".format(total_income|default(0) - total_expense|default(0)) }}
-                </h3>
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card {{ 'bg-success' if net_profit >= 0 else 'bg-danger' }} text-white h-100">
+                <div class="card-body p-3">
+                    <h6 class="text-white-50 small mb-1">กำไร/ขาดทุนสุทธิ</h6>
+                    <h4 class="mb-0">฿{{ "{:,.2f}".format(net_profit) }}</h4>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Category Summary -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">สรุปตามหมวดหมู่ (รายรับ)</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>หมวดหมู่</th>
-                                <th class="text-end">จำนวนเงิน</th>
-                                <th class="text-end">%</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in category_summary if item.type == 'income' %}
-                            <tr>
-                                <td>{{ item.name }}</td>
-                                <td class="text-end">฿{{ "{:,.2f}".format(item.total) }}</td>
-                                <td class="text-end">
-                                    {{ "{:.1f}".format((item.total / total_income * 100) if total_income > 0 else 0) }}%
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card bg-info text-white h-100">
+                <div class="card-body p-3">
+                    <h6 class="text-white-50 small mb-1">จำนวนรายการ</h6>
+                    <h4 class="mb-0">{{ transactions|length }}</h4>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">สรุปตามหมวดหมู่ (รายจ่าย)</h5>
+    <!-- Daily Trend Chart -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">แนวโน้มรายรับ-รายจ่ายรายวัน</h5>
+        </div>
+        <div class="card-body">
+            <div style="position: relative; height: 40vh; min-height: 300px;">
+                <canvas id="dailyChart"></canvas>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>หมวดหมู่</th>
-                                <th class="text-end">จำนวนเงิน</th>
-                                <th class="text-end">%</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in category_summary if item.type == 'expense' %}
-                            <tr>
-                                <td>{{ item.name }}</td>
-                                <td class="text-end">฿{{ "{:,.2f}".format(item.total) }}</td>
-                                <td class="text-end">
-                                    {{ "{:.1f}".format((item.total / total_expense * 100) if total_expense > 0 else 0) }}%
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        </div>
+    </div>
+
+    <!-- Bank Account Summary - Mobile Friendly -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">สรุปตามบัญชีธนาคาร</h5>
+        </div>
+        <div class="card-body p-0">
+            <!-- Desktop Table -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ธนาคาร</th>
+                            <th>เลขบัญชี</th>
+                            <th class="text-end">รายรับ</th>
+                            <th class="text-end">รายจ่าย</th>
+                            <th class="text-end">สุทธิ</th>
+                            <th class="text-end">จำนวนรายการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bank in bank_breakdown %}
+                        <tr>
+                            <td>{{ bank.bank_name }}</td>
+                            <td>{{ bank.account_number }}</td>
+                            <td class="text-end text-success">฿{{ "{:,.2f}".format(bank.income) }}</td>
+                            <td class="text-end text-danger">฿{{ "{:,.2f}".format(bank.expense) }}</td>
+                            <td class="text-end {{ 'text-success' if (bank.income - bank.expense) >= 0 else 'text-danger' }}">
+                                ฿{{ "{:,.2f}".format(bank.income - bank.expense) }}
+                            </td>
+                            <td class="text-end">{{ bank.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="d-md-none">
+                {% for bank in bank_breakdown %}
+                <div class="border-bottom p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-0">{{ bank.bank_name }}</h6>
+                            <small class="text-muted">{{ bank.account_number }}</small>
+                        </div>
+                        <span class="badge bg-secondary">{{ bank.count }} รายการ</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <small class="text-muted d-block">รายรับ</small>
+                            <span class="text-success">฿{{ "{:,.0f}".format(bank.income) }}</span>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted d-block">รายจ่าย</small>
+                            <span class="text-danger">฿{{ "{:,.0f}".format(bank.expense) }}</span>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted d-block">สุทธิ</small>
+                            <span class="{{ 'text-success' if (bank.income - bank.expense) >= 0 else 'text-danger' }}">
+                                ฿{{ "{:,.0f}".format(bank.income - bank.expense) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Breakdown - Mobile Optimized -->
+    <div class="row">
+        <div class="col-12 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">สรุปตามหมวดหมู่ (รายรับ)</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary active" onclick="switchView('income', 'table')">
+                            <i class="fas fa-table"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="switchView('income', 'chart')">
+                            <i class="fas fa-chart-pie"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0" id="income-table-view">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 sortable-table" id="income-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable('income-table', 0)">หมวดหมู่ <i class="fas fa-sort"></i></th>
+                                    <th class="text-end d-none d-sm-table-cell" onclick="sortTable('income-table', 1)">จำนวน <i class="fas fa-sort"></i></th>
+                                    <th class="text-end" onclick="sortTable('income-table', 2)">ยอดรวม <i class="fas fa-sort"></i></th>
+                                    <th class="text-end" onclick="sortTable('income-table', 3)">% <i class="fas fa-sort"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in category_breakdown if item.type == 'income' %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td class="text-end d-none d-sm-table-cell" data-value="{{ item.count }}">{{ item.count }}</td>
+                                    <td class="text-end" data-value="{{ item.total }}">฿{{ "{:,.0f}".format(item.total) }}</td>
+                                    <td class="text-end" data-value="{{ (item.total / total_income * 100) if total_income > 0 else 0 }}">
+                                        {{ "{:.1f}".format((item.total / total_income * 100) if total_income > 0 else 0) }}%
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">ไม่มีข้อมูล</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-body d-none" id="income-chart-view">
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="incomePieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">สรุปตามหมวดหมู่ (รายจ่าย)</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary active" onclick="switchView('expense', 'table')">
+                            <i class="fas fa-table"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="switchView('expense', 'chart')">
+                            <i class="fas fa-chart-pie"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0" id="expense-table-view">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 sortable-table" id="expense-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable('expense-table', 0)">หมวดหมู่ <i class="fas fa-sort"></i></th>
+                                    <th class="text-end d-none d-sm-table-cell" onclick="sortTable('expense-table', 1)">จำนวน <i class="fas fa-sort"></i></th>
+                                    <th class="text-end" onclick="sortTable('expense-table', 2)">ยอดรวม <i class="fas fa-sort"></i></th>
+                                    <th class="text-end" onclick="sortTable('expense-table', 3)">% <i class="fas fa-sort"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in category_breakdown if item.type == 'expense' %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td class="text-end d-none d-sm-table-cell" data-value="{{ item.count }}">{{ item.count }}</td>
+                                    <td class="text-end" data-value="{{ item.total }}">฿{{ "{:,.0f}".format(item.total) }}</td>
+                                    <td class="text-end" data-value="{{ (item.total / total_expense * 100) if total_expense > 0 else 0 }}">
+                                        {{ "{:.1f}".format((item.total / total_expense * 100) if total_expense > 0 else 0) }}%
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">ไม่มีข้อมูล</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-body d-none" id="expense-chart-view">
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="expensePieChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<style>
+.sortable-table th {
+    cursor: pointer;
+    white-space: nowrap;
+}
+.sortable-table th:hover {
+    background-color: #f8f9fa;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 576px) {
+    .dashboard-card .card-body {
+        padding: 0.75rem !important;
+    }
+
+    .dashboard-card h4 {
+        font-size: 1.25rem;
+    }
+
+    .dashboard-card h6 {
+        font-size: 0.75rem;
+    }
+
+    .card-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .card-title {
+        font-size: 1rem;
+    }
+
+    .table td, .table th {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-group-sm > .btn, .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+<script>
+// Chart.js default settings for mobile
+Chart.defaults.font.size = window.innerWidth < 576 ? 10 : 12;
+Chart.defaults.plugins.legend.labels.boxWidth = window.innerWidth < 576 ? 12 : 40;
+
+// Initialize DateRangePicker
+$(document).ready(function() {
+    $('#dateRangePicker').daterangepicker({
+        startDate: moment('{{ start_date }}'),
+        endDate: moment('{{ end_date }}'),
+        ranges: {
+            'วันนี้': [moment(), moment()],
+            'เมื่อวาน': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            '7 วันล่าสุด': [moment().subtract(6, 'days'), moment()],
+            '30 วันล่าสุด': [moment().subtract(29, 'days'), moment()],
+            'เดือนนี้': [moment().startOf('month'), moment().endOf('month')],
+            'เดือนที่แล้ว': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+            'ปีนี้': [moment().startOf('year'), moment()],
+        },
+        locale: {
+            format: 'DD/MM/YYYY',
+            separator: ' - ',
+            applyLabel: 'ตกลง',
+            cancelLabel: 'ยกเลิก',
+            fromLabel: 'จาก',
+            toLabel: 'ถึง',
+            customRangeLabel: 'กำหนดเอง',
+            daysOfWeek: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
+            monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
+            firstDay: 1
+        },
+        opens: window.innerWidth < 576 ? 'center' : 'left'
+    }, function(start, end) {
+        $('#startDate').val(start.format('YYYY-MM-DD'));
+        $('#endDate').val(end.format('YYYY-MM-DD'));
+        submitForm();
+    });
+});
+
+function submitForm() {
+    document.getElementById('filterForm').submit();
+}
+
+function updateCategoryAndSubmit() {
+    updateCategoryFilter();
+    submitForm();
+}
+
+function updateCategoryFilter() {
+    const selectedType = document.querySelector('input[name="type"]:checked').value;
+    const categorySelect = document.getElementById('categorySelect');
+    const options = categorySelect.options;
+
+    for (let i = 1; i < options.length; i++) {
+        const option = options[i];
+        const optionType = option.getAttribute('data-type');
+
+        if (!selectedType || optionType === selectedType) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    }
+
+    if (categorySelect.selectedIndex > 0) {
+        const selectedOption = options[categorySelect.selectedIndex];
+        if (selectedOption.style.display === 'none') {
+            categorySelect.selectedIndex = 0;
+        }
+    }
+}
+
+// Daily Chart
+const dailyData = {
+    labels: [{% for item in daily_summary %}'{{ item.transaction_date.strftime('%d/%m') }}'{% if not loop.last %},{% endif %}{% endfor %}],
+    datasets: [
+        {
+            label: 'รายรับ',
+            data: [{% for item in daily_summary %}{{ item.income }}{% if not loop.last %},{% endif %}{% endfor %}],
+            borderColor: '#4caf50',
+            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+            fill: true,
+            tension: 0.4
+        },
+        {
+            label: 'รายจ่าย',
+            data: [{% for item in daily_summary %}{{ item.expense }}{% if not loop.last %},{% endif %}{% endfor %}],
+            borderColor: '#f44336',
+            backgroundColor: 'rgba(244, 67, 54, 0.1)',
+            fill: true,
+            tension: 0.4
+        }
+    ]
+};
+
+new Chart(document.getElementById('dailyChart'), {
+    type: 'line',
+    data: dailyData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: window.innerWidth < 576 ? 'bottom' : 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '฿' + value.toLocaleString();
+                    }
+                }
+            },
+            x: {
+                ticks: {
+                    maxRotation: window.innerWidth < 576 ? 45 : 0,
+                    minRotation: window.innerWidth < 576 ? 45 : 0
+                }
+            }
+        }
+    }
+});
+
+// Category Pie Charts
+let incomePieChart, expensePieChart;
+
+const colorPalette = [
+    '#4CAF50', '#2196F3', '#FFC107', '#E91E63', '#9C27B0',
+    '#FF5722', '#795548', '#607D8B', '#00BCD4', '#8BC34A',
+    '#FF9800', '#F44336', '#3F51B5', '#009688', '#CDDC39',
+    '#673AB7', '#03A9F4', '#FFEB3B', '#9E9E9E', '#FF5252'
+];
+
+function initializePieCharts() {
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: window.innerWidth < 576 ? 'bottom' : 'right',
+                labels: {
+                    boxWidth: window.innerWidth < 576 ? 12 : 40,
+                    padding: window.innerWidth < 576 ? 8 : 20
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${context.label}: ฿${value.toLocaleString()} (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    };
+
+    // Income Pie Chart
+    const incomeData = {
+        labels: [{% for item in category_breakdown if item.type == 'income' %}'{{ item.name }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for item in category_breakdown if item.type == 'income' %}{{ item.total }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: colorPalette
+        }]
+    };
+
+    incomePieChart = new Chart(document.getElementById('incomePieChart'), {
+        type: 'doughnut',
+        data: incomeData,
+        options: chartOptions
+    });
+
+    // Expense Pie Chart
+    const expenseData = {
+        labels: [{% for item in category_breakdown if item.type == 'expense' %}'{{ item.name }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for item in category_breakdown if item.type == 'expense' %}{{ item.total }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: colorPalette
+        }]
+    };
+
+    expensePieChart = new Chart(document.getElementById('expensePieChart'), {
+        type: 'doughnut',
+        data: expenseData,
+        options: chartOptions
+    });
+}
+
+// Switch View Function
+function switchView(type, view) {
+    const tableView = document.getElementById(`${type}-table-view`);
+    const chartView = document.getElementById(`${type}-chart-view`);
+    const buttons = event.currentTarget.parentElement.getElementsByTagName('button');
+
+    for (let btn of buttons) {
+        btn.classList.remove('active');
+    }
+    event.currentTarget.classList.add('active');
+
+    if (view === 'table') {
+        tableView.classList.remove('d-none');
+        chartView.classList.add('d-none');
+    } else {
+        tableView.classList.add('d-none');
+        chartView.classList.remove('d-none');
+
+        if (!incomePieChart || !expensePieChart) {
+            initializePieCharts();
+        }
+    }
+}
+
+// Sort Table Function
+function sortTable(tableId, columnIndex) {
+    const table = document.getElementById(tableId);
+    const tbody = table.getElementsByTagName('tbody')[0];
+    const rows = Array.from(tbody.getElementsByTagName('tr'));
+
+    if (rows.length === 1 && rows[0].cells[0].colSpan === 4) return;
+
+    const isAscending = table.getAttribute('data-sort-col') === columnIndex.toString() &&
+                       table.getAttribute('data-sort-dir') === 'asc';
+
+    rows.sort((a, b) => {
+        let aValue, bValue;
+
+        if (columnIndex === 0) {
+            aValue = a.cells[columnIndex].textContent.trim();
+            bValue = b.cells[columnIndex].textContent.trim();
+        } else {
+            aValue = parseFloat(a.cells[columnIndex].getAttribute('data-value'));
+            bValue = parseFloat(b.cells[columnIndex].getAttribute('data-value'));
+        }
+
+        if (isAscending) {
+            return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        } else {
+            return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        }
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+
+    table.setAttribute('data-sort-col', columnIndex);
+    table.setAttribute('data-sort-dir', isAscending ? 'desc' : 'asc');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateCategoryFilter();
+});
+
+function exportPDF() {
+    alert('กำลังพัฒนา');
+}
+
+function exportExcel() {
+    alert('กำลังพัฒนา');
+}
+</script>
 {% endblock %}

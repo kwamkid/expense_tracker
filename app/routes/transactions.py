@@ -218,5 +218,6 @@ def get_categories():
 
     return jsonify([{
         'id': cat.id,
-        'name': cat.name
+        'name': cat.name,
+        'keywords': cat.keywords
     } for cat in categories])

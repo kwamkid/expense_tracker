@@ -152,23 +152,30 @@ h1 {
 }
 
 .topbar .dropdown-toggle {
-    color: white !important;
+    color: black !important;
 }
 
 .topbar .dropdown-toggle::after {
-    border-top-color: white;
+    border-top-color: black;
 }
 
 /* Sidebar toggle button */
 #sidebarCollapse {
-    background-color: var(--primary-color);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: none;
+    border: none;
+    color: var(--primary-color)!important;
+    padding: 0;
+    line-height: 1;
 }
 
 #sidebarCollapse:hover {
-    background-color: var(--primary-hover);
-    color: white;
+    color: var(--primary-hover);
+    opacity: 0.8;
+}
+
+#sidebarCollapse:focus {
+    box-shadow: none;
+    outline: none;
 }
 
 .profile-img {
