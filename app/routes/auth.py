@@ -1,9 +1,13 @@
 # app/routes/auth.py
 from flask import Blueprint, redirect, url_for, request, session, flash
 from flask_login import login_user, logout_user, login_required
-from app.models import db, User, Category, BankAccount
+from app.models import db, User, Category, BankAccount , Company
 from app.services.line_auth import LineAuth
 import uuid
+from datetime import datetime
+import pytz
+
+bangkok_tz = pytz.timezone('Asia/Bangkok')
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -67,6 +71,7 @@ def callback():
             db.session.add(user)
             db.session.commit()
 
+            # ถ้าไม่ได้รับเชิญให้สร้างบริษัทใหม่
             # ถ้าไม่ได้รับเชิญให้สร้างบริษัทใหม่
             if not invite_token:
                 company = Company(

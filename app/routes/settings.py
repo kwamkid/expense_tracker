@@ -1,8 +1,8 @@
 # app/routes/settings.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from app.models import db, Category, InviteToken, Transaction, ImportHistory , User , Company
+from app.models import db, Category, InviteToken, Transaction, ImportHistory , User , Company, BankAccount
 from app.forms import CompanySettingsForm, CategoryForm
 import os
 import uuid
@@ -176,6 +176,9 @@ def allowed_file(filename):
         filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
 
 
+# ในไฟล์ app/routes/settings.py
+# แก้ไขฟังก์ชัน clear_data
+
 @settings_bp.route('/clear-data', methods=['GET', 'POST'])
 @login_required
 def clear_data():
@@ -194,7 +197,38 @@ def clear_data():
                 for history in import_histories:
                     db.session.delete(history)
 
+                # ลบหมวดหมู่เก่าทั้งหมด
+                categories = Category.query.filter_by(user_id=current_user.id).all()
+                for category in categories:
+                    db.session.delete(category)
+
+                # ลบบัญชีธนาคารทั้งหมด
+                bank_accounts = BankAccount.query.filter_by(user_id=current_user.id).all()
+                for account in bank_accounts:
+                    db.session.delete(account)
+
+                # อัปเดตข้อมูลบริษัท (หรือสร้างใหม่ถ้ายังไม่มี)
+                if current_user.company_id:
+                    company = Company.query.get(current_user.company_id)
+                    company.name = "Amp Tech Co.,Ltd"
+                else:
+                    company = Company(
+                        name="Amp Tech Co.,Ltd",
+                        created_at=datetime.now(bangkok_tz),
+                        owner_id=current_user.id
+                    )
+                    db.session.add(company)
+                    db.session.commit()
+                    current_user.company_id = company.id
+
                 db.session.commit()
+
+                # สร้างหมวดหมู่ค่าเริ่มต้นใหม่
+                create_default_categories(current_user.id, current_user.company_id)
+
+                # สร้างบัญชีธนาคารเริ่มต้นใหม่
+                create_default_bank_account(current_user.id, current_user.company_id)
+
                 flash('ลบข้อมูลทั้งหมดเรียบร้อยแล้ว', 'success')
                 return redirect(url_for('main.dashboard'))
             except Exception as e:
@@ -262,22 +296,44 @@ def delete_category(id):
 from datetime import date
 
 
-@settings_bp.route('/users')
-@login_required
-def users():
-    # ดึงข้อมูลผู้ใช้ทั้งหมดในบริษัทเดียวกัน
-    users = User.query.filter_by(company_id=current_user.company_id).order_by(User.created_at.desc()).all()
-
-    # ดึงข้อมูล invite tokens ของบริษัท
-    invite_tokens = InviteToken.query.filter_by(company_id=current_user.company_id).order_by(InviteToken.created_at.desc()).all()
-
-    # ส่งวันที่ปัจจุบันไปด้วย
-    today = date.today()
-
-    return render_template('settings/users.html',
-                           users=users,
-                           invite_tokens=invite_tokens,
-                           today=today)
+# @settings_bp.route('/users')
+# @login_required
+# def users():
+#     # ตรวจสอบว่ามี company_id หรือไม่
+#     if not current_user.company_id:
+#         # ถ้าไม่มี ให้สร้างบริษัทใหม่
+#         company = Company(
+#             name=f"บริษัทของ {current_user.name or 'ผู้ใช้ใหม่'}",
+#             created_at=datetime.now(bangkok_tz),
+#             owner_id=current_user.id
+#         )
+#         db.session.add(company)
+#         db.session.commit()
+#
+#         # อัปเดตผู้ใช้ให้มี company_id
+#         current_user.company_id = company.id
+#         db.session.commit()
+#     else:
+#         # ถ้ามี company_id ให้ดึงข้อมูลบริษัท
+#         company = Company.query.get(current_user.company_id)
+#
+#     # ดึงข้อมูลสมาชิกในบริษัท
+#     members = User.query.filter_by(company_id=current_user.company_id).all()
+#
+#     # ดึงข้อมูลคำเชิญที่ยังไม่ได้ใช้
+#     pending_invites = InviteToken.query.filter_by(
+#         company_id=current_user.company_id,
+#         used=False
+#     ).order_by(InviteToken.created_at.desc()).all()
+#
+#     # ส่งวันที่ปัจจุบันไปด้วย
+#     today = date.today()
+#
+#     return render_template('settings/users.html',
+#                            company=company,  # เพิ่มตัวแปร company
+#                            members=members,
+#                            invite_tokens=pending_invites,
+#                            today=today)
 
 
 # เพิ่มเส้นทางสำหรับจัดการสมาชิกบริษัทใน app/routes/settings.py

@@ -91,13 +91,11 @@
                     <i class="fas fa-tags"></i> หมวดหมู่
                 </a>
             </li>
-            {% if request.endpoint.startswith('settings') and request.endpoint != 'settings.clear_data' %}
             <li>
                 <a href="{{ url_for('settings.clear_data') }}">
                     <i class="fas fa-trash-alt"></i> ล้างข้อมูลทั้งหมด
                 </a>
             </li>
-            {% endif %}
         </ul>
     </li>
 </ul>
