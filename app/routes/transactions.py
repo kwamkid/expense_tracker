@@ -20,7 +20,8 @@ def index():
     if per_page not in [20, 50, 100, 200]:
         per_page = 20
 
-    query = Transaction.query.filter_by(user_id=current_user.id)
+    # สร้าง query จาก company_id แทนที่จะใช้ user_id
+    query = Transaction.query.filter_by(company_id=current_user.company_id)
 
     # Apply filters
     transaction_type = request.args.get('type')
@@ -49,8 +50,9 @@ def index():
     transactions = query.order_by(Transaction.transaction_date.desc(), Transaction.created_at.desc()) \
         .paginate(page=page, per_page=per_page)
 
-    categories = Category.query.filter_by(user_id=current_user.id).all()
-    bank_accounts = BankAccount.query.filter_by(user_id=current_user.id).all()
+    # ดึงข้อมูลหมวดหมู่และบัญชีธนาคารจาก company_id เดียวกัน
+    categories = Category.query.filter_by(company_id=current_user.company_id).all()
+    bank_accounts = BankAccount.query.filter_by(company_id=current_user.company_id).all()
 
     return render_template('transactions/index.html',
                            transactions=transactions,

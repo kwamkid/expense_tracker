@@ -2,12 +2,14 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from app.models import db, Category, InviteToken, Transaction, ImportHistory , User
+from app.models import db, Category, InviteToken, Transaction, ImportHistory , User , Company
 from app.forms import CompanySettingsForm, CategoryForm
 import os
 import uuid
-from datetime import date
+from datetime import date, datetime  # เพิ่ม datetime ตรงนี้
+import pytz  # ต้องเพิ่ม pytz ด้วยเพื่อใช้งาน bangkok_tz
 
+bangkok_tz = pytz.timezone('Asia/Bangkok')
 settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
 
 
@@ -79,14 +81,88 @@ def profile():
     return render_template('settings/profile.html')
 
 
+@settings_bp.route('/create_invite', methods=['GET'])
+@login_required
+def create_invite():
+    """สร้างคำเชิญใหม่และส่งคืน URL (ใช้กับ AJAX)"""
+    # ตรวจสอบว่ามี company_id หรือไม่
+    if not current_user.company_id:
+        # ถ้าไม่มี ให้สร้างบริษัทใหม่
+        company = Company(
+            name=f"บริษัทของ {current_user.name or 'ผู้ใช้ใหม่'}",
+            created_at=datetime.now(bangkok_tz),
+            owner_id=current_user.id
+        )
+        db.session.add(company)
+        db.session.commit()
+
+        # อัปเดตผู้ใช้ให้มี company_id
+        current_user.company_id = company.id
+        db.session.commit()
+
+    # สร้าง token ใหม่
+    token = str(uuid.uuid4())
+    invite = InviteToken(
+        token=token,
+        created_by=current_user.id,
+        company_id=current_user.company_id
+    )
+    db.session.add(invite)
+    db.session.commit()
+
+    # สร้าง URL สำหรับเชิญ
+    invite_url = url_for('auth.login', invite=token, _external=True)
+
+    # ส่งคืนเป็น JSON
+    return jsonify({
+        'success': True,
+        'invite_url': invite_url,
+        'token': token
+    })
+
+
+@settings_bp.route('/cancel_invite/<int:id>')
+@login_required
+def cancel_invite(id):
+    """ยกเลิกคำเชิญที่ยังไม่ได้ใช้"""
+    # ตรวจสอบว่าคำเชิญอยู่ในบริษัทของผู้ใช้หรือไม่
+    invite = InviteToken.query.filter_by(
+        id=id,
+        company_id=current_user.company_id,
+        used=False
+    ).first_or_404()
+
+    # ลบคำเชิญ
+    db.session.delete(invite)
+    db.session.commit()
+
+    flash('ยกเลิกคำเชิญเรียบร้อยแล้ว', 'success')
+    return redirect(url_for('settings.company_members'))
+
 @settings_bp.route('/invite')
 @login_required
 def invite():
+    # ตรวจสอบว่ามี company_id หรือไม่
+    if not current_user.company_id:
+        # ถ้าไม่มี ให้สร้างบริษัทใหม่
+        company = Company(
+            name=f"บริษัทของ {current_user.name or 'ผู้ใช้ใหม่'}",
+            created_at=datetime.now(bangkok_tz),
+            owner_id=current_user.id
+        )
+        db.session.add(company)
+        db.session.commit()
+
+        # อัปเดตผู้ใช้ให้มี company_id
+        current_user.company_id = company.id
+        db.session.commit()
+
     # Generate invite link
     token = str(uuid.uuid4())
     invite = InviteToken(
         token=token,
-        created_by=current_user.id
+        created_by=current_user.id,
+        company_id=current_user.company_id
     )
     db.session.add(invite)
     db.session.commit()
@@ -189,11 +265,11 @@ from datetime import date
 @settings_bp.route('/users')
 @login_required
 def users():
-    # ดึงข้อมูลผู้ใช้ทั้งหมด
-    users = User.query.order_by(User.created_at.desc()).all()
+    # ดึงข้อมูลผู้ใช้ทั้งหมดในบริษัทเดียวกัน
+    users = User.query.filter_by(company_id=current_user.company_id).order_by(User.created_at.desc()).all()
 
-    # ดึงข้อมูล invite tokens
-    invite_tokens = InviteToken.query.order_by(InviteToken.created_at.desc()).all()
+    # ดึงข้อมูล invite tokens ของบริษัท
+    invite_tokens = InviteToken.query.filter_by(company_id=current_user.company_id).order_by(InviteToken.created_at.desc()).all()
 
     # ส่งวันที่ปัจจุบันไปด้วย
     today = date.today()
@@ -202,3 +278,108 @@ def users():
                            users=users,
                            invite_tokens=invite_tokens,
                            today=today)
+
+
+# เพิ่มเส้นทางสำหรับจัดการสมาชิกบริษัทใน app/routes/settings.py
+
+@settings_bp.route('/company_members')
+@login_required
+def company_members():
+    """แสดงหน้าจัดการผู้ใช้"""
+    # ตรวจสอบว่ามี company_id หรือไม่
+    if not current_user.company_id:
+        # ถ้าไม่มี ให้สร้างบริษัทใหม่
+        company = Company(
+            name=f"บริษัทของ {current_user.name or 'ผู้ใช้ใหม่'}",
+            created_at=datetime.now(bangkok_tz),
+            owner_id=current_user.id
+        )
+        db.session.add(company)
+        db.session.commit()
+
+        # อัปเดตผู้ใช้ให้มี company_id
+        current_user.company_id = company.id
+        db.session.commit()
+    else:
+        # ถ้ามี company_id ให้ดึงข้อมูลบริษัท
+        company = Company.query.get(current_user.company_id)
+
+    # ดึงข้อมูลสมาชิกในบริษัท
+    members = User.query.filter_by(company_id=current_user.company_id).all()
+
+    # ดึงข้อมูลคำเชิญที่ยังไม่ได้ใช้
+    pending_invites = InviteToken.query.filter_by(
+        company_id=current_user.company_id,
+        used=False
+    ).order_by(InviteToken.created_at.desc()).all()
+
+    return render_template('settings/company_members.html',
+                           company=company,
+                           members=members,
+                           pending_invites=pending_invites)
+
+
+@settings_bp.route('/remove_member/<int:id>')
+@login_required
+def remove_member(id):
+    # ตรวจสอบว่าผู้ใช้ปัจจุบันเป็นเจ้าของบริษัทหรือไม่
+    company = Company.query.get(current_user.company_id)
+
+    if not company or company.owner_id != current_user.id:
+        flash('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error')
+        return redirect(url_for('settings.company_members'))
+
+    # ไม่อนุญาตให้ลบตัวเอง
+    if id == current_user.id:
+        flash('คุณไม่สามารถลบตัวเองได้', 'error')
+        return redirect(url_for('settings.company_members'))
+
+    # ค้นหาผู้ใช้ที่ต้องการลบ
+    user = User.query.filter_by(id=id, company_id=current_user.company_id).first()
+
+    if not user:
+        flash('ไม่พบผู้ใช้ในบริษัทนี้', 'error')
+        return redirect(url_for('settings.company_members'))
+
+    # สร้างบริษัทใหม่สำหรับผู้ใช้ที่ถูกลบ
+    new_company = Company(
+        name=f"บริษัทของ {user.name or 'ผู้ใช้'}",
+        created_at=datetime.now(bangkok_tz),
+        owner_id=user.id
+    )
+    db.session.add(new_company)
+    db.session.commit()
+
+    # ย้ายผู้ใช้ไปยังบริษัทใหม่
+    user.company_id = new_company.id
+    db.session.commit()
+
+    flash(f'ลบ {user.name} ออกจากบริษัทเรียบร้อยแล้ว', 'success')
+    return redirect(url_for('settings.company_members'))
+
+
+# สำหรับอนาคต: ฟังก์ชันตั้ง/ถอดถอนแอดมิน
+@settings_bp.route('/toggle_admin/<int:id>')
+@login_required
+def toggle_admin(id):
+    # ตรวจสอบว่าผู้ใช้ปัจจุบันเป็นเจ้าของบริษัทหรือไม่
+    company = Company.query.get(current_user.company_id)
+
+    if not company or company.owner_id != current_user.id:
+        flash('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error')
+        return redirect(url_for('settings.company_members'))
+
+    # ค้นหาผู้ใช้ที่ต้องการแก้ไข
+    user = User.query.filter_by(id=id, company_id=current_user.company_id).first()
+
+    if not user:
+        flash('ไม่พบผู้ใช้ในบริษัทนี้', 'error')
+        return redirect(url_for('settings.company_members'))
+
+    # สลับสถานะแอดมิน (ต้องเพิ่มฟิลด์ is_admin ในตาราง User ก่อน)
+    # user.is_admin = not user.is_admin
+    # db.session.commit()
+
+    # flash(f'{"ตั้ง" if user.is_admin else "ถอดถอน"} {user.name} {"เป็น" if user.is_admin else "จาก"}แอดมินเรียบร้อยแล้ว', 'success')
+    flash('ฟีเจอร์นี้ยังไม่เปิดให้ใช้งาน', 'info')
+    return redirect(url_for('settings.company_members'))

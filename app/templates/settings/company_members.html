@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}จัดการผู้ใช้ - {{ super() }}{% endblock %}
+{% block title %}สมาชิกในบริษัท - {{ super() }}{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>จัดการผู้ใช้</h1>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inviteModal">
-        <i class="fas fa-user-plus me-2"></i>เชิญผู้ใช้ใหม่
-    </button>
+    <h1>สมาชิกในบริษัท</h1>
+    <a href="{{ url_for('settings.invite') }}" class="btn btn-primary">
+        <i class="fas fa-user-plus me-2"></i>เชิญสมาชิกใหม่
+    </a>
 </div>
 
 <!-- ข้อมูลบริษัท -->
@@ -123,7 +123,6 @@
                         <th>สร้างเมื่อ</th>
                         <th>URL สำหรับเชิญ</th>
                         <th>คัดลอก</th>
-                        <th>การจัดการ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -150,12 +149,6 @@
                                 <i class="fas fa-copy"></i> คัดลอก
                             </button>
                         </td>
-                        <td>
-                            <a href="{{ url_for('settings.cancel_invite', id=invite.id) }}" class="btn btn-sm btn-outline-danger"
-                               onclick="return confirm('ยืนยันการยกเลิกคำเชิญนี้?')">
-                                <i class="fas fa-times"></i> ยกเลิก
-                            </a>
-                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -164,52 +157,6 @@
     </div>
 </div>
 {% endif %}
-
-<!-- Modal สร้างคำเชิญใหม่ -->
-<div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="inviteModalLabel">เชิญผู้ใช้ใหม่</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p>คลิกปุ่ม "สร้างลิงก์เชิญ" เพื่อสร้างลิงก์สำหรับเชิญผู้ใช้ใหม่เข้าร่วมบริษัทของคุณ</p>
-
-        <div id="invite-result" class="d-none">
-          <div class="alert alert-success mb-3">
-            สร้างลิงก์เชิญสำเร็จ! คัดลอกลิงก์ด้านล่างและส่งให้ผู้ที่คุณต้องการเชิญ
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">ลิงก์เชิญ:</label>
-            <div class="input-group">
-              <input type="text" class="form-control" id="invite-link" readonly>
-              <button class="btn btn-outline-primary" type="button" onclick="copyInviteLink()">
-                <i class="fas fa-copy"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="text-center mb-3">
-            <a href="#" id="line-share-link" class="btn btn-success">
-              <i class="fab fa-line me-2"></i>แชร์ผ่าน LINE
-            </a>
-          </div>
-
-          <div class="alert alert-warning">
-            <i class="fas fa-info-circle me-2"></i>
-            ลิงก์นี้ใช้ได้เพียงครั้งเดียวเท่านั้น หากต้องการเชิญผู้ใช้หลายคน กรุณาสร้างลิงก์ใหม่สำหรับแต่ละคน
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-        <button type="button" class="btn btn-primary" id="generate-invite-btn">สร้างลิงก์เชิญ</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
 function copyInviteUrl(inputId, button) {
@@ -230,53 +177,5 @@ function copyInviteUrl(inputId, button) {
         button.classList.add('btn-outline-primary');
     }, 2000);
 }
-
-function copyInviteLink() {
-    const input = document.getElementById('invite-link');
-    input.select();
-    document.execCommand('copy');
-
-    const button = event.currentTarget;
-    const originalInnerHTML = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-check"></i>';
-
-    setTimeout(() => {
-        button.innerHTML = originalInnerHTML;
-    }, 2000);
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const generateInviteBtn = document.getElementById('generate-invite-btn');
-
-    generateInviteBtn.addEventListener('click', function() {
-        generateInviteBtn.disabled = true;
-        generateInviteBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> กำลังสร้าง...';
-
-        // ส่งคำขอไปยังเซิร์ฟเวอร์เพื่อสร้างคำเชิญ
-        fetch('{{ url_for("settings.create_invite") }}')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // แสดงผลลัพธ์
-                    document.getElementById('invite-result').classList.remove('d-none');
-                    document.getElementById('invite-link').value = data.invite_url;
-                    document.getElementById('line-share-link').href = `https://line.me/R/msg/text/?${encodeURIComponent(data.invite_url)}`;
-
-                    // เปลี่ยนปุ่มกลับเป็นสร้างลิงก์เชิญใหม่
-                    generateInviteBtn.innerHTML = 'สร้างลิงก์เชิญใหม่';
-                    generateInviteBtn.disabled = false;
-                } else {
-                    alert('เกิดข้อผิดพลาดในการสร้างคำเชิญ');
-                    generateInviteBtn.innerHTML = 'สร้างลิงก์เชิญ';
-                    generateInviteBtn.disabled = false;
-                }
-            })
-            .catch(error => {
-                alert('เกิดข้อผิดพลาดในการสร้างคำเชิญ');
-                generateInviteBtn.innerHTML = 'สร้างลิงก์เชิญ';
-                generateInviteBtn.disabled = false;
-            });
-    });
-});
 </script>
 {% endblock %}

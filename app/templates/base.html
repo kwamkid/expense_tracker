@@ -33,64 +33,74 @@
                 {% endif %}
             </div>
 
-            <ul class="list-unstyled components">
-                <li class="{{ 'active' if request.endpoint == 'main.dashboard' }}">
-                    <a href="{{ url_for('main.dashboard') }}">
-                        <i class="fas fa-tachometer-alt"></i> Dashboard
-                    </a>
-                </li>
-                <li class="{{ 'active' if request.endpoint.startswith('bank_accounts') }}">
-                    <a href="{{ url_for('bank_accounts.index') }}">
-                        <i class="fas fa-university"></i> บัญชีธนาคาร
-                    </a>
-                </li>
-                <li class="{{ 'active' if request.endpoint.startswith('transactions') }}">
-                    <a href="{{ url_for('transactions.index') }}">
-                        <i class="fas fa-exchange-alt"></i> ธุรกรรม
-                    </a>
-                </li>
-                <li class="{{ 'active' if request.endpoint.startswith('imports') }}">
-                    <a href="#importsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                        <i class="fas fa-file-import"></i> นำเข้าข้อมูล
-                    </a>
-                    <ul class="collapse list-unstyled" id="importsSubmenu">
-                        <li>
-                            <a href="{{ url_for('imports.upload') }}">นำเข้าใหม่</a>
-                        </li>
-                        <li>
-                            <a href="{{ url_for('imports.history') }}">ประวัติการนำเข้า</a>
-                        </li>
-                    </ul>
-                </li>
-                <li class="{{ 'active' if request.endpoint == 'main.reports' }}">
-                    <a href="{{ url_for('main.reports') }}">
-                        <i class="fas fa-chart-bar"></i> รายงาน
-                    </a>
-                </li>
-                <li class="{{ 'active' if request.endpoint.startswith('settings') }}">
-    <a href="#settingsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-        <i class="fas fa-cog"></i> ตั้งค่า
-    </a>
-    <ul class="collapse list-unstyled" id="settingsSubmenu">
-        <li>
-            <a href="{{ url_for('settings.company') }}">
-                <i class="fas fa-building"></i> ข้อมูลบริษัท
-            </a>
-        </li>
-        <li>
-            <a href="{{ url_for('settings.categories') }}">
-                <i class="fas fa-tags"></i> หมวดหมู่
-            </a>
-        </li>
-        <li>
-            <a href="{{ url_for('settings.users') }}">
-                <i class="fas fa-users"></i> จัดการผู้ใช้
-            </a>
-        </li>
+            <!-- แก้ไขส่วนเมนูด้านซ้ายในไฟล์ app/templates/base.html -->
 
-    </ul>
-</li>
-            </ul>
+<!-- แก้ไขส่วนเมนูด้านซ้ายในไฟล์ app/templates/base.html -->
+
+<ul class="list-unstyled components">
+    <li class="{{ 'active' if request.endpoint == 'main.dashboard' }}">
+        <a href="{{ url_for('main.dashboard') }}">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+    </li>
+    <li class="{{ 'active' if request.endpoint.startswith('bank_accounts') }}">
+        <a href="{{ url_for('bank_accounts.index') }}">
+            <i class="fas fa-university"></i> บัญชีธนาคาร
+        </a>
+    </li>
+    <li class="{{ 'active' if request.endpoint.startswith('transactions') }}">
+        <a href="{{ url_for('transactions.index') }}">
+            <i class="fas fa-exchange-alt"></i> ธุรกรรม
+        </a>
+    </li>
+    <li class="{{ 'active' if request.endpoint.startswith('imports') }}">
+        <a href="#importsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+            <i class="fas fa-file-import"></i> นำเข้าข้อมูล
+        </a>
+        <ul class="collapse list-unstyled" id="importsSubmenu">
+            <li>
+                <a href="{{ url_for('imports.upload') }}">นำเข้าใหม่</a>
+            </li>
+            <li>
+                <a href="{{ url_for('imports.history') }}">ประวัติการนำเข้า</a>
+            </li>
+        </ul>
+    </li>
+    <li class="{{ 'active' if request.endpoint == 'main.reports' }}">
+        <a href="{{ url_for('main.reports') }}">
+            <i class="fas fa-chart-bar"></i> รายงาน
+        </a>
+    </li>
+    <li class="{{ 'active' if request.endpoint.startswith('settings') }}">
+        <a href="#settingsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+            <i class="fas fa-cog"></i> ตั้งค่า
+        </a>
+        <ul class="collapse list-unstyled" id="settingsSubmenu">
+            <li>
+                <a href="{{ url_for('settings.company') }}">
+                    <i class="fas fa-building"></i> ข้อมูลบริษัท
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('settings.company_members') }}">
+                    <i class="fas fa-users"></i> จัดการผู้ใช้
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('settings.categories') }}">
+                    <i class="fas fa-tags"></i> หมวดหมู่
+                </a>
+            </li>
+            {% if request.endpoint.startswith('settings') and request.endpoint != 'settings.clear_data' %}
+            <li>
+                <a href="{{ url_for('settings.clear_data') }}">
+                    <i class="fas fa-trash-alt"></i> ล้างข้อมูลทั้งหมด
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </li>
+</ul>
         </nav>
 
         <!-- Page Content -->

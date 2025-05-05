@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for,jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from app.models import db, Transaction, Category, BankAccount
 from sqlalchemy import func, case
@@ -18,8 +18,6 @@ def index():
     return render_template('main/landing.html')
 
 
-# เฉพาะฟังก์ชัน dashboard ใน app/routes/main.py
-
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -29,12 +27,12 @@ def dashboard():
 
     # Calculate totals for COMPLETED transactions only
     total_income = db.session.query(func.sum(Transaction.amount)) \
-                       .filter_by(user_id=current_user.id, type='income', status='completed') \
+                       .filter_by(company_id=current_user.company_id, type='income', status='completed') \
                        .filter(Transaction.transaction_date >= first_day) \
                        .scalar() or 0
 
     total_expense = db.session.query(func.sum(Transaction.amount)) \
-                        .filter_by(user_id=current_user.id, type='expense', status='completed') \
+                        .filter_by(company_id=current_user.company_id, type='expense', status='completed') \
                         .filter(Transaction.transaction_date >= first_day) \
                         .scalar() or 0
 
@@ -42,23 +40,26 @@ def dashboard():
 
     # Get ALL pending transactions (not just current month)
     all_pending_income = db.session.query(func.sum(Transaction.amount)) \
-                             .filter_by(user_id=current_user.id, type='income', status='pending') \
+                             .filter_by(company_id=current_user.company_id, type='income', status='pending') \
                              .scalar() or 0
 
     all_pending_expense = db.session.query(func.sum(Transaction.amount)) \
-                              .filter_by(user_id=current_user.id, type='expense', status='pending') \
+                              .filter_by(company_id=current_user.company_id, type='expense', status='pending') \
                               .scalar() or 0
 
     # Get recent transactions
     recent_transactions = Transaction.query \
-        .filter_by(user_id=current_user.id) \
+        .filter_by(company_id=current_user.company_id) \
         .order_by(Transaction.transaction_date.desc(),
                   Transaction.created_at.desc()) \
         .limit(10) \
         .all()
 
     # Get bank accounts
-    bank_accounts = BankAccount.query.filter_by(user_id=current_user.id, is_active=True).all()
+    bank_accounts = BankAccount.query.filter_by(company_id=current_user.company_id, is_active=True).all()
+
+    # Get categories for this company (moved from global to inside function)
+    categories = Category.query.filter_by(company_id=current_user.company_id).all()
 
     return render_template('main/dashboard.html',
                            total_income=total_income,
@@ -67,7 +68,8 @@ def dashboard():
                            all_pending_income=all_pending_income,
                            all_pending_expense=all_pending_expense,
                            recent_transactions=recent_transactions,
-                           bank_accounts=bank_accounts)
+                           bank_accounts=bank_accounts,
+                           categories=categories)
 
 
 @main_bp.route('/api/dashboard-data')
@@ -110,13 +112,13 @@ def dashboard_data_api():
 
     # Calculate totals for the selected period
     total_income = db.session.query(func.sum(Transaction.amount)) \
-                       .filter_by(user_id=current_user.id, type='income', status='completed') \
+                       .filter_by(company_id=current_user.company_id, type='income', status='completed') \
                        .filter(Transaction.transaction_date >= start_date) \
                        .filter(Transaction.transaction_date <= end_date) \
                        .scalar() or 0
 
     total_expense = db.session.query(func.sum(Transaction.amount)) \
-                        .filter_by(user_id=current_user.id, type='expense', status='completed') \
+                        .filter_by(company_id=current_user.company_id, type='expense', status='completed') \
                         .filter(Transaction.transaction_date >= start_date) \
                         .filter(Transaction.transaction_date <= end_date) \
                         .scalar() or 0
@@ -147,8 +149,8 @@ def reports():
     if not end_date:
         end_date = datetime.now().strftime('%Y-%m-%d')
 
-    # Build query
-    query = Transaction.query.filter_by(user_id=current_user.id)
+    # Build query - เปลี่ยนจาก user_id เป็น company_id
+    query = Transaction.query.filter_by(company_id=current_user.company_id)
 
     if transaction_type:
         query = query.filter_by(type=transaction_type)
@@ -169,14 +171,14 @@ def reports():
     total_expense = sum(t.amount for t in transactions if t.type == 'expense')
     net_profit = total_income - total_expense
 
-    # Category breakdown
+    # Category breakdown - เปลี่ยนจาก user_id เป็น company_id
     category_breakdown = db.session.query(
         Category.name,
         Category.type,
         func.sum(Transaction.amount).label('total'),
         func.count(Transaction.id).label('count')
     ).join(Transaction) \
-        .filter(Transaction.user_id == current_user.id) \
+        .filter(Transaction.company_id == current_user.company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
     if status_filter:
@@ -184,7 +186,7 @@ def reports():
 
     category_breakdown = category_breakdown.group_by(Category.id).all()
 
-    # Bank account breakdown - แก้ไขการใช้ case()
+    # Bank account breakdown - เปลี่ยนจาก user_id เป็น company_id
     bank_breakdown = db.session.query(
         BankAccount.bank_name,
         BankAccount.account_number,
@@ -198,7 +200,7 @@ def reports():
         )).label('expense'),
         func.count(Transaction.id).label('count')
     ).join(Transaction, Transaction.bank_account_id == BankAccount.id) \
-        .filter(Transaction.user_id == current_user.id) \
+        .filter(Transaction.company_id == current_user.company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
     if status_filter:
@@ -206,7 +208,7 @@ def reports():
 
     bank_breakdown = bank_breakdown.group_by(BankAccount.id).all()
 
-    # Daily summary - แก้ไขการใช้ case()
+    # Daily summary - เปลี่ยนจาก user_id เป็น company_id
     daily_summary = db.session.query(
         Transaction.transaction_date,
         func.sum(case(
@@ -217,7 +219,7 @@ def reports():
             (Transaction.type == 'expense', Transaction.amount),
             else_=0
         )).label('expense')
-    ).filter(Transaction.user_id == current_user.id) \
+    ).filter(Transaction.company_id == current_user.company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
     if status_filter:
@@ -226,9 +228,9 @@ def reports():
     daily_summary = daily_summary.group_by(Transaction.transaction_date) \
         .order_by(Transaction.transaction_date).all()
 
-    # Get categories and bank accounts for filters
-    categories = Category.query.filter_by(user_id=current_user.id).all()
-    bank_accounts = BankAccount.query.filter_by(user_id=current_user.id).all()
+    # Get categories and bank accounts for filters - เปลี่ยนจาก user_id เป็น company_id
+    categories = Category.query.filter_by(company_id=current_user.company_id).all()
+    bank_accounts = BankAccount.query.filter_by(company_id=current_user.company_id).all()
 
     return render_template('main/reports.html',
                            transactions=transactions,
@@ -256,13 +258,14 @@ def get_monthly_data():
         month_start = date.replace(day=1)
         month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
 
+        # เปลี่ยนจาก user_id เป็น company_id
         income = db.session.query(func.sum(Transaction.amount)) \
-                     .filter_by(user_id=current_user.id, type='income', status='completed') \
+                     .filter_by(company_id=current_user.company_id, type='income', status='completed') \
                      .filter(Transaction.transaction_date.between(month_start, month_end)) \
                      .scalar() or 0
 
         expense = db.session.query(func.sum(Transaction.amount)) \
-                      .filter_by(user_id=current_user.id, type='expense', status='completed') \
+                      .filter_by(company_id=current_user.company_id, type='expense', status='completed') \
                       .filter(Transaction.transaction_date.between(month_start, month_end)) \
                       .scalar() or 0
 
