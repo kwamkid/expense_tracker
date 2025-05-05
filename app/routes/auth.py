@@ -154,45 +154,7 @@ def logout():
     return redirect(url_for('main.index'))
 
 
-def create_default_categories(user_id):
-    default_categories = [
-        # รายรับ
-        {'name': 'ค่าคอร์ส', 'type': 'income', 'keywords': 'ค่าคอร์ส,course,คอร์สเรียน'},
-        {'name': 'ค่าสอนพิเศษตามโรงเรียน', 'type': 'income', 'keywords': 'สอนพิเศษ,โรงเรียน,tutor,school'},
-        {'name': 'ค่าสอนพิเศษตามบ้าน', 'type': 'income', 'keywords': 'สอนพิเศษ,ตามบ้าน,บ้าน,home tutor'},
-        {'name': 'ขายสินค้า', 'type': 'income', 'keywords': 'ขาย,สินค้า,sale,product'},
-        {'name': 'ค่าสมัครสมาชิก', 'type': 'income', 'keywords': 'สมัคร,สมาชิก,membership,registration'},
-        {'name': 'ค่าหนังสือ/เอกสาร', 'type': 'income', 'keywords': 'หนังสือ,เอกสาร,book,document'},
-        {'name': 'ค่าสอบ/ทดสอบ', 'type': 'income', 'keywords': 'สอบ,ทดสอบ,exam,test'},
 
-        # รายจ่าย
-        {'name': 'ค่าก่อสร้าง/เฟอร์นิเจอร์', 'type': 'expense',
-         'keywords': 'ก่อสร้าง,เฟอร์นิเจอร์,construction,furniture'},
-        {'name': 'ค่าอาหาร', 'type': 'expense', 'keywords': 'อาหาร,food,restaurant,ร้านอาหาร'},
-        {'name': 'ค่าสาธารณูปโภค', 'type': 'expense',
-         'keywords': 'ค่าเช่า,ค่าน้ำ,ค่าไฟ,utilities,rent,water,electricity'},
-        {'name': 'ค่าอุปกรณ์การสอน', 'type': 'expense', 'keywords': 'อุปกรณ์,การสอน,teaching,materials,stationery'},
-        {'name': 'ค่าเงินเดือน', 'type': 'expense', 'keywords': 'เงินเดือน,salary,wage,พนักงาน'},
-        {'name': 'ค่าการตลาด/โฆษณา', 'type': 'expense', 'keywords': 'การตลาด,โฆษณา,marketing,advertising'},
-        {'name': 'ค่าซ่อมบำรุง', 'type': 'expense', 'keywords': 'ซ่อม,บำรุง,maintenance,repair'},
-        {'name': 'ค่าใช้จ่ายสำนักงาน', 'type': 'expense', 'keywords': 'สำนักงาน,office,supplies'},
-        {'name': 'ค่าพัฒนาระบบ/IT', 'type': 'expense', 'keywords': 'คอมพิวเตอร์,IT,software,hardware'},
-
-        # อื่นๆ
-        {'name': 'อื่นๆ', 'type': 'income', 'keywords': ''},
-        {'name': 'อื่นๆ', 'type': 'expense', 'keywords': ''}
-    ]
-
-    for cat in default_categories:
-        category = Category(
-            name=cat['name'],
-            type=cat['type'],
-            keywords=cat['keywords'],
-            user_id=user_id
-        )
-        db.session.add(category)
-
-    db.session.commit()
 
 
 def create_default_bank_account(user_id, company_id=None):
