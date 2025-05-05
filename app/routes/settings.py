@@ -8,6 +8,8 @@ import os
 import uuid
 from datetime import date, datetime  # เพิ่ม datetime ตรงนี้
 import pytz  # ต้องเพิ่ม pytz ด้วยเพื่อใช้งาน bangkok_tz
+from app.routes.auth import create_default_categories, create_default_bank_account
+
 
 bangkok_tz = pytz.timezone('Asia/Bangkok')
 settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
