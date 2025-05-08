@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}เลือกบริษัท - {{ super() }}{% endblock %}
+
+{% block main_content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">เลือกบริษัทหรือสร้างบริษัทใหม่</h4>
+                </div>
+                <div class="card-body">
+                    {% if user_companies %}
+                    <div class="mb-4">
+                        <h5>บริษัทของคุณ</h5>
+                        <div class="list-group">
+                            {% for uc in user_companies %}
+                            <form method="POST" class="mb-2">
+                                <input type="hidden" name="company_id" value="{{ uc.company.id }}">
+                                <button type="submit" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ uc.company.name }}</h6>
+                                        <small class="text-muted">เข้าร่วมเมื่อ: {{ uc.joined_at.strftime('%d/%m/%Y') }}</small>
+                                    </div>
+                                    {% if uc.is_admin %}
+                                    <span class="badge bg-primary rounded-pill">แอดมิน</span>
+                                    {% endif %}
+                                </button>
+                            </form>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>คุณยังไม่มีบริษัท กรุณาสร้างบริษัทใหม่
+                    </div>
+                    {% endif %}
+
+                    <h5 class="mt-4">สร้างบริษัทใหม่</h5>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="newCompany" class="form-label">ชื่อบริษัท</label>
+                            <input type="text" class="form-control" id="newCompany" name="new_company_name" placeholder="ชื่อบริษัทใหม่" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-plus-circle me-2"></i>สร้างบริษัทใหม่
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

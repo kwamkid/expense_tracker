@@ -7,8 +7,6 @@ db = SQLAlchemy()
 bangkok_tz = pytz.timezone('Asia/Bangkok')
 
 
-# แก้ไขโมเดล User เพื่อเพิ่มความสัมพันธ์กับบริษัท
-
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     line_id = db.Column(db.String(100), unique=True, nullable=False)
@@ -29,6 +27,20 @@ class User(UserMixin, db.Model):
 
     transactions = db.relationship('Transaction', backref='user', lazy=True)
     bank_accounts = db.relationship('BankAccount', backref='user', lazy=True)
+
+    # เพิ่มความสัมพันธ์กับบริษัทหลายบริษัท
+    user_companies = db.relationship('UserCompany', back_populates='user', cascade='all, delete-orphan')
+
+    # เพิ่มคุณสมบัติเพื่อเข้าถึงบริษัททั้งหมดที่ผู้ใช้เป็นสมาชิก
+    @property
+    def companies(self):
+        return [uc.company for uc in self.user_companies]
+
+    # เพิ่มคุณสมบัติเพื่อเข้าถึงบริษัทที่ active
+    @property
+    def active_company(self):
+        uc = UserCompany.query.filter_by(user_id=self.id, active_company=True).first()
+        return uc.company if uc else None
 
     # ฟังก์ชันสำหรับการเข้าถึงข้อมูลบริษัท
     @property
@@ -84,7 +96,22 @@ class User(UserMixin, db.Model):
             self._logo_path = value
 
 
-# เฉพาะส่วนที่แก้ไขในไฟล์ app/models.py - class BankAccount
+# โมเดลความสัมพันธ์ระหว่างผู้ใช้และบริษัท
+class UserCompany(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)  # สิทธิ์แอดมิน
+    active_company = db.Column(db.Boolean, default=True)  # บริษัทที่กำลังใช้งานอยู่
+    joined_at = db.Column(db.DateTime, default=lambda: datetime.now(bangkok_tz))
+
+    # ไม่ให้ผู้ใช้มีความสัมพันธ์กับบริษัทเดียวกันซ้ำกัน
+    __table_args__ = (db.UniqueConstraint('user_id', 'company_id'),)
+
+    # ความสัมพันธ์กับผู้ใช้และบริษัท
+    user = db.relationship('User', back_populates='user_companies')
+    company = db.relationship('Company', back_populates='user_companies')
+
 
 class BankAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -159,7 +186,16 @@ class Company(db.Model):
     owner_id = db.Column(db.Integer)
 
     # ความสัมพันธ์กับผู้ใช้
-    users = db.relationship('User', backref='company', lazy=True)
+    users = db.relationship('User', backref='company', foreign_keys=[User.company_id])
+
+    # แก้ไขความสัมพันธ์กับผู้ใช้สำหรับหลายบริษัท
+    user_companies = db.relationship('UserCompany', back_populates='company', cascade='all, delete-orphan')
+
+    # คุณสมบัติเพื่อเข้าถึงสมาชิกทั้งหมดในบริษัท
+    @property
+    def members(self):
+        return [uc.user for uc in self.user_companies]
+
 
 class InviteToken(db.Model):
     id = db.Column(db.Integer, primary_key=True)

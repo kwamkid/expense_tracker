@@ -1,8 +1,7 @@
 # app/__init__.py
-from flask import Flask, current_app
-from flask_login import LoginManager
+from flask import Flask, current_app, redirect, url_for, flash, request
+from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
-from app.config import Config
 from app.models import db, User
 import os
 import time
@@ -11,15 +10,54 @@ login_manager = LoginManager()
 migrate = Migrate()
 
 
-def create_app(config_class=Config):
+def create_app(config_class=None):
+    from app.config import Config
+
     app = Flask(__name__)
-    app.config.from_object(config_class)
+    app.config.from_object(config_class or Config)
 
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+
+    # กำหนด middleware สำหรับตรวจสอบบริษัทที่ active
+    @app.before_request
+    def check_active_company():
+        # เช็คเฉพาะเมื่อผู้ใช้ล็อกอินแล้ว
+        if current_user.is_authenticated:
+            # เส้นทางที่ยกเว้นไม่ต้องตรวจสอบบริษัท
+            exempt_endpoints = [
+                None,  # กรณี static files
+                'static',
+                'auth.login',
+                'auth.logout',
+                'auth.callback',
+                'auth.select_company',
+                'main.index'
+            ]
+
+            # ถ้าไม่ได้อยู่ในเส้นทางที่ยกเว้น
+            if request.endpoint not in exempt_endpoints and not request.endpoint.startswith('static'):
+                # ตรวจสอบว่ามีบริษัทที่ active หรือไม่
+                has_active_company = False
+
+                try:
+                    from app.models import UserCompany
+                    active_company = UserCompany.query.filter_by(
+                        user_id=current_user.id,
+                        active_company=True
+                    ).first()
+
+                    has_active_company = active_company is not None
+                except Exception as e:
+                    app.logger.error(f"Error checking active company: {e}")
+
+                # ถ้าไม่มีบริษัทที่ active ให้ไปที่หน้าเลือกบริษัท
+                if not has_active_company:
+                    flash('กรุณาเลือกบริษัทที่ต้องการใช้งาน', 'warning')
+                    return redirect(url_for('auth.select_company'))
 
     # Create upload folders
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'logo'), exist_ok=True)
@@ -41,7 +79,19 @@ def create_app(config_class=Config):
     @app.context_processor
     def utility_processor():
         from datetime import datetime
-        return dict(current_year=datetime.now().year)
+
+        # ฟังก์ชัน Helper สำหรับดึงบริษัทที่ active
+        def get_active_company():
+            if current_user.is_authenticated:
+                from app.models import UserCompany
+                uc = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+                return uc.company if uc else None
+            return None
+
+        return dict(
+            current_year=datetime.now().year,
+            get_active_company=get_active_company
+        )
 
     # Clean temp files
     @app.before_request
