@@ -388,3 +388,71 @@ tr.table-pending:hover td {
 tr.table-cancelled:hover td {
     background-color: #ffe5e5 !important;
 }
+
+/* เพิ่ม CSS นี้ไว้ใน style.css หรือใส่ในแท็ก <style> ในไฟล์ base.html */
+
+/* Sidebar Active Item Styling */
+#sidebar ul li.active > a {
+    color: #fff;
+    background: #EC523E;
+}
+
+#sidebar ul li > a:hover {
+    color: #fff;
+    background: #d64632;
+    transition: all 0.3s;
+}
+
+/* Sidebar Regular Links */
+#sidebar ul li a {
+    padding: 10px 20px;
+    font-size: 16px;
+    display: block;
+    color: #fff;
+    text-decoration: none;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+/* Sidebar Active Link Special Border */
+#sidebar ul li.active > a {
+    border-left: 4px solid #FF7F50;
+}
+
+/* Make sure dropdown items are properly styled */
+#sidebar ul ul a {
+    padding-left: 40px !important;
+    background: #2c3135;
+    font-size: 15px !important;
+}
+
+/* Dropdown item hover effect */
+#sidebar ul ul a:hover {
+    background: #242729;
+}
+
+/* Dropdown active item */
+#sidebar ul ul li.active a {
+    background: #EC523E;
+    border-left: 4px solid #FF7F50;
+}
+
+/* Icon styling */
+#sidebar ul li a i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Make dropdown toggle have a different color when active */
+#sidebar ul li.active a.dropdown-toggle {
+    background: #EC523E;
+}
+
+/* Smooth transitions for all hover and active states */
+#sidebar ul li a,
+#sidebar ul li.active > a,
+#sidebar ul li a:hover,
+#sidebar ul li a:focus {
+    transition: all 0.3s;
+}

@@ -2,14 +2,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from app.models import db, Category, InviteToken, Transaction, ImportHistory , User , Company, BankAccount
+from app.models import db, Category, InviteToken, Transaction, ImportHistory, User, Company, BankAccount, UserCompany
 from app.forms import CompanySettingsForm, CategoryForm
 import os
 import uuid
-from datetime import date, datetime  # เพิ่ม datetime ตรงนี้
-import pytz  # ต้องเพิ่ม pytz ด้วยเพื่อใช้งาน bangkok_tz
+from datetime import date, datetime
+import pytz
 from app.routes.auth import create_default_categories, create_default_bank_account
-
 
 bangkok_tz = pytz.timezone('Asia/Bangkok')
 settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
@@ -18,20 +17,33 @@ settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
 @settings_bp.route('/company', methods=['GET', 'POST'])
 @login_required
 def company():
-    form = CompanySettingsForm(obj=current_user)
+    # ดึงบริษัทที่ active จาก UserCompany
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if not active_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    company = active_company.company
+
+    # สร้าง form พร้อมข้อมูลบริษัท
+    form = CompanySettingsForm(obj=company)
 
     if form.validate_on_submit():
-        current_user.company_name = form.company_name.data
-        current_user.company_address = form.company_address.data
-        current_user.tax_id = form.tax_id.data
+        company.name = form.company_name.data
+        company.address = form.company_address.data
+        company.tax_id = form.tax_id.data
 
         # Handle logo upload
         if form.logo.data:
             file = form.logo.data
             if file and allowed_file(file.filename):
                 # Delete old logo
-                if current_user.logo_path:
-                    old_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'logo', current_user.logo_path)
+                if company.logo_path:
+                    old_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'logo', company.logo_path)
                     if os.path.exists(old_path):
                         os.remove(old_path)
 
@@ -40,19 +52,29 @@ def company():
                 unique_filename = f"{uuid.uuid4()}_{filename}"
                 filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], 'logo', unique_filename)
                 file.save(filepath)
-                current_user.logo_path = unique_filename
+                company.logo_path = unique_filename
 
         db.session.commit()
         flash('บันทึกข้อมูลเรียบร้อยแล้ว', 'success')
         return redirect(url_for('settings.company'))
 
-    return render_template('settings/company.html', form=form)
+    return render_template('settings/company.html', form=form, company=company)
 
 
 @settings_bp.route('/categories')
 @login_required
 def categories():
-    categories = Category.query.filter_by(user_id=current_user.id).all()
+    # อาจต้องแก้ไขจาก user_id เป็น company_id
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if not active_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    categories = Category.query.filter_by(company_id=active_company.company_id).all()
     return render_template('settings/categories.html', categories=categories)
 
 
@@ -62,11 +84,22 @@ def add_category():
     form = CategoryForm()
 
     if form.validate_on_submit():
+        # ดึงบริษัทที่ active
+        active_company = UserCompany.query.filter_by(
+            user_id=current_user.id,
+            active_company=True
+        ).first()
+
+        if not active_company:
+            flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+            return redirect(url_for('main.dashboard'))
+
         category = Category(
             name=form.name.data,
             type=form.type.data,
             keywords=form.keywords.data,
-            user_id=current_user.id
+            user_id=current_user.id,
+            company_id=active_company.company_id
         )
         db.session.add(category)
         db.session.commit()
@@ -87,27 +120,21 @@ def profile():
 @login_required
 def create_invite():
     """สร้างคำเชิญใหม่และส่งคืน URL (ใช้กับ AJAX)"""
-    # ตรวจสอบว่ามี company_id หรือไม่
-    if not current_user.company_id:
-        # ถ้าไม่มี ให้สร้างบริษัทใหม่
-        company = Company(
-            name=f"บริษัทของ {current_user.name or 'ผู้ใช้ใหม่'}",
-            created_at=datetime.now(bangkok_tz),
-            owner_id=current_user.id
-        )
-        db.session.add(company)
-        db.session.commit()
+    # ดึงบริษัทที่ active
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
 
-        # อัปเดตผู้ใช้ให้มี company_id
-        current_user.company_id = company.id
-        db.session.commit()
+    if not active_company:
+        return jsonify({'success': False, 'error': 'ไม่พบบริษัทที่ใช้งานอยู่'})
 
     # สร้าง token ใหม่
     token = str(uuid.uuid4())
     invite = InviteToken(
         token=token,
         created_by=current_user.id,
-        company_id=current_user.company_id
+        company_id=active_company.company_id
     )
     db.session.add(invite)
     db.session.commit()
@@ -127,10 +154,20 @@ def create_invite():
 @login_required
 def cancel_invite(id):
     """ยกเลิกคำเชิญที่ยังไม่ได้ใช้"""
+    # ดึงบริษัทที่ active
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if not active_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
     # ตรวจสอบว่าคำเชิญอยู่ในบริษัทของผู้ใช้หรือไม่
     invite = InviteToken.query.filter_by(
         id=id,
-        company_id=current_user.company_id,
+        company_id=active_company.company_id,
         used=False
     ).first_or_404()
 
@@ -141,30 +178,26 @@ def cancel_invite(id):
     flash('ยกเลิกคำเชิญเรียบร้อยแล้ว', 'success')
     return redirect(url_for('settings.company_members'))
 
+
 @settings_bp.route('/invite')
 @login_required
 def invite():
-    # ตรวจสอบว่ามี company_id หรือไม่
-    if not current_user.company_id:
-        # ถ้าไม่มี ให้สร้างบริษัทใหม่
-        company = Company(
-            name=f"บริษัทของ {current_user.name or 'ผู้ใช้ใหม่'}",
-            created_at=datetime.now(bangkok_tz),
-            owner_id=current_user.id
-        )
-        db.session.add(company)
-        db.session.commit()
+    # ดึงบริษัทที่ active
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
 
-        # อัปเดตผู้ใช้ให้มี company_id
-        current_user.company_id = company.id
-        db.session.commit()
+    if not active_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
 
     # Generate invite link
     token = str(uuid.uuid4())
     invite = InviteToken(
         token=token,
         created_by=current_user.id,
-        company_id=current_user.company_id
+        company_id=active_company.company_id
     )
     db.session.add(invite)
     db.session.commit()
@@ -184,52 +217,54 @@ def allowed_file(filename):
 @settings_bp.route('/clear-data', methods=['GET', 'POST'])
 @login_required
 def clear_data():
+    # ดึงบริษัทที่ active
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if not active_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    company_id = active_company.company_id
+
     if request.method == 'POST':
         # ตรวจสอบการยืนยัน
         confirm_text = request.form.get('confirm_text', '')
         if confirm_text.lower() == 'ลบข้อมูลทั้งหมด':
             try:
-                # ลบ transactions ทั้งหมดของผู้ใช้
-                transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+                # ลบ transactions ทั้งหมดของบริษัท
+                transactions = Transaction.query.filter_by(company_id=company_id).all()
                 for transaction in transactions:
                     db.session.delete(transaction)
 
-                # ลบ import history ทั้งหมดของผู้ใช้
-                import_histories = ImportHistory.query.filter_by(user_id=current_user.id).all()
+                # ลบ import history ทั้งหมดของบริษัท
+                import_histories = ImportHistory.query.filter_by(company_id=company_id).all()
                 for history in import_histories:
                     db.session.delete(history)
 
                 # ลบหมวดหมู่เก่าทั้งหมด
-                categories = Category.query.filter_by(user_id=current_user.id).all()
+                categories = Category.query.filter_by(company_id=company_id).all()
                 for category in categories:
                     db.session.delete(category)
 
                 # ลบบัญชีธนาคารทั้งหมด
-                bank_accounts = BankAccount.query.filter_by(user_id=current_user.id).all()
+                bank_accounts = BankAccount.query.filter_by(company_id=company_id).all()
                 for account in bank_accounts:
                     db.session.delete(account)
 
-                # อัปเดตข้อมูลบริษัท (หรือสร้างใหม่ถ้ายังไม่มี)
-                if current_user.company_id:
-                    company = Company.query.get(current_user.company_id)
-                    company.name = "Amp Tech Co.,Ltd"
-                else:
-                    company = Company(
-                        name="Amp Tech Co.,Ltd",
-                        created_at=datetime.now(bangkok_tz),
-                        owner_id=current_user.id
-                    )
-                    db.session.add(company)
-                    db.session.commit()
-                    current_user.company_id = company.id
+                # อัปเดตข้อมูลบริษัท
+                company = Company.query.get(company_id)
+                company.name = "Amp Tech Co.,Ltd"
 
                 db.session.commit()
 
                 # สร้างหมวดหมู่ค่าเริ่มต้นใหม่
-                create_default_categories(current_user.id, current_user.company_id)
+                create_default_categories(current_user.id, company_id)
 
                 # สร้างบัญชีธนาคารเริ่มต้นใหม่
-                create_default_bank_account(current_user.id, current_user.company_id)
+                create_default_bank_account(current_user.id, company_id)
 
                 flash('ลบข้อมูลทั้งหมดเรียบร้อยแล้ว', 'success')
                 return redirect(url_for('main.dashboard'))
@@ -240,8 +275,8 @@ def clear_data():
             flash('กรุณาพิมพ์ข้อความยืนยันให้ถูกต้อง', 'error')
 
     # นับจำนวนข้อมูลเพื่อแสดงให้ผู้ใช้เห็น
-    transaction_count = Transaction.query.filter_by(user_id=current_user.id).count()
-    import_count = ImportHistory.query.filter_by(user_id=current_user.id).count()
+    transaction_count = Transaction.query.filter_by(company_id=company_id).count()
+    import_count = ImportHistory.query.filter_by(company_id=company_id).count()
 
     return render_template('settings/clear_data.html',
                            transaction_count=transaction_count,
@@ -251,10 +286,20 @@ def clear_data():
 @settings_bp.route('/categories/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_category(id):
+    # ดึงบริษัทที่ active
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if not active_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
     category = Category.query.get_or_404(id)
 
-    # ตรวจสอบว่าเป็นหมวดหมู่ของผู้ใช้หรือไม่
-    if category.user_id != current_user.id:
+    # ตรวจสอบว่าเป็นหมวดหมู่ของบริษัทหรือไม่
+    if category.company_id != active_company.company_id:
         flash('คุณไม่มีสิทธิ์แก้ไขหมวดหมู่นี้', 'error')
         return redirect(url_for('settings.categories'))
 
@@ -275,10 +320,20 @@ def edit_category(id):
 @settings_bp.route('/categories/delete/<int:id>')
 @login_required
 def delete_category(id):
+    # ดึงบริษัทที่ active
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if not active_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
     category = Category.query.get_or_404(id)
 
-    # ตรวจสอบว่าเป็นหมวดหมู่ของผู้ใช้หรือไม่
-    if category.user_id != current_user.id:
+    # ตรวจสอบว่าเป็นหมวดหมู่ของบริษัทหรือไม่
+    if category.company_id != active_company.company_id:
         flash('คุณไม่มีสิทธิ์ลบหมวดหมู่นี้', 'error')
         return redirect(url_for('settings.categories'))
 
@@ -344,30 +399,25 @@ from datetime import date
 @login_required
 def company_members():
     """แสดงหน้าจัดการผู้ใช้"""
-    # ตรวจสอบว่ามี company_id หรือไม่
-    if not current_user.company_id:
-        # ถ้าไม่มี ให้สร้างบริษัทใหม่
-        company = Company(
-            name=f"บริษัทของ {current_user.name or 'ผู้ใช้ใหม่'}",
-            created_at=datetime.now(bangkok_tz),
-            owner_id=current_user.id
-        )
-        db.session.add(company)
-        db.session.commit()
+    # ดึงบริษัทที่ active
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
 
-        # อัปเดตผู้ใช้ให้มี company_id
-        current_user.company_id = company.id
-        db.session.commit()
-    else:
-        # ถ้ามี company_id ให้ดึงข้อมูลบริษัท
-        company = Company.query.get(current_user.company_id)
+    if not active_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    company = Company.query.get(active_company.company_id)
 
     # ดึงข้อมูลสมาชิกในบริษัท
-    members = User.query.filter_by(company_id=current_user.company_id).all()
+    user_companies = UserCompany.query.filter_by(company_id=company.id).all()
+    members = [uc.user for uc in user_companies]
 
     # ดึงข้อมูลคำเชิญที่ยังไม่ได้ใช้
     pending_invites = InviteToken.query.filter_by(
-        company_id=current_user.company_id,
+        company_id=company.id,
         used=False
     ).order_by(InviteToken.created_at.desc()).all()
 
@@ -380,10 +430,20 @@ def company_members():
 @settings_bp.route('/remove_member/<int:id>')
 @login_required
 def remove_member(id):
-    # ตรวจสอบว่าผู้ใช้ปัจจุบันเป็นเจ้าของบริษัทหรือไม่
-    company = Company.query.get(current_user.company_id)
+    # ดึงบริษัทที่ active
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
 
-    if not company or company.owner_id != current_user.id:
+    if not active_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    company = Company.query.get(active_company.company_id)
+
+    # ตรวจสอบว่าผู้ใช้ปัจจุบันเป็นเจ้าของบริษัทหรือไม่
+    if company.owner_id != current_user.id:
         flash('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error')
         return redirect(url_for('settings.company_members'))
 
@@ -392,12 +452,14 @@ def remove_member(id):
         flash('คุณไม่สามารถลบตัวเองได้', 'error')
         return redirect(url_for('settings.company_members'))
 
-    # ค้นหาผู้ใช้ที่ต้องการลบ
-    user = User.query.filter_by(id=id, company_id=current_user.company_id).first()
+    # ค้นหาความสัมพันธ์ระหว่างผู้ใช้กับบริษัท
+    user_company = UserCompany.query.filter_by(
+        user_id=id,
+        company_id=company.id
+    ).first_or_404()
 
-    if not user:
-        flash('ไม่พบผู้ใช้ในบริษัทนี้', 'error')
-        return redirect(url_for('settings.company_members'))
+    # ดึงข้อมูลผู้ใช้
+    user = User.query.get(id)
 
     # สร้างบริษัทใหม่สำหรับผู้ใช้ที่ถูกลบ
     new_company = Company(
@@ -408,8 +470,17 @@ def remove_member(id):
     db.session.add(new_company)
     db.session.commit()
 
-    # ย้ายผู้ใช้ไปยังบริษัทใหม่
-    user.company_id = new_company.id
+    # ลบความสัมพันธ์เดิม
+    db.session.delete(user_company)
+
+    # สร้างความสัมพันธ์ใหม่กับบริษัทใหม่
+    new_user_company = UserCompany(
+        user_id=id,
+        company_id=new_company.id,
+        is_admin=True,
+        active_company=True
+    )
+    db.session.add(new_user_company)
     db.session.commit()
 
     flash(f'ลบ {user.name} ออกจากบริษัทเรียบร้อยแล้ว', 'success')
@@ -420,24 +491,41 @@ def remove_member(id):
 @settings_bp.route('/toggle_admin/<int:id>')
 @login_required
 def toggle_admin(id):
-    # ตรวจสอบว่าผู้ใช้ปัจจุบันเป็นเจ้าของบริษัทหรือไม่
-    company = Company.query.get(current_user.company_id)
+    # ดึงบริษัทที่ active
+    active_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
 
-    if not company or company.owner_id != current_user.id:
+    if not active_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    company = Company.query.get(active_company.company_id)
+
+    # ตรวจสอบว่าผู้ใช้ปัจจุบันเป็นเจ้าของบริษัทหรือไม่
+    if company.owner_id != current_user.id:
         flash('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error')
         return redirect(url_for('settings.company_members'))
 
-    # ค้นหาผู้ใช้ที่ต้องการแก้ไข
-    user = User.query.filter_by(id=id, company_id=current_user.company_id).first()
+    # ค้นหาความสัมพันธ์ระหว่างผู้ใช้กับบริษัท
+    user_company = UserCompany.query.filter_by(
+        user_id=id,
+        company_id=company.id
+    ).first_or_404()
 
-    if not user:
+    if not user_company:
         flash('ไม่พบผู้ใช้ในบริษัทนี้', 'error')
         return redirect(url_for('settings.company_members'))
 
-    # สลับสถานะแอดมิน (ต้องเพิ่มฟิลด์ is_admin ในตาราง User ก่อน)
-    # user.is_admin = not user.is_admin
-    # db.session.commit()
+    # สลับสถานะแอดมิน
+    user_company.is_admin = not user_company.is_admin
+    db.session.commit()
 
-    # flash(f'{"ตั้ง" if user.is_admin else "ถอดถอน"} {user.name} {"เป็น" if user.is_admin else "จาก"}แอดมินเรียบร้อยแล้ว', 'success')
-    flash('ฟีเจอร์นี้ยังไม่เปิดให้ใช้งาน', 'info')
+    # ดึงข้อมูลผู้ใช้
+    user = User.query.get(id)
+
+    flash(
+        f'{"ตั้ง" if user_company.is_admin else "ถอดถอน"} {user.name} {"เป็น" if user_company.is_admin else "จาก"}แอดมินเรียบร้อยแล้ว',
+        'success')
     return redirect(url_for('settings.company_members'))

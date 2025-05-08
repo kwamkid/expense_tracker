@@ -169,7 +169,7 @@ def select_company():
             company = Company(
                 name=company_name,
                 created_at=datetime.now(bangkok_tz),
-                owner_id=current_user.id
+                owner_id=current_user.id,
             )
             db.session.add(company)
             db.session.commit()
@@ -190,8 +190,7 @@ def select_company():
 
             flash(f'สร้างบริษัท {company.name} เรียบร้อยแล้ว', 'success')
             return redirect(url_for('main.dashboard'))
-
-    return render_template('auth/select_company.html', user_companies=user_companies)
+    return render_template('auth/select_company.html', user_companies=user_companies, is_select_company_page=True)
 
 
 @auth_bp.route('/logout')

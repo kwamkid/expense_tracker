@@ -3,53 +3,282 @@
 {% block title %}เลือกบริษัท - {{ super() }}{% endblock %}
 
 {% block main_content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">เลือกบริษัทหรือสร้างบริษัทใหม่</h4>
-                </div>
-                <div class="card-body">
-                    {% if user_companies %}
-                    <div class="mb-4">
-                        <h5>บริษัทของคุณ</h5>
-                        <div class="list-group">
-                            {% for uc in user_companies %}
-                            <form method="POST" class="mb-2">
-                                <input type="hidden" name="company_id" value="{{ uc.company.id }}">
-                                <button type="submit" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-0">{{ uc.company.name }}</h6>
-                                        <small class="text-muted">เข้าร่วมเมื่อ: {{ uc.joined_at.strftime('%d/%m/%Y') }}</small>
-                                    </div>
-                                    {% if uc.is_admin %}
-                                    <span class="badge bg-primary rounded-pill">แอดมิน</span>
-                                    {% endif %}
-                                </button>
-                            </form>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>คุณยังไม่มีบริษัท กรุณาสร้างบริษัทใหม่
-                    </div>
-                    {% endif %}
+<div class="simple-login-page">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-10 col-lg-8">
+                <div class="login-card shadow">
+                    <div class="row g-0">
+                        <!-- Left Panel - White -->
+                        <div class="col-md-7">
+                            <div class="login-form p-4 p-md-5">
+                                <div class="text-center mb-4">
+                                    <h2 class="fw-bold">เลือกบริษัท</h2>
+                                    <p class="text-muted">ระบบบันทึกรายรับรายจ่ายอย่างง่าย</p>
+                                </div>
 
-                    <h5 class="mt-4">สร้างบริษัทใหม่</h5>
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="newCompany" class="form-label">ชื่อบริษัท</label>
-                            <input type="text" class="form-control" id="newCompany" name="new_company_name" placeholder="ชื่อบริษัทใหม่" required>
+                                {% if user_companies %}
+                                <div class="mb-4">
+                                    <div class="company-list">
+                                        {% for uc in user_companies %}
+                                        <form method="POST" class="mb-2">
+                                            <input type="hidden" name="company_id" value="{{ uc.company.id }}">
+                                            <button type="submit" class="company-item w-100 text-start p-3 rounded border">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-0">{{ uc.company.name }}</h6>
+                                                        <small class="text-muted">เข้าร่วมเมื่อ: {{ uc.joined_at.strftime('%d/%m/%Y') }}</small>
+                                                    </div>
+                                                    {% if uc.is_admin %}
+                                                    <span class="badge bg-primary rounded-pill">แอดมิน</span>
+                                                    {% endif %}
+                                                </div>
+                                            </button>
+                                        </form>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <div class="divider">
+                                    <span>หรือสร้างบริษัทใหม่</span>
+                                </div>
+
+                                <div class="new-company-section mt-4">
+                                    <form method="POST">
+                                        <div class="mb-3">
+                                            <input type="text" class="form-control" id="newCompany" name="new_company_name" placeholder="ชื่อบริษัทใหม่" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="fas fa-plus-circle me-2"></i>สร้างบริษัทใหม่
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <p class="text-center mt-4 text-muted small mb-0">
+                                    © {{ current_year }} Amp Tech - Expense Tracker
+                                </p>
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-success w-100">
-                            <i class="fas fa-plus-circle me-2"></i>สร้างบริษัทใหม่
-                        </button>
-                    </form>
+
+                        <!-- Right Panel - Red -->
+                        <div class="col-md-5 d-none d-md-block">
+                            <div class="login-image">
+                                <div class="image-content">
+                                    <i class="fas fa-chart-line fa-4x text-white mb-4"></i>
+                                    <h3 class="text-white">จัดการการเงิน<br>อย่างชาญฉลาด</h3>
+                                    <p class="text-white-50">บันทึกรายรับรายจ่าย วิเคราะห์<br>ข้อมูล วางแผนการเงิน</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Background decoration -->
+    <div class="background-decoration">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
 </div>
+
+<style>
+/* Reset for full-screen background */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+/* Remove any default margins/padding from base template */
+body {
+    background: none !important;
+}
+
+/* Simple Login Page Styles */
+.simple-login-page {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+    min-height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 9999; /* ค่า z-index สูงเพื่อให้อยู่เหนือทุกสิ่ง */
+}
+
+/* Container standard width */
+.simple-login-page .container {
+    max-width: 1140px;
+}
+
+.login-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease-out;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1) !important;
+}
+
+.login-form {
+    position: relative;
+    z-index: 2;
+}
+
+.login-form h2 {
+    color: #2d3436;
+    font-size: 2rem;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 25px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.divider span {
+    padding: 0 15px;
+    color: #757575;
+    font-size: 0.9rem;
+}
+
+.login-image {
+    background: #EC523E;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    position: relative;
+}
+
+.image-content {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+/* Company List Styling */
+.company-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.company-item {
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.company-item:hover {
+    background-color: #f1f1f1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    border-color: #EC523E !important;
+}
+
+/* Background decoration */
+.background-decoration {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.circle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(236, 82, 62, 0.1);
+}
+
+.circle-1 {
+    width: 300px;
+    height: 300px;
+    top: -150px;
+    left: -150px;
+}
+
+.circle-2 {
+    width: 200px;
+    height: 200px;
+    bottom: -100px;
+    right: -100px;
+}
+
+.circle-3 {
+    width: 150px;
+    height: 150px;
+    top: 50%;
+    right: 10%;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .simple-login-page {
+        position: relative;
+        overflow-y: auto;
+        padding: 0 20px 0 20px;
+    }
+
+    .login-card {
+        margin: 1rem 0;
+        border-radius: 10px;
+    }
+
+    .login-form {
+        padding: 1.5rem !important;
+    }
+
+    .login-form h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .login-form p {
+        font-size: 0.9rem;
+        margin-bottom: 1rem !important;
+    }
+
+    .divider {
+        margin: 1.5rem 0;
+    }
+
+    hr {
+        margin: 1rem 0 !important;
+    }
+
+    .container {
+        --bs-gutter-x : 0!important;
+    }
+}
+</style>
 {% endblock %}

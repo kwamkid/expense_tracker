@@ -18,89 +18,118 @@
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
+    <style>
+        /* Override sidebar active styles */
+        #sidebar ul li > a {
+            border-left: 4px solid transparent;
+        }
+
+        #sidebar ul li > a:hover {
+            background: #495057;
+            border-left: 4px solid #FF7F50;
+        }
+
+        /* ยกเลิกการไฮไลท์เมนูหลัก */
+        #sidebar > ul > li.active > a.dropdown-toggle {
+            background: transparent;
+            border-left: 4px solid transparent;
+        }
+
+        /* เฉพาะเมนูที่ active จริงๆ เท่านั้นที่จะไฮไลท์ */
+        #sidebar ul li.active > a:not(.dropdown-toggle),
+        #sidebar ul ul li.active > a {
+            background: #EC523E;
+            border-left: 4px solid #FF7F50;
+        }
+
+        /* Sidebar header logo */
+        #sidebar .sidebar-header .logo-img {
+            max-width: 150px;
+            max-height: 100px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    {% if current_user.is_authenticated %}
+    {% if current_user.is_authenticated and not is_select_company_page %}
     <div class="wrapper">
         <!-- Sidebar -->
         <nav id="sidebar">
             <div class="sidebar-header">
-                {% if current_user.logo_path %}
+                {% if get_active_company() and get_active_company().logo_path %}
+                <img src="{{ url_for('static', filename='uploads/logo/' + get_active_company().logo_path) }}" class="logo-img" alt="Logo">
+                {% elif current_user.logo_path %}
                 <img src="{{ url_for('static', filename='uploads/logo/' + current_user.logo_path) }}" class="logo-img" alt="Logo">
                 {% else %}
-                <h3>{{ current_user.company_name or 'Expense Tracker' }}</h3>
+                <h3>{{ get_active_company().name if get_active_company() else 'Expense Tracker' }}</h3>
                 {% endif %}
             </div>
 
-            <!-- แก้ไขส่วนเมนูด้านซ้ายในไฟล์ app/templates/base.html -->
-
-<!-- แก้ไขส่วนเมนูด้านซ้ายในไฟล์ app/templates/base.html -->
-
+            <!-- ส่วนของ Sidebar Menu ใน base.html -->
 <ul class="list-unstyled components">
-    <li class="{{ 'active' if request.endpoint == 'main.dashboard' }}">
+    <li class="{{ 'active' if request.endpoint == 'main.dashboard' else '' }}">
         <a href="{{ url_for('main.dashboard') }}">
             <i class="fas fa-tachometer-alt"></i> Dashboard
         </a>
     </li>
-    <li class="{{ 'active' if request.endpoint.startswith('transactions') or request.endpoint.startswith('imports') }}">
+    <li>
         <a href="#transactionsSubMenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if request.endpoint.startswith('transactions') or request.endpoint.startswith('imports') else 'false' }}" class="dropdown-toggle">
             <i class="fas fa-exchange-alt"></i> ธุรกรรม
         </a>
         <ul class="collapse {{ 'show' if request.endpoint.startswith('transactions') or request.endpoint.startswith('imports') else '' }} list-unstyled" id="transactionsSubMenu">
-            <li class="{{ 'active' if request.endpoint == 'transactions.index' }}">
+            <li class="{{ 'active' if request.endpoint == 'transactions.index' else '' }}">
                 <a href="{{ url_for('transactions.index') }}">
                     <i class="fas fa-list"></i> รายการธุรกรรม
                 </a>
             </li>
-            <li class="{{ 'active' if request.endpoint == 'transactions.add' }}">
+            <li class="{{ 'active' if request.endpoint == 'transactions.add' else '' }}">
                 <a href="{{ url_for('transactions.add') }}">
                     <i class="fas fa-plus"></i> เพิ่มธุรกรรม
                 </a>
             </li>
-            <li class="{{ 'active' if request.endpoint == 'imports.upload' }}">
+            <li class="{{ 'active' if request.endpoint == 'imports.upload' else '' }}">
                 <a href="{{ url_for('imports.upload') }}">
                     <i class="fas fa-file-import"></i> นำเข้าข้อมูล
                 </a>
             </li>
-            <li class="{{ 'active' if request.endpoint == 'imports.history' }}">
+            <li class="{{ 'active' if request.endpoint == 'imports.history' else '' }}">
                 <a href="{{ url_for('imports.history') }}">
                     <i class="fas fa-history"></i> ประวัติการนำเข้า
                 </a>
             </li>
         </ul>
     </li>
-    <li class="{{ 'active' if request.endpoint == 'main.reports' }}">
+    <li class="{{ 'active' if request.endpoint == 'main.reports' else '' }}">
         <a href="{{ url_for('main.reports') }}">
             <i class="fas fa-chart-bar"></i> รายงาน
         </a>
     </li>
-    <li class="{{ 'active' if request.endpoint.startswith('settings') or request.endpoint.startswith('bank_accounts') }}">
-        <a href="#settingsSubMenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if request.endpoint.startswith('settings') or request.endpoint.startswith('bank_accounts') else 'false' }}" class="dropdown-toggle">
+    <!-- ส่วนของเมนูตั้งค่า -->
+    <li>
+        <a href="#settingsSubMenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if request.endpoint and (request.endpoint.startswith('settings') or request.endpoint.startswith('bank_accounts')) and not (request.endpoint == 'bank_accounts.index') else 'false' }}" class="dropdown-toggle">
             <i class="fas fa-cog"></i> ตั้งค่า
         </a>
-        <ul class="collapse {{ 'show' if request.endpoint.startswith('settings') or request.endpoint.startswith('bank_accounts') else '' }} list-unstyled" id="settingsSubMenu">
-            <li class="{{ 'active' if request.endpoint == 'settings.company' }}">
+        <ul class="collapse {{ 'show' if request.endpoint and (request.endpoint.startswith('settings') or request.endpoint.startswith('bank_accounts')) and not (request.endpoint == 'bank_accounts.index') else '' }} list-unstyled" id="settingsSubMenu">
+            <li class="{{ 'active' if request.endpoint == 'settings.company' else '' }}">
                 <a href="{{ url_for('settings.company') }}">
                     <i class="fas fa-building"></i> ข้อมูลบริษัท
                 </a>
             </li>
-            <li class="{{ 'active' if request.endpoint == 'settings.company_members' }}">
+            <li class="{{ 'active' if request.endpoint == 'settings.company_members' else '' }}">
                 <a href="{{ url_for('settings.company_members') }}">
                     <i class="fas fa-users"></i> จัดการผู้ใช้
                 </a>
             </li>
-            <li class="{{ 'active' if request.endpoint.startswith('bank_accounts') }}">
-                <a href="{{ url_for('bank_accounts.index') }}">
-                    <i class="fas fa-university"></i> บัญชีธนาคาร
-                </a>
-            </li>
-            <li class="{{ 'active' if request.endpoint == 'settings.categories' }}">
+            <li class="{{ 'active' if request.endpoint == 'settings.categories' else '' }}">
                 <a href="{{ url_for('settings.categories') }}">
                     <i class="fas fa-tags"></i> หมวดหมู่
                 </a>
             </li>
-            <li class="{{ 'active' if request.endpoint == 'settings.clear_data' }}">
+            <li class="{{ 'active' if request.endpoint == 'settings.clear_data' else '' }}">
                 <a href="{{ url_for('settings.clear_data') }}">
                     <i class="fas fa-trash-alt"></i> ล้างข้อมูลทั้งหมด
                 </a>
@@ -108,9 +137,16 @@
         </ul>
     </li>
 
+    <!-- เมนูบัญชีธนาคาร แยกออกมาต่างหาก -->
+    <li class="{{ 'active' if request.endpoint == 'bank_accounts.index' else '' }}">
+        <a href="{{ url_for('bank_accounts.index') }}">
+            <i class="fas fa-university"></i> บัญชีธนาคาร
+        </a>
+    </li>
+
     <!-- เพิ่มเมนูสำหรับเปลี่ยนบริษัท -->
     {% if current_user.user_companies|length > 1 %}
-    <li class="{{ 'active' if request.endpoint == 'auth.select_company' }}">
+    <li class="{{ 'active' if request.endpoint == 'auth.select_company' else '' }}">
         <a href="{{ url_for('auth.select_company') }}">
             <i class="fas fa-exchange-alt"></i> เปลี่ยนบริษัท
         </a>
@@ -121,36 +157,36 @@
 
         <!-- Page Content -->
         <div id="content">
-          <!-- Top Bar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light topbar">
-    <div class="container-fluid">
-        <button type="button" id="sidebarCollapse" class="btn btn-link text-primary p-0">
-            <i class="fas fa-bars fa-lg"></i>
-        </button>
+            <!-- Top Bar -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light topbar">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-link text-primary p-0">
+                        <i class="fas fa-bars fa-lg"></i>
+                    </button>
 
-        <div class="ms-auto">
-            <div class="dropdown">
-                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                    {% if current_user.picture_url %}
-                    <img src="{{ current_user.picture_url }}" class="rounded-circle profile-img me-2" alt="Profile">
-                    {% else %}
-                    <i class="fas fa-user-circle fa-2x me-2"></i>
-                    {% endif %}
-                    <span class="d-none d-md-inline">{{ current_user.name }}</span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="{{ url_for('settings.profile') }}">
-                        <i class="fas fa-user me-2"></i>โปรไฟล์
-                    </a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                        <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
-                    </a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</nav>
+                    <div class="ms-auto">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                {% if current_user.picture_url %}
+                                <img src="{{ current_user.picture_url }}" class="rounded-circle profile-img me-2" alt="Profile">
+                                {% else %}
+                                <i class="fas fa-user-circle fa-2x me-2"></i>
+                                {% endif %}
+                                <span class="d-none d-md-inline">{{ current_user.name }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('settings.profile') }}">
+                                    <i class="fas fa-user me-2"></i>โปรไฟล์
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
 
             <!-- Main Content -->
             <div class="container-fluid">
@@ -170,7 +206,7 @@
         </div>
     </div>
     {% else %}
-    <!-- Content for non-authenticated users -->
+    <!-- Content for non-authenticated users or select_company page -->
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
