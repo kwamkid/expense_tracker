@@ -2,7 +2,8 @@
 import pandas as pd
 from datetime import datetime, time
 import re
-
+import os
+import traceback
 
 class BankImportService:
     def __init__(self, bank_type):
@@ -24,8 +25,18 @@ class BankImportService:
     def _parse_scb(self, filepath):
         """Parse SCB Excel file - รองรับโครงสร้างไฟล์ SCB จริง"""
         try:
+            # Check if file exists
+            if not os.path.exists(filepath):
+                print(f"ERROR: File does not exist: {filepath}")
+                raise ValueError(f"ไม่พบไฟล์: {filepath}")
+
             # อ่านไฟล์ Excel
-            df = pd.read_excel(filepath)
+            try:
+                df = pd.read_excel(filepath)
+            except Exception as e:
+                print(f"Error reading Excel file: {e}")
+                print(traceback.format_exc())
+                raise ValueError(f"ไม่สามารถอ่านไฟล์ Excel ได้: {str(e)}")
 
             # แสดงชื่อคอลัมน์ทั้งหมดเพื่อ debug
             print(f"Columns found: {df.columns.tolist()}")
@@ -50,6 +61,8 @@ class BankImportService:
                     column_map['description'] = col
                 elif 'note' in col_lower or 'โน๊ต' in col_lower or 'หมายเหตุ' in col_lower:
                     column_map['note'] = col
+
+            print(f"Mapped columns: {column_map}")
 
             # ตรวจสอบว่ามีคอลัมน์ที่จำเป็น
             required_columns = ['date', 'withdrawal', 'deposit']
@@ -199,7 +212,6 @@ class BankImportService:
             return transactions
 
         except Exception as e:
-            import traceback
             print(f"Error parsing SCB file: {str(e)}")
             print(traceback.format_exc())
             raise ValueError(f"เกิดข้อผิดพลาดในการอ่านไฟล์: {str(e)}")

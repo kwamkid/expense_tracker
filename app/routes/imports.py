@@ -7,8 +7,8 @@ from app.services.import_service import BankImportService
 from app.services.category_matcher import CategoryMatcher
 from app.services.balance_service import BalanceService
 import os
-import uuid
 import json
+import uuid
 from datetime import datetime
 import pytz
 
@@ -16,7 +16,11 @@ imports_bp = Blueprint('imports', __name__, url_prefix='/imports')
 bangkok_tz = pytz.timezone('Asia/Bangkok')
 
 
-# เฉพาะส่วนที่แก้ไขใน upload function ของ app/routes/imports.py
+def allowed_file(filename):
+    """Check if the file has an allowed extension"""
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in {'xlsx', 'xls'}
+
 
 @imports_bp.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -35,6 +39,8 @@ def upload():
             filename = secure_filename(file.filename)
             unique_filename = f"{uuid.uuid4()}_{filename}"
             filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+
+            # Save the file
             file.save(filepath)
 
             # เก็บชื่อไฟล์ต้นฉบับไว้ใน session
@@ -46,12 +52,17 @@ def upload():
 
             if not bank_account_id:
                 flash('กรุณาเลือกบัญชีธนาคาร', 'error')
+                # Clean up uploaded file
+                if os.path.exists(filepath):
+                    os.remove(filepath)
                 return redirect(request.url)
 
             import_service = BankImportService(bank_type)
 
             try:
+                print(f"Processing file: {file.filename}")
                 transactions_data = import_service.parse_file(filepath)
+                print(f"Successfully parsed {len(transactions_data)} transactions")
 
                 # ตรวจสอบรายการซ้ำสำหรับแต่ละรายการ
                 for item in transactions_data:
@@ -86,6 +97,9 @@ def upload():
 
                 return redirect(url_for('imports.preview'))
             except Exception as e:
+                import traceback
+                print(f"Error parsing file: {str(e)}")
+                print(traceback.format_exc())
                 flash(f'เกิดข้อผิดพลาดในการอ่านไฟล์: {str(e)}', 'error')
                 return redirect(request.url)
             finally:
@@ -100,7 +114,6 @@ def upload():
     bank_accounts = BankAccount.query.filter_by(user_id=current_user.id, is_active=True).all()
     return render_template('imports/upload.html', bank_accounts=bank_accounts)
 
-# เฉพาะส่วนที่แก้ไขใน preview function ของ app/routes/imports.py
 
 @imports_bp.route('/preview', methods=['GET', 'POST'])
 @login_required
@@ -192,7 +205,8 @@ def preview():
                         bank_account_id=bank_account_id,
                         status='completed',  # รายการที่ import มาต้องเป็น completed
                         source='import',
-                        completed_date=datetime.now(bangkok_tz)
+                        completed_date=datetime.now(bangkok_tz),
+                        company_id=current_user.company_id  # เพิ่ม company_id
                     )
                     db.session.add(transaction)
                     success_count += 1
@@ -200,6 +214,7 @@ def preview():
                 else:
                     error_count += 1
             except Exception as e:
+                print(f"Error creating transaction: {e}")
                 error_count += 1
 
         # บันทึกประวัติการ import
@@ -212,15 +227,26 @@ def preview():
                 total_amount=total_amount,
                 status='completed' if error_count == 0 else 'partial',
                 user_id=current_user.id,
-                bank_account_id=bank_account_id
+                bank_account_id=bank_account_id,
+                company_id=current_user.company_id  # เพิ่ม company_id
             )
             db.session.add(import_history)
 
-        db.session.commit()
+        try:
+            db.session.commit()
+            print(f"Successfully committed {success_count} transactions")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during commit: {e}")
+            flash(f'เกิดข้อผิดพลาดในการบันทึกข้อมูล: {str(e)}', 'error')
+            return redirect(url_for('transactions.index'))
 
         # อัพเดทยอดเงินในบัญชี
         if success_count > 0:
-            BalanceService.update_bank_balance(bank_account_id)
+            try:
+                BalanceService.update_bank_balance(bank_account_id)
+            except Exception as e:
+                print(f"Error updating bank balance: {e}")
 
         # Clean up
         if os.path.exists(temp_data_file):
@@ -300,11 +326,6 @@ def delete_import(batch_id):
 
     flash(f'ลบรายการนำเข้าจากไฟล์ {history.filename} เรียบร้อยแล้ว ({len(transactions)} รายการ)', 'success')
     return redirect(url_for('imports.history'))
-
-
-def allowed_file(filename):
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in {'xlsx', 'xls'}
 
 
 def check_duplicate_transaction(user_id, date, amount, description):

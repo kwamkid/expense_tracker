@@ -64,10 +64,16 @@ def index():
 @login_required
 def add():
     form = TransactionForm()
-    form.category_id.choices = [(c.id, c.name) for c in Category.query.filter_by(user_id=current_user.id).all()]
+
+    # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลหมวดหมู่
+    form.category_id.choices = [(c.id, c.name) for c in
+                                Category.query.filter_by(company_id=current_user.company_id).all()]
+
+    # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลบัญชีธนาคาร
     form.bank_account_id.choices = [(0, 'เลือกบัญชี')] + [(b.id, f"{b.bank_name} - {b.account_number}")
                                                           for b in
-                                                          BankAccount.query.filter_by(user_id=current_user.id).all()]
+                                                          BankAccount.query.filter_by(
+                                                              company_id=current_user.company_id).all()]
 
     if form.validate_on_submit():
         transaction = Transaction(
@@ -79,7 +85,8 @@ def add():
             category_id=form.category_id.data,
             bank_account_id=form.bank_account_id.data if form.bank_account_id.data != 0 else None,
             status=form.status.data,
-            user_id=current_user.id
+            user_id=current_user.id,
+            company_id=current_user.company_id  # เพิ่มบรรทัดนี้เพื่อกำหนด company_id
         )
 
         # ถ้าสถานะเป็น completed ให้บันทึก completed_date
@@ -91,7 +98,11 @@ def add():
 
         # อัพเดทยอดเงินถ้าสถานะเป็น completed และมีบัญชีธนาคาร
         if transaction.status == 'completed' and transaction.bank_account_id:
-            BalanceService.update_bank_balance(transaction.bank_account_id)
+            try:
+                BalanceService.update_bank_balance(transaction.bank_account_id)
+            except Exception as e:
+                print(f"Error updating bank balance: {e}")
+                flash('เพิ่มธุรกรรมสำเร็จแต่มีปัญหาในการอัพเดทยอดเงิน', 'warning')
 
         flash(f'เพิ่ม{form.type.data == "income" and "รายรับ" or "รายจ่าย"}เรียบร้อยแล้ว', 'success')
         return redirect(url_for('transactions.index'))
@@ -104,15 +115,22 @@ def add():
 def edit(id):
     transaction = Transaction.query.get_or_404(id)
 
-    if transaction.user_id != current_user.id:
+    # ตรวจสอบทั้ง user_id และ company_id
+    if transaction.user_id != current_user.id or transaction.company_id != current_user.company_id:
         flash('คุณไม่มีสิทธิ์แก้ไขรายการนี้', 'error')
         return redirect(url_for('transactions.index'))
 
     form = TransactionForm(obj=transaction)
-    form.category_id.choices = [(c.id, c.name) for c in Category.query.filter_by(user_id=current_user.id).all()]
+
+    # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลหมวดหมู่
+    form.category_id.choices = [(c.id, c.name) for c in
+                                Category.query.filter_by(company_id=current_user.company_id).all()]
+
+    # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลบัญชีธนาคาร
     form.bank_account_id.choices = [(0, 'เลือกบัญชี')] + [(b.id, f"{b.bank_name} - {b.account_number}")
                                                           for b in
-                                                          BankAccount.query.filter_by(user_id=current_user.id).all()]
+                                                          BankAccount.query.filter_by(
+                                                              company_id=current_user.company_id).all()]
 
     if form.validate_on_submit():
         old_status = transaction.status
@@ -126,6 +144,7 @@ def edit(id):
         transaction.category_id = form.category_id.data
         transaction.bank_account_id = form.bank_account_id.data if form.bank_account_id.data != 0 else None
         transaction.status = form.status.data
+        # company_id ไม่ต้องอัพเดทเพราะยังคงใช้ค่าเดิม
 
         # อัพเดท completed_date ถ้าเปลี่ยนสถานะเป็น completed
         if form.status.data == 'completed' and old_status != 'completed':
@@ -138,9 +157,17 @@ def edit(id):
         # อัพเดทยอดเงินถ้าจำเป็น
         if old_bank_account_id != transaction.bank_account_id or old_status != transaction.status:
             if old_bank_account_id:
-                BalanceService.update_bank_balance(old_bank_account_id)
+                try:
+                    BalanceService.update_bank_balance(old_bank_account_id)
+                except Exception as e:
+                    print(f"Error updating old bank balance: {e}")
+
             if transaction.bank_account_id:
-                BalanceService.update_bank_balance(transaction.bank_account_id)
+                try:
+                    BalanceService.update_bank_balance(transaction.bank_account_id)
+                except Exception as e:
+                    print(f"Error updating new bank balance: {e}")
+                    flash('แก้ไขธุรกรรมสำเร็จแต่มีปัญหาในการอัพเดทยอดเงิน', 'warning')
 
         flash('แก้ไขรายการเรียบร้อยแล้ว', 'success')
         return redirect(url_for('transactions.index'))
@@ -159,7 +186,8 @@ def edit(id):
 def delete(id):
     transaction = Transaction.query.get_or_404(id)
 
-    if transaction.user_id != current_user.id:
+    # ตรวจสอบทั้ง user_id และ company_id เพื่อความปลอดภัย
+    if transaction.user_id != current_user.id or transaction.company_id != current_user.company_id:
         flash('คุณไม่มีสิทธิ์ลบรายการนี้', 'error')
         return redirect(url_for('transactions.index'))
 
@@ -170,7 +198,11 @@ def delete(id):
 
     # อัพเดทยอดเงินถ้าจำเป็น
     if bank_account_id and transaction.status == 'completed':
-        BalanceService.update_bank_balance(bank_account_id)
+        try:
+            BalanceService.update_bank_balance(bank_account_id)
+        except Exception as e:
+            print(f"Error updating bank balance after delete: {e}")
+            flash('ลบธุรกรรมสำเร็จแต่มีปัญหาในการอัพเดทยอดเงิน', 'warning')
 
     flash('ลบรายการเรียบร้อยแล้ว', 'success')
     return redirect(url_for('transactions.index'))
@@ -182,7 +214,8 @@ def update_status(id):
     """อัพเดทสถานะ transaction แบบ AJAX"""
     transaction = Transaction.query.get_or_404(id)
 
-    if transaction.user_id != current_user.id:
+    # ตรวจสอบทั้ง user_id และ company_id
+    if transaction.user_id != current_user.id or transaction.company_id != current_user.company_id:
         return jsonify({'success': False, 'message': 'ไม่มีสิทธิ์'}), 403
 
     data = request.get_json()
@@ -195,26 +228,32 @@ def update_status(id):
     # ถ้ามีการส่ง bank_account_id มา ให้อัพเดทด้วย
     if bank_account_id:
         bank_account = BankAccount.query.get(bank_account_id)
-        if bank_account and bank_account.user_id == current_user.id:
+        if bank_account and bank_account.company_id == current_user.company_id:  # ตรวจสอบ company_id แทน user_id
             transaction.bank_account_id = bank_account_id
         else:
             return jsonify({'success': False, 'message': 'บัญชีธนาคารไม่ถูกต้อง'}), 400
 
-    success = BalanceService.update_transaction_status(transaction.id, new_status)
+    try:
+        success = BalanceService.update_transaction_status(transaction.id, new_status)
 
-    if success:
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'อัพเดทสถานะเรียบร้อย'})
-    else:
-        return jsonify({'success': False, 'message': 'เกิดข้อผิดพลาด'}), 500
+        if success:
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'อัพเดทสถานะเรียบร้อย'})
+        else:
+            return jsonify({'success': False, 'message': 'เกิดข้อผิดพลาด'}), 500
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating transaction status: {e}")
+        return jsonify({'success': False, 'message': f'เกิดข้อผิดพลาด: {str(e)}'}), 500
 
 
 @transactions_bp.route('/api/categories')
 @login_required
 def get_categories():
     transaction_type = request.args.get('type', 'expense')
+    # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลหมวดหมู่
     categories = Category.query.filter_by(
-        user_id=current_user.id,
+        company_id=current_user.company_id,
         type=transaction_type
     ).all()
 
