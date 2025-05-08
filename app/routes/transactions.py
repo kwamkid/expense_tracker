@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from app.models import db, Transaction, Category, BankAccount
+from app.models import db, Transaction, Category, BankAccount, UserCompany
 from app.forms import TransactionForm
 from app.services.balance_service import BalanceService
+from app.routes.auth import create_default_categories
 from datetime import datetime
 import pytz
 
@@ -13,6 +14,15 @@ bangkok_tz = pytz.timezone('Asia/Bangkok')
 @transactions_bp.route('/')
 @login_required
 def index():
+    # ตรวจสอบและดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
 
@@ -21,7 +31,7 @@ def index():
         per_page = 20
 
     # สร้าง query จาก company_id แทนที่จะใช้ user_id
-    query = Transaction.query.filter_by(company_id=current_user.company_id)
+    query = Transaction.query.filter_by(company_id=company_id)
 
     # Apply filters
     transaction_type = request.args.get('type')
@@ -51,8 +61,26 @@ def index():
         .paginate(page=page, per_page=per_page)
 
     # ดึงข้อมูลหมวดหมู่และบัญชีธนาคารจาก company_id เดียวกัน
-    categories = Category.query.filter_by(company_id=current_user.company_id).all()
-    bank_accounts = BankAccount.query.filter_by(company_id=current_user.company_id).all()
+    categories = Category.query.filter_by(company_id=company_id).all()
+
+    # ตรวจสอบว่ามีหมวดหมู่หรือไม่
+    if len(categories) == 0:
+        # ถ้าไม่มีหมวดหมู่ ให้ดึงข้อมูลจาก user_id แล้วย้ายไปยัง company_id
+        orphan_categories = Category.query.filter_by(user_id=current_user.id).all()
+        if orphan_categories:
+            # ย้ายหมวดหมู่ให้เชื่อมโยงกับบริษัทปัจจุบัน
+            for category in orphan_categories:
+                category.company_id = company_id
+            db.session.commit()
+            flash('พบหมวดหมู่ที่ยังไม่มีการเชื่อมโยงกับบริษัท ระบบได้ทำการย้ายข้อมูลให้อัตโนมัติแล้ว', 'success')
+            categories = Category.query.filter_by(company_id=company_id).all()
+        else:
+            # ถ้าไม่มีหมวดหมู่เลย ให้สร้างหมวดหมู่เริ่มต้น
+            create_default_categories(current_user.id, company_id)
+            flash('ระบบได้สร้างหมวดหมู่เริ่มต้นให้แล้ว', 'success')
+            categories = Category.query.filter_by(company_id=company_id).all()
+
+    bank_accounts = BankAccount.query.filter_by(company_id=company_id).all()
 
     return render_template('transactions/index.html',
                            transactions=transactions,
@@ -63,17 +91,43 @@ def index():
 @transactions_bp.route('/add', methods=['GET', 'POST'])
 @login_required
 def add():
+    # ตรวจสอบและดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
+    # ตรวจสอบว่ามีหมวดหมู่ในบริษัทนี้หรือไม่
+    categories = Category.query.filter_by(company_id=company_id).all()
+    if len(categories) == 0:
+        # ถ้าไม่มีหมวดหมู่ ให้ดึงข้อมูลจาก user_id แล้วย้ายไปยัง company_id
+        orphan_categories = Category.query.filter_by(user_id=current_user.id).all()
+        if orphan_categories:
+            # ย้ายหมวดหมู่ให้เชื่อมโยงกับบริษัทปัจจุบัน
+            for category in orphan_categories:
+                category.company_id = company_id
+            db.session.commit()
+            flash('พบหมวดหมู่ที่ยังไม่มีการเชื่อมโยงกับบริษัท ระบบได้ทำการย้ายข้อมูลให้อัตโนมัติแล้ว', 'success')
+            categories = Category.query.filter_by(company_id=company_id).all()
+        else:
+            # ถ้าไม่มีหมวดหมู่เลย ให้สร้างหมวดหมู่เริ่มต้น
+            create_default_categories(current_user.id, company_id)
+            flash('ระบบได้สร้างหมวดหมู่เริ่มต้นให้แล้ว', 'success')
+            categories = Category.query.filter_by(company_id=company_id).all()
+
     form = TransactionForm()
 
     # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลหมวดหมู่
-    form.category_id.choices = [(c.id, c.name) for c in
-                                Category.query.filter_by(company_id=current_user.company_id).all()]
+    form.category_id.choices = [(c.id, c.name) for c in categories]
 
     # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลบัญชีธนาคาร
     form.bank_account_id.choices = [(0, 'เลือกบัญชี')] + [(b.id, f"{b.bank_name} - {b.account_number}")
                                                           for b in
                                                           BankAccount.query.filter_by(
-                                                              company_id=current_user.company_id).all()]
+                                                              company_id=company_id).all()]
 
     if form.validate_on_submit():
         transaction = Transaction(
@@ -86,7 +140,7 @@ def add():
             bank_account_id=form.bank_account_id.data if form.bank_account_id.data != 0 else None,
             status=form.status.data,
             user_id=current_user.id,
-            company_id=current_user.company_id  # เพิ่มบรรทัดนี้เพื่อกำหนด company_id
+            company_id=company_id  # เพิ่มบรรทัดนี้เพื่อกำหนด company_id
         )
 
         # ถ้าสถานะเป็น completed ให้บันทึก completed_date
@@ -113,10 +167,19 @@ def add():
 @transactions_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
+    # ตรวจสอบและดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
     transaction = Transaction.query.get_or_404(id)
 
     # ตรวจสอบทั้ง user_id และ company_id
-    if transaction.user_id != current_user.id or transaction.company_id != current_user.company_id:
+    if transaction.user_id != current_user.id or transaction.company_id != company_id:
         flash('คุณไม่มีสิทธิ์แก้ไขรายการนี้', 'error')
         return redirect(url_for('transactions.index'))
 
@@ -124,13 +187,13 @@ def edit(id):
 
     # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลหมวดหมู่
     form.category_id.choices = [(c.id, c.name) for c in
-                                Category.query.filter_by(company_id=current_user.company_id).all()]
+                                Category.query.filter_by(company_id=company_id).all()]
 
     # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลบัญชีธนาคาร
     form.bank_account_id.choices = [(0, 'เลือกบัญชี')] + [(b.id, f"{b.bank_name} - {b.account_number}")
                                                           for b in
                                                           BankAccount.query.filter_by(
-                                                              company_id=current_user.company_id).all()]
+                                                              company_id=company_id).all()]
 
     if form.validate_on_submit():
         old_status = transaction.status
@@ -186,8 +249,17 @@ def edit(id):
 def delete(id):
     transaction = Transaction.query.get_or_404(id)
 
+    # ตรวจสอบและดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
     # ตรวจสอบทั้ง user_id และ company_id เพื่อความปลอดภัย
-    if transaction.user_id != current_user.id or transaction.company_id != current_user.company_id:
+    if transaction.user_id != current_user.id or transaction.company_id != company_id:
         flash('คุณไม่มีสิทธิ์ลบรายการนี้', 'error')
         return redirect(url_for('transactions.index'))
 
@@ -214,8 +286,16 @@ def update_status(id):
     """อัพเดทสถานะ transaction แบบ AJAX"""
     transaction = Transaction.query.get_or_404(id)
 
+    # ตรวจสอบและดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        return jsonify({'success': False, 'message': 'ไม่พบข้อมูลบริษัทที่ใช้งานอยู่'}), 403
+
+    company_id = user_company.company_id
+
     # ตรวจสอบทั้ง user_id และ company_id
-    if transaction.user_id != current_user.id or transaction.company_id != current_user.company_id:
+    if transaction.user_id != current_user.id or transaction.company_id != company_id:
         return jsonify({'success': False, 'message': 'ไม่มีสิทธิ์'}), 403
 
     data = request.get_json()
@@ -228,7 +308,7 @@ def update_status(id):
     # ถ้ามีการส่ง bank_account_id มา ให้อัพเดทด้วย
     if bank_account_id:
         bank_account = BankAccount.query.get(bank_account_id)
-        if bank_account and bank_account.company_id == current_user.company_id:  # ตรวจสอบ company_id แทน user_id
+        if bank_account and bank_account.company_id == company_id:  # ตรวจสอบ company_id แทน user_id
             transaction.bank_account_id = bank_account_id
         else:
             return jsonify({'success': False, 'message': 'บัญชีธนาคารไม่ถูกต้อง'}), 400
@@ -251,11 +331,39 @@ def update_status(id):
 @login_required
 def get_categories():
     transaction_type = request.args.get('type', 'expense')
+
+    # ตรวจสอบและดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        return jsonify([])
+
+    company_id = user_company.company_id
+
     # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลหมวดหมู่
     categories = Category.query.filter_by(
-        company_id=current_user.company_id,
+        company_id=company_id,
         type=transaction_type
     ).all()
+
+    # ถ้าไม่มีหมวดหมู่ ให้ตรวจสอบว่ามีข้อมูลใน user_id หรือไม่
+    if len(categories) == 0:
+        orphan_categories = Category.query.filter_by(
+            user_id=current_user.id,
+            type=transaction_type
+        ).all()
+
+        if orphan_categories:
+            # ย้ายหมวดหมู่ให้เชื่อมโยงกับบริษัทปัจจุบัน
+            for category in orphan_categories:
+                category.company_id = company_id
+            db.session.commit()
+
+            # โหลดหมวดหมู่ใหม่
+            categories = Category.query.filter_by(
+                company_id=company_id,
+                type=transaction_type
+            ).all()
 
     return jsonify([{
         'id': cat.id,

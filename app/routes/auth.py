@@ -21,6 +21,17 @@ def login():
         # Check for invite token
         invite_token = request.args.get('invite')
         if invite_token:
+            # ดึงข้อมูลบริษัทจาก invite token
+            invite = InviteToken.query.filter_by(token=invite_token, used=False).first()
+            if invite and invite.company_id:
+                company = Company.query.get(invite.company_id)
+                if company:
+                    # เก็บข้อมูลบริษัทใน session เพื่อแสดงในหน้า login
+                    session['invite_company_name'] = company.name
+                    session['invite_company_id'] = company.id
+                    if company.logo_path:
+                        session['invite_company_logo'] = company.logo_path
+
             session['invite_token'] = invite_token
 
         line_auth = LineAuth()
@@ -153,42 +164,79 @@ def select_company():
             flash(f'เลือกบริษัท {user_company.company.name} เรียบร้อยแล้ว', 'success')
             return redirect(url_for('main.dashboard'))
 
+
+        # ส่วนการสร้างบริษัทใหม่ ในฟังก์ชัน select_company
+
         elif 'new_company_name' in request.form:
+
             # สร้างบริษัทใหม่
+
             company_name = request.form.get('new_company_name')
 
             # ตรวจสอบชื่อบริษัท
+
             if not company_name or len(company_name.strip()) < 3:
                 flash('ชื่อบริษัทต้องมีความยาวอย่างน้อย 3 ตัวอักษร', 'error')
+
                 return redirect(url_for('auth.select_company'))
 
             # ปรับให้ทุกบริษัทไม่ active ก่อน
+
             UserCompany.query.filter_by(user_id=current_user.id).update({'active_company': False})
 
             # สร้างบริษัทใหม่
+
             company = Company(
+
                 name=company_name,
+
                 created_at=datetime.now(bangkok_tz),
+
                 owner_id=current_user.id,
+
             )
+
             db.session.add(company)
+
             db.session.commit()
 
             # สร้างความสัมพันธ์กับผู้ใช้
+
             user_company = UserCompany(
+
                 user_id=current_user.id,
+
                 company_id=company.id,
+
                 is_admin=True,
+
                 active_company=True
+
             )
+
             db.session.add(user_company)
+
             db.session.commit()
 
             # สร้างหมวดหมู่และบัญชีธนาคารเริ่มต้น
+
             create_default_categories(current_user.id, company.id)
+
             create_default_bank_account(current_user.id, company.id)
 
+            # เพิ่มการตรวจสอบว่าสร้างหมวดหมู่สำเร็จหรือไม่
+
+            categories = Category.query.filter_by(company_id=company.id).all()
+
+            if len(categories) == 0:
+                print("WARNING: Failed to create default categories!")
+
+                # ลองสร้างอีกครั้ง
+
+                create_default_categories(current_user.id, company.id)
+
             flash(f'สร้างบริษัท {company.name} เรียบร้อยแล้ว', 'success')
+
             return redirect(url_for('main.dashboard'))
     return render_template('auth/select_company.html', user_companies=user_companies, is_select_company_page=True)
 
@@ -203,6 +251,16 @@ def logout():
 # Helper functions
 
 def create_default_categories(user_id, company_id=None):
+    """สร้างหมวดหมู่เริ่มต้นสำหรับผู้ใช้ใหม่หรือบริษัทใหม่"""
+    print(f"Creating default categories for user_id={user_id}, company_id={company_id}")
+
+    # ตรวจสอบว่ามีหมวดหมู่อยู่แล้วหรือไม่
+    if company_id:
+        existing_categories = Category.query.filter_by(company_id=company_id).count()
+        if existing_categories > 0:
+            print(f"Already has {existing_categories} categories for company_id={company_id}")
+            return
+
     default_categories = [
         # รายรับ
         {'name': 'ค่าคอร์ส', 'type': 'income', 'keywords': 'ค่าคอร์ส,course,คอร์สเรียน'},
@@ -231,17 +289,29 @@ def create_default_categories(user_id, company_id=None):
         {'name': 'อื่นๆ', 'type': 'expense', 'keywords': ''}
     ]
 
+    # พยายามสร้างหมวดหมู่ทั้งหมด
+    created_count = 0
     for cat in default_categories:
-        category = Category(
-            name=cat['name'],
-            type=cat['type'],
-            keywords=cat['keywords'],
-            user_id=user_id,
-            company_id=company_id
-        )
-        db.session.add(category)
+        try:
+            category = Category(
+                name=cat['name'],
+                type=cat['type'],
+                keywords=cat['keywords'],
+                user_id=user_id,
+                company_id=company_id
+            )
+            db.session.add(category)
+            created_count += 1
+        except Exception as e:
+            print(f"Error creating category {cat['name']}: {e}")
+            db.session.rollback()
 
-    db.session.commit()
+    try:
+        db.session.commit()
+        print(f"Successfully created {created_count} default categories")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error committing default categories: {e}")
 
 
 def create_default_bank_account(user_id, company_id=None):
@@ -293,6 +363,13 @@ def process_invite_token(token, user_id, is_new_user=False):
                     active_company=True  # กำหนดเป็นบริษัทที่ active
                 )
                 db.session.add(user_company)
+
+                # ตรวจสอบว่าบริษัทนี้มีหมวดหมู่หรือไม่ ถ้าไม่มีให้สร้าง
+                categories = Category.query.filter_by(company_id=invite.company_id).count()
+                if categories == 0:
+                    # สร้างหมวดหมู่และบัญชีธนาคารเริ่มต้น
+                    create_default_categories(user_id, invite.company_id)
+                    create_default_bank_account(user_id, invite.company_id)
 
         db.session.commit()
         return True

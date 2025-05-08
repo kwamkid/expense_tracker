@@ -64,48 +64,60 @@ def company():
 @settings_bp.route('/categories')
 @login_required
 def categories():
-    # อาจต้องแก้ไขจาก user_id เป็น company_id
-    active_company = UserCompany.query.filter_by(
-        user_id=current_user.id,
-        active_company=True
-    ).first()
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
 
-    if not active_company:
+    if not user_company:
         flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
         return redirect(url_for('main.dashboard'))
 
-    categories = Category.query.filter_by(company_id=active_company.company_id).all()
-    return render_template('settings/categories.html', categories=categories)
+    company_id = user_company.company_id
+
+    # ตรวจสอบว่ามีหมวดหมู่ในบริษัทนี้หรือไม่
+    categories = Category.query.filter_by(company_id=company_id).all()
+
+    # ตรวจสอบว่ามีหมวดหมู่ที่ไม่มี company_id หรือไม่
+    orphan_categories_count = Category.query.filter(
+        Category.user_id == current_user.id,
+        (Category.company_id == None) | (Category.company_id != company_id)
+    ).count()
+
+    return render_template('settings/categories.html',
+                           categories=categories,
+                           orphan_categories_count=orphan_categories_count)
 
 
 @settings_bp.route('/categories/add', methods=['GET', 'POST'])
 @login_required
 def add_category():
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    company_id = user_company.company_id
+
     form = CategoryForm()
 
     if form.validate_on_submit():
-        # ดึงบริษัทที่ active
-        active_company = UserCompany.query.filter_by(
-            user_id=current_user.id,
-            active_company=True
-        ).first()
-
-        if not active_company:
-            flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
-            return redirect(url_for('main.dashboard'))
-
         category = Category(
             name=form.name.data,
             type=form.type.data,
             keywords=form.keywords.data,
             user_id=current_user.id,
-            company_id=active_company.company_id
+            company_id=company_id
         )
-        db.session.add(category)
-        db.session.commit()
 
-        flash('เพิ่มหมวดหมู่เรียบร้อยแล้ว', 'success')
-        return redirect(url_for('settings.categories'))
+        try:
+            db.session.add(category)
+            db.session.commit()
+            flash('เพิ่มหมวดหมู่เรียบร้อยแล้ว', 'success')
+            return redirect(url_for('settings.categories'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'เกิดข้อผิดพลาดในการบันทึกข้อมูล: {str(e)}', 'error')
 
     return render_template('settings/category_form.html', form=form, title='เพิ่มหมวดหมู่')
 
@@ -142,10 +154,16 @@ def create_invite():
     # สร้าง URL สำหรับเชิญ
     invite_url = url_for('auth.login', invite=token, _external=True)
 
+    # สร้างข้อความเชิญที่มีชื่อบริษัท
+    company_name = active_company.company.name
+    invite_message = f"คุณได้รับเชิญให้เข้าร่วมบริษัท {company_name} - {invite_url}"
+
     # ส่งคืนเป็น JSON
     return jsonify({
         'success': True,
         'invite_url': invite_url,
+        'invite_message': invite_message,
+        'company_name': company_name,
         'token': token
     })
 
@@ -183,21 +201,20 @@ def cancel_invite(id):
 @login_required
 def invite():
     # ดึงบริษัทที่ active
-    active_company = UserCompany.query.filter_by(
-        user_id=current_user.id,
-        active_company=True
-    ).first()
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
 
-    if not active_company:
+    if not user_company:
         flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
         return redirect(url_for('main.dashboard'))
+
+    company_id = user_company.company_id
 
     # Generate invite link
     token = str(uuid.uuid4())
     invite = InviteToken(
         token=token,
         created_by=current_user.id,
-        company_id=active_company.company_id
+        company_id=company_id
     )
     db.session.add(invite)
     db.session.commit()
@@ -287,32 +304,61 @@ def clear_data():
 @login_required
 def edit_category(id):
     # ดึงบริษัทที่ active
-    active_company = UserCompany.query.filter_by(
-        user_id=current_user.id,
-        active_company=True
-    ).first()
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
 
-    if not active_company:
+    if not user_company:
         flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
         return redirect(url_for('main.dashboard'))
+
+    company_id = user_company.company_id
 
     category = Category.query.get_or_404(id)
 
     # ตรวจสอบว่าเป็นหมวดหมู่ของบริษัทหรือไม่
-    if category.company_id != active_company.company_id:
-        flash('คุณไม่มีสิทธิ์แก้ไขหมวดหมู่นี้', 'error')
-        return redirect(url_for('settings.categories'))
+    if category.company_id != company_id:
+        # ถ้าไม่ใช่ แต่เป็นของผู้ใช้ปัจจุบัน ให้ย้ายเข้าบริษัทปัจจุบัน
+        if category.user_id == current_user.id:
+            category.company_id = company_id
+            db.session.commit()
+            flash('หมวดหมู่นี้ถูกย้ายเข้าสู่บริษัทปัจจุบันเรียบร้อยแล้ว', 'success')
+        else:
+            flash('คุณไม่มีสิทธิ์แก้ไขหมวดหมู่นี้', 'error')
+            return redirect(url_for('settings.categories'))
 
     form = CategoryForm(obj=category)
 
     if form.validate_on_submit():
+        # บันทึกข้อมูลก่อนแก้ไข
+        old_type = category.type
+
+        # แก้ไขข้อมูล
         category.name = form.name.data
         category.type = form.type.data
         category.keywords = form.keywords.data
 
-        db.session.commit()
-        flash('แก้ไขหมวดหมู่เรียบร้อยแล้ว', 'success')
-        return redirect(url_for('settings.categories'))
+        # ตรวจสอบว่ามีการแก้ไข company_id หรือไม่
+        if category.company_id != company_id:
+            category.company_id = company_id
+
+        # ถ้าแก้ประเภทหมวดหมู่ ต้องตรวจสอบธุรกรรมที่เกี่ยวข้อง
+        if old_type != category.type:
+            affected_transactions = Transaction.query.filter_by(
+                category_id=category.id,
+                type=old_type
+            ).count()
+
+            if affected_transactions > 0:
+                flash(
+                    f'คำเตือน: มีรายการธุรกรรม {affected_transactions} รายการที่ใช้หมวดหมู่นี้ การเปลี่ยนประเภทจาก {old_type} เป็น {category.type} อาจทำให้ข้อมูลไม่ตรงกัน',
+                    'warning')
+
+        try:
+            db.session.commit()
+            flash('แก้ไขหมวดหมู่เรียบร้อยแล้ว', 'success')
+            return redirect(url_for('settings.categories'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'เกิดข้อผิดพลาดในการบันทึกข้อมูล: {str(e)}', 'error')
 
     return render_template('settings/category_form.html', form=form, title='แก้ไขหมวดหมู่')
 
@@ -321,20 +367,23 @@ def edit_category(id):
 @login_required
 def delete_category(id):
     # ดึงบริษัทที่ active
-    active_company = UserCompany.query.filter_by(
-        user_id=current_user.id,
-        active_company=True
-    ).first()
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
 
-    if not active_company:
+    if not user_company:
         flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
         return redirect(url_for('main.dashboard'))
+
+    company_id = user_company.company_id
 
     category = Category.query.get_or_404(id)
 
     # ตรวจสอบว่าเป็นหมวดหมู่ของบริษัทหรือไม่
-    if category.company_id != active_company.company_id:
-        flash('คุณไม่มีสิทธิ์ลบหมวดหมู่นี้', 'error')
+    if category.company_id != company_id:
+        # ถ้าไม่ใช่ แต่เป็นของผู้ใช้ปัจจุบัน
+        if category.user_id == current_user.id:
+            flash('หมวดหมู่นี้ไม่ได้อยู่ในบริษัทปัจจุบัน หากต้องการลบ กรุณาย้ายเข้าบริษัทปัจจุบันก่อน', 'warning')
+        else:
+            flash('คุณไม่มีสิทธิ์ลบหมวดหมู่นี้', 'error')
         return redirect(url_for('settings.categories'))
 
     # ตรวจสอบว่ามี transactions ที่ใช้หมวดหมู่นี้หรือไม่
@@ -343,9 +392,13 @@ def delete_category(id):
         flash(f'ไม่สามารถลบหมวดหมู่นี้ได้ เนื่องจากมีธุรกรรม {transaction_count} รายการที่ใช้หมวดหมู่นี้', 'error')
         return redirect(url_for('settings.categories'))
 
-    db.session.delete(category)
-    db.session.commit()
-    flash('ลบหมวดหมู่เรียบร้อยแล้ว', 'success')
+    try:
+        db.session.delete(category)
+        db.session.commit()
+        flash('ลบหมวดหมู่เรียบร้อยแล้ว', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'เกิดข้อผิดพลาดในการลบหมวดหมู่: {str(e)}', 'error')
 
     return redirect(url_for('settings.categories'))
 
@@ -529,3 +582,48 @@ def toggle_admin(id):
         f'{"ตั้ง" if user_company.is_admin else "ถอดถอน"} {user.name} {"เป็น" if user_company.is_admin else "จาก"}แอดมินเรียบร้อยแล้ว',
         'success')
     return redirect(url_for('settings.company_members'))
+
+
+@settings_bp.route('/fix_categories')
+@login_required
+def fix_categories():
+    """ย้ายหมวดหมู่ที่ยังไม่มี company_id ให้เชื่อมโยงกับบริษัทปัจจุบัน"""
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    company_id = user_company.company_id
+
+    # ค้นหาหมวดหมู่ที่มี user_id ตรงกับผู้ใช้ปัจจุบัน แต่ไม่มี company_id
+    orphan_categories = Category.query.filter(
+        Category.user_id == current_user.id,
+        (Category.company_id == None) | (Category.company_id != company_id)
+    ).all()
+
+    if not orphan_categories:
+        # ถ้าไม่พบหมวดหมู่ที่ต้องแก้ไข ให้ตรวจสอบว่ามีหมวดหมู่ในบริษัทปัจจุบันหรือไม่
+        categories = Category.query.filter_by(company_id=company_id).all()
+        if not categories:
+            # ถ้าไม่มีหมวดหมู่เลย ให้สร้างหมวดหมู่เริ่มต้น
+            from app.routes.auth import create_default_categories
+            create_default_categories(current_user.id, company_id)
+            flash('ระบบได้สร้างหมวดหมู่เริ่มต้นให้แล้ว', 'success')
+            return redirect(url_for('settings.categories'))
+
+        flash('ไม่พบหมวดหมู่ที่ต้องแก้ไข', 'info')
+        return redirect(url_for('settings.categories'))
+
+    # ย้ายหมวดหมู่ให้เชื่อมโยงกับบริษัทปัจจุบัน
+    for category in orphan_categories:
+        category.company_id = company_id
+
+    db.session.commit()
+
+    flash(f'ย้ายหมวดหมู่ {len(orphan_categories)} รายการเข้าสู่บริษัทปัจจุบันเรียบร้อยแล้ว', 'success')
+    return redirect(url_for('settings.categories'))

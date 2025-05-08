@@ -5,10 +5,29 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>จัดการหมวดหมู่</h1>
-    <a href="{{ url_for('settings.add_category') }}" class="btn btn-primary">
-        <i class="fas fa-plus me-2"></i>เพิ่มหมวดหมู่
-    </a>
+    <div>
+        <a href="{{ url_for('settings.fix_categories') }}" class="btn btn-warning me-2">
+            <i class="fas fa-sync me-2"></i>แก้ไขหมวดหมู่
+        </a>
+        <a href="{{ url_for('settings.add_category') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>เพิ่มหมวดหมู่
+        </a>
+    </div>
 </div>
+
+{% if categories|length == 0 %}
+<div class="alert alert-warning mb-4">
+    <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>ไม่พบหมวดหมู่</h6>
+    <p class="mb-1">ไม่พบข้อมูลหมวดหมู่ในบริษัทนี้ คลิก <a href="{{ url_for('settings.fix_categories') }}" class="alert-link">แก้ไขหมวดหมู่</a> เพื่อย้ายหมวดหมู่หรือสร้างหมวดหมู่เริ่มต้น</p>
+</div>
+{% endif %}
+
+{% if orphan_categories_count and orphan_categories_count > 0 %}
+<div class="alert alert-info mb-4">
+    <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>พบหมวดหมู่ที่ยังไม่ได้เชื่อมโยงกับบริษัท</h6>
+    <p class="mb-1">พบหมวดหมู่ {{ orphan_categories_count }} รายการที่ยังไม่ได้เชื่อมโยงกับบริษัทปัจจุบัน คลิก <a href="{{ url_for('settings.fix_categories') }}" class="alert-link">แก้ไขหมวดหมู่</a> เพื่อย้ายหมวดหมู่เข้าสู่บริษัทปัจจุบัน</p>
+</div>
+{% endif %}
 
 <div class="row">
     <!-- รายรับ Column -->
@@ -147,6 +166,19 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         padding: 0.25rem;
         border-radius: 0.25rem;
+    }
+
+    /* Style ปุ่มแก้ไขหมวดหมู่ */
+    .btn-warning {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #212529;
+    }
+
+    .btn-warning:hover {
+        background-color: #e0a800;
+        border-color: #d39e00;
+        color: #212529;
     }
 </style>
 {% endblock %}
