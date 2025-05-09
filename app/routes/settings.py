@@ -251,30 +251,27 @@ def clear_data():
         confirm_text = request.form.get('confirm_text', '')
         if confirm_text.lower() == 'ลบข้อมูลทั้งหมด':
             try:
-                # ลบ transactions ทั้งหมดของบริษัท
-                transactions = Transaction.query.filter_by(company_id=company_id).all()
-                for transaction in transactions:
-                    db.session.delete(transaction)
+                # ลำดับการลบข้อมูลสำคัญมาก - ลบ transactions ก่อน แล้วค่อยลบอื่นๆ
 
-                # ลบ import history ทั้งหมดของบริษัท
-                import_histories = ImportHistory.query.filter_by(company_id=company_id).all()
-                for history in import_histories:
-                    db.session.delete(history)
+                # 1. ลบ Transaction ทั้งหมดที่เกี่ยวข้องกับบริษัทก่อน เพราะมี Foreign Key ไปยัง Categories
+                Transaction.query.filter_by(company_id=company_id).delete()
+                db.session.commit()
 
-                # ลบหมวดหมู่เก่าทั้งหมด
-                categories = Category.query.filter_by(company_id=company_id).all()
-                for category in categories:
-                    db.session.delete(category)
+                # 2. ลบ Import History
+                ImportHistory.query.filter_by(company_id=company_id).delete()
+                db.session.commit()
 
-                # ลบบัญชีธนาคารทั้งหมด
-                bank_accounts = BankAccount.query.filter_by(company_id=company_id).all()
-                for account in bank_accounts:
-                    db.session.delete(account)
+                # 3. ลบ Categories หลังจากที่ลบ Transaction แล้ว
+                Category.query.filter_by(company_id=company_id).delete()
+                db.session.commit()
+
+                # 4. ลบ Bank Accounts
+                BankAccount.query.filter_by(company_id=company_id).delete()
+                db.session.commit()
 
                 # อัปเดตข้อมูลบริษัท
                 company = Company.query.get(company_id)
                 company.name = "Amp Tech Co.,Ltd"
-
                 db.session.commit()
 
                 # สร้างหมวดหมู่ค่าเริ่มต้นใหม่

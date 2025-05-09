@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from app.models import db, Transaction, Category, ImportHistory, BankAccount
+from app.models import db, Transaction, Category, ImportHistory, BankAccount, UserCompany
 from app.services.import_service import BankImportService
 from app.services.category_matcher import CategoryMatcher
 from app.services.balance_service import BalanceService
@@ -26,6 +26,18 @@ def allowed_file(filename):
 @login_required
 def upload():
     if request.method == 'POST':
+        # ดึงบริษัทที่ active
+        user_company = UserCompany.query.filter_by(
+            user_id=current_user.id,
+            active_company=True
+        ).first()
+
+        if not user_company:
+            flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+            return redirect(url_for('main.dashboard'))
+
+        company_id = user_company.company_id
+
         if 'file' not in request.files:
             flash('กรุณาเลือกไฟล์', 'error')
             return redirect(request.url)
@@ -111,7 +123,25 @@ def upload():
             return redirect(request.url)
 
     # Get bank accounts for dropdown
-    bank_accounts = BankAccount.query.filter_by(user_id=current_user.id, is_active=True).all()
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    company_id = user_company.company_id
+
+    # ดึงบัญชีธนาคารเฉพาะของบริษัทปัจจุบัน
+    bank_accounts = BankAccount.query.filter_by(
+        user_id=current_user.id,
+        company_id=company_id,
+        is_active=True
+    ).all()
+
     return render_template('imports/upload.html', bank_accounts=bank_accounts)
 
 
@@ -159,6 +189,18 @@ def preview():
         bank_account_id = session.get('bank_account_id')
         original_filename = session.get('original_filename', 'unknown')
 
+        # ดึงบริษัทที่ active จาก UserCompany
+        user_company = UserCompany.query.filter_by(
+            user_id=current_user.id,
+            active_company=True
+        ).first()
+
+        if not user_company:
+            flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+            return redirect(url_for('main.dashboard'))
+
+        company_id = user_company.company_id
+
         matcher = CategoryMatcher(current_user.id)
 
         success_count = 0
@@ -186,6 +228,7 @@ def preview():
                     # Use default "Other" category
                     category = Category.query.filter_by(
                         user_id=current_user.id,
+                        company_id=company_id,  # เพิ่มบรรทัดนี้เพื่อให้ค้นหาเฉพาะหมวดหมู่ในบริษัทปัจจุบัน
                         type=item['type'],
                         name='อื่นๆ'
                     ).first()
@@ -206,7 +249,7 @@ def preview():
                         status='completed',  # รายการที่ import มาต้องเป็น completed
                         source='import',
                         completed_date=datetime.now(bangkok_tz),
-                        company_id=current_user.company_id  # เพิ่ม company_id
+                        company_id=company_id  # ใช้ company_id จาก active company
                     )
                     db.session.add(transaction)
                     success_count += 1
@@ -228,7 +271,7 @@ def preview():
                 status='completed' if error_count == 0 else 'partial',
                 user_id=current_user.id,
                 bank_account_id=bank_account_id,
-                company_id=current_user.company_id  # เพิ่ม company_id
+                company_id=company_id  # ใช้ company_id จาก active company
             )
             db.session.add(import_history)
 
@@ -268,7 +311,22 @@ def preview():
         return redirect(url_for('transactions.index'))
 
     # Prepare data for preview - เพิ่มการแสดงเวลาด้วย
-    categories = Category.query.filter_by(user_id=current_user.id).all()
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if user_company:
+        # ดึงหมวดหมู่จากบริษัทปัจจุบัน
+        categories = Category.query.filter_by(
+            user_id=current_user.id,
+            company_id=user_company.company_id
+        ).all()
+    else:
+        # ถ้าไม่มีบริษัทที่ active ให้ดึงโดยใช้แค่ user_id
+        categories = Category.query.filter_by(user_id=current_user.id).all()
+
     matcher = CategoryMatcher(current_user.id)
 
     for item in import_data:
@@ -291,8 +349,24 @@ def preview():
 @login_required
 def history():
     """แสดงประวัติการ import"""
-    import_histories = ImportHistory.query.filter_by(user_id=current_user.id) \
-        .order_by(ImportHistory.import_date.desc()).all()
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    company_id = user_company.company_id
+
+    # ดึงประวัติการนำเข้าเฉพาะในบริษัทปัจจุบัน
+    import_histories = ImportHistory.query.filter_by(
+        user_id=current_user.id,
+        company_id=company_id
+    ).order_by(ImportHistory.import_date.desc()).all()
+
     return render_template('imports/history.html', histories=import_histories)
 
 
@@ -300,17 +374,32 @@ def history():
 @login_required
 def delete_import(batch_id):
     """ลบรายการที่ import โดยใช้ batch_id"""
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(
+        user_id=current_user.id,
+        active_company=True
+    ).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    company_id = user_company.company_id
+
+    # ต้องตรวจสอบทั้ง user_id และ company_id
     history = ImportHistory.query.filter_by(
         batch_id=batch_id,
-        user_id=current_user.id
+        user_id=current_user.id,
+        company_id=company_id
     ).first_or_404()
 
     bank_account_id = history.bank_account_id
 
-    # ลบ transactions ที่เกี่ยวข้อง
+    # ลบ transactions ที่เกี่ยวข้อง (ต้องตรวจสอบทั้ง user_id และ company_id)
     transactions = Transaction.query.filter_by(
         import_batch_id=batch_id,
-        user_id=current_user.id
+        user_id=current_user.id,
+        company_id=company_id
     ).all()
 
     for trans in transactions:
@@ -330,12 +419,27 @@ def delete_import(batch_id):
 
 def check_duplicate_transaction(user_id, date, amount, description):
     """ตรวจสอบว่ามีรายการซ้ำหรือไม่"""
+    # ดึงบริษัทที่ active จาก UserCompany
+    user_company = UserCompany.query.filter_by(
+        user_id=user_id,
+        active_company=True
+    ).first()
+
+    company_id = user_company.company_id if user_company else None
+
     # ค้นหารายการที่มีวันที่, จำนวนเงิน และรายละเอียดเหมือนกัน
-    existing = Transaction.query.filter_by(
+    # ให้ค้นหาเฉพาะธุรกรรมในบริษัทปัจจุบัน
+    query = Transaction.query.filter_by(
         user_id=user_id,
         transaction_date=date,
         amount=amount
-    ).all()
+    )
+
+    # ถ้ามี company_id ให้เพิ่มเงื่อนไขในการค้นหา
+    if company_id:
+        query = query.filter_by(company_id=company_id)
+
+    existing = query.all()
 
     # ตรวจสอบรายละเอียดเพิ่มเติม
     for trans in existing:

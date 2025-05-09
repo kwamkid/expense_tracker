@@ -578,12 +578,32 @@ function filterByCategory(categoryId) {
     submitForm();
 }
 
+// แก้ไขฟังก์ชัน updateTransactionStatus และ doUpdateStatus ในไฟล์ transactions/index.html
+
 function updateTransactionStatus(transactionId, newStatus, needBankAccount) {
     currentTransactionId = transactionId;
     currentStatus = newStatus;
 
+    // ถ้าสถานะเป็น completed และยังไม่มีบัญชีธนาคาร
     if (newStatus === 'completed' && needBankAccount) {
         const modal = new bootstrap.Modal(document.getElementById('bankAccountModal'));
+
+        // ทำให้แน่ใจว่า modal จะถูกเคลียร์ทุกครั้งก่อนแสดง
+        const modalBankAccountSelect = document.getElementById('modalBankAccountSelect');
+        modalBankAccountSelect.value = '';
+
+        // เพิ่มข้อความเตือนว่าจำเป็นต้องเลือกบัญชีธนาคาร
+        const modalTitle = document.getElementById('bankAccountModalLabel');
+        if (modalTitle) {
+            modalTitle.innerHTML = '<i class="fas fa-exclamation-circle text-danger me-2"></i>กรุณาเลือกบัญชีธนาคาร';
+        }
+
+        // เพิ่มคำอธิบายให้ชัดเจน
+        const modalDescription = document.querySelector('#bankAccountModal .modal-body p');
+        if (modalDescription) {
+            modalDescription.innerHTML = '<strong class="text-danger">จำเป็นต้องเลือกบัญชีธนาคาร</strong> สำหรับรายการที่สำเร็จแล้ว เพื่อบันทึกข้อมูลทางการเงินอย่างถูกต้อง';
+        }
+
         modal.show();
     } else {
         doUpdateStatus(transactionId, newStatus, null);
@@ -594,7 +614,8 @@ document.getElementById('confirmBankAccountBtn').addEventListener('click', funct
     const bankAccountId = document.getElementById('modalBankAccountSelect').value;
 
     if (!bankAccountId) {
-        alert('กรุณาเลือกบัญชีธนาคาร');
+        // เพิ่มการแจ้งเตือนเมื่อไม่ได้เลือกบัญชีธนาคาร
+        alert('กรุณาเลือกบัญชีธนาคารสำหรับรายการที่สำเร็จแล้ว');
         return;
     }
 
@@ -626,8 +647,23 @@ function doUpdateStatus(transactionId, newStatus, bankAccountId) {
                 location.reload();
             }, 1500);
         } else {
-            showAlert('danger', 'เกิดข้อผิดพลาด: ' + data.message);
-            location.reload();
+            // ถ้าต้องการบัญชีธนาคาร ให้แสดง modal เลือกบัญชีธนาคาร
+            if (data.needBankAccount) {
+                const modal = new bootstrap.Modal(document.getElementById('bankAccountModal'));
+
+                // เพิ่มข้อความเตือนว่าจำเป็นต้องเลือกบัญชีธนาคาร
+                const modalTitle = document.getElementById('bankAccountModalLabel');
+                if (modalTitle) {
+                    modalTitle.innerHTML = '<i class="fas fa-exclamation-circle text-danger me-2"></i>กรุณาเลือกบัญชีธนาคาร';
+                }
+
+                modal.show();
+            } else {
+                showAlert('danger', 'เกิดข้อผิดพลาด: ' + data.message);
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            }
         }
     })
     .catch(error => {

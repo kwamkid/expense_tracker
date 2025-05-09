@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from flask_login import login_required, current_user
-from app.models import db, Transaction, Category, BankAccount
+from app.models import db, Transaction, Category, BankAccount, UserCompany
 from sqlalchemy import func, case
 from datetime import datetime, timedelta
 import calendar
@@ -18,53 +18,80 @@ def index():
     return render_template('main/landing.html')
 
 
+# app/routes/main.py - แก้ไขฟังก์ชัน dashboard
+
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():
+    # ตรวจสอบและดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
     # Get current month data (default)
     today = datetime.now()
     first_day = today.replace(day=1)
+    last_day = today
 
-    # Calculate totals for COMPLETED transactions only
+    # Calculate totals for COMPLETED transactions only - สำหรับเดือนปัจจุบัน
+    total_income_current_month = db.session.query(func.sum(Transaction.amount)) \
+                                     .filter_by(company_id=company_id, type='income', status='completed') \
+                                     .filter(Transaction.transaction_date >= first_day) \
+                                     .filter(Transaction.transaction_date <= last_day) \
+                                     .scalar() or 0
+
+    total_expense_current_month = db.session.query(func.sum(Transaction.amount)) \
+                                      .filter_by(company_id=company_id, type='expense', status='completed') \
+                                      .filter(Transaction.transaction_date >= first_day) \
+                                      .filter(Transaction.transaction_date <= last_day) \
+                                      .scalar() or 0
+
+    # คำนวณยอดทั้งหมดโดยไม่จำกัดวันที่ - สำหรับแสดงผลรวมทั้งหมด
     total_income = db.session.query(func.sum(Transaction.amount)) \
-                       .filter_by(company_id=current_user.company_id, type='income', status='completed') \
-                       .filter(Transaction.transaction_date >= first_day) \
+                       .filter_by(company_id=company_id, type='income', status='completed') \
                        .scalar() or 0
 
     total_expense = db.session.query(func.sum(Transaction.amount)) \
-                        .filter_by(company_id=current_user.company_id, type='expense', status='completed') \
-                        .filter(Transaction.transaction_date >= first_day) \
+                        .filter_by(company_id=company_id, type='expense', status='completed') \
                         .scalar() or 0
 
+    balance_current_month = total_income_current_month - total_expense_current_month
     balance = total_income - total_expense
 
     # Get ALL pending transactions (not just current month)
     all_pending_income = db.session.query(func.sum(Transaction.amount)) \
-                             .filter_by(company_id=current_user.company_id, type='income', status='pending') \
+                             .filter_by(company_id=company_id, type='income', status='pending') \
                              .scalar() or 0
 
     all_pending_expense = db.session.query(func.sum(Transaction.amount)) \
-                              .filter_by(company_id=current_user.company_id, type='expense', status='pending') \
+                              .filter_by(company_id=company_id, type='expense', status='pending') \
                               .scalar() or 0
 
     # Get recent transactions
     recent_transactions = Transaction.query \
-        .filter_by(company_id=current_user.company_id) \
+        .filter_by(company_id=company_id) \
         .order_by(Transaction.transaction_date.desc(),
                   Transaction.created_at.desc()) \
         .limit(10) \
         .all()
 
     # Get bank accounts
-    bank_accounts = BankAccount.query.filter_by(company_id=current_user.company_id, is_active=True).all()
+    bank_accounts = BankAccount.query.filter_by(company_id=company_id, is_active=True).all()
 
-    # Get categories for this company (moved from global to inside function)
-    categories = Category.query.filter_by(company_id=current_user.company_id).all()
+    # Get categories for this company
+    categories = Category.query.filter_by(company_id=company_id).all()
 
     return render_template('main/dashboard.html',
                            total_income=total_income,
                            total_expense=total_expense,
                            balance=balance,
+                           total_income_current_month=total_income_current_month,
+                           total_expense_current_month=total_expense_current_month,
+                           balance_current_month=balance_current_month,
                            all_pending_income=all_pending_income,
                            all_pending_expense=all_pending_expense,
                            recent_transactions=recent_transactions,
@@ -75,6 +102,18 @@ def dashboard():
 @main_bp.route('/api/dashboard-data')
 @login_required
 def dashboard_data_api():
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        return jsonify({
+            'total_income': 0,
+            'total_expense': 0,
+            'profit_loss': 0
+        })
+
+    company_id = user_company.company_id
+
     filter_type = request.args.get('filter', 'this_month')
     start_date = None
     end_date = None
@@ -110,15 +149,33 @@ def dashboard_data_api():
         start_date = datetime.strptime(request.args.get('start_date'), '%Y-%m-%d')
         end_date = datetime.strptime(request.args.get('end_date'), '%Y-%m-%d')
 
+    elif filter_type == 'all':
+        # ดึงข้อมูลทั้งหมดโดยไม่จำกัดวันที่
+        total_income = db.session.query(func.sum(Transaction.amount)) \
+                           .filter_by(company_id=company_id, type='income', status='completed') \
+                           .scalar() or 0
+
+        total_expense = db.session.query(func.sum(Transaction.amount)) \
+                            .filter_by(company_id=company_id, type='expense', status='completed') \
+                            .scalar() or 0
+
+        profit_loss = total_income - total_expense
+
+        return jsonify({
+            'total_income': float(total_income),
+            'total_expense': float(total_expense),
+            'profit_loss': float(profit_loss)
+        })
+
     # Calculate totals for the selected period
     total_income = db.session.query(func.sum(Transaction.amount)) \
-                       .filter_by(company_id=current_user.company_id, type='income', status='completed') \
+                       .filter_by(company_id=company_id, type='income', status='completed') \
                        .filter(Transaction.transaction_date >= start_date) \
                        .filter(Transaction.transaction_date <= end_date) \
                        .scalar() or 0
 
     total_expense = db.session.query(func.sum(Transaction.amount)) \
-                        .filter_by(company_id=current_user.company_id, type='expense', status='completed') \
+                        .filter_by(company_id=company_id, type='expense', status='completed') \
                         .filter(Transaction.transaction_date >= start_date) \
                         .filter(Transaction.transaction_date <= end_date) \
                         .scalar() or 0
@@ -135,6 +192,15 @@ def dashboard_data_api():
 @main_bp.route('/reports')
 @login_required
 def reports():
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
     # Get filter parameters
     transaction_type = request.args.get('type')
     category_id = request.args.get('category')
@@ -149,8 +215,8 @@ def reports():
     if not end_date:
         end_date = datetime.now().strftime('%Y-%m-%d')
 
-    # Build query - เปลี่ยนจาก user_id เป็น company_id
-    query = Transaction.query.filter_by(company_id=current_user.company_id)
+    # Build query - ใช้ company_id ในการค้นหา
+    query = Transaction.query.filter_by(company_id=company_id)
 
     if transaction_type:
         query = query.filter_by(type=transaction_type)
@@ -171,14 +237,14 @@ def reports():
     total_expense = sum(t.amount for t in transactions if t.type == 'expense')
     net_profit = total_income - total_expense
 
-    # Category breakdown - เปลี่ยนจาก user_id เป็น company_id
+    # Category breakdown - ใช้ company_id แทน user_id
     category_breakdown = db.session.query(
         Category.name,
         Category.type,
         func.sum(Transaction.amount).label('total'),
         func.count(Transaction.id).label('count')
     ).join(Transaction) \
-        .filter(Transaction.company_id == current_user.company_id) \
+        .filter(Transaction.company_id == company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
     if status_filter:
@@ -186,7 +252,7 @@ def reports():
 
     category_breakdown = category_breakdown.group_by(Category.id).all()
 
-    # Bank account breakdown - เปลี่ยนจาก user_id เป็น company_id
+    # Bank account breakdown - ใช้ company_id แทน user_id
     bank_breakdown = db.session.query(
         BankAccount.bank_name,
         BankAccount.account_number,
@@ -200,7 +266,7 @@ def reports():
         )).label('expense'),
         func.count(Transaction.id).label('count')
     ).join(Transaction, Transaction.bank_account_id == BankAccount.id) \
-        .filter(Transaction.company_id == current_user.company_id) \
+        .filter(Transaction.company_id == company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
     if status_filter:
@@ -208,7 +274,7 @@ def reports():
 
     bank_breakdown = bank_breakdown.group_by(BankAccount.id).all()
 
-    # Daily summary - เปลี่ยนจาก user_id เป็น company_id
+    # Daily summary - ใช้ company_id แทน user_id
     daily_summary = db.session.query(
         Transaction.transaction_date,
         func.sum(case(
@@ -219,7 +285,7 @@ def reports():
             (Transaction.type == 'expense', Transaction.amount),
             else_=0
         )).label('expense')
-    ).filter(Transaction.company_id == current_user.company_id) \
+    ).filter(Transaction.company_id == company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
     if status_filter:
@@ -228,9 +294,9 @@ def reports():
     daily_summary = daily_summary.group_by(Transaction.transaction_date) \
         .order_by(Transaction.transaction_date).all()
 
-    # Get categories and bank accounts for filters - เปลี่ยนจาก user_id เป็น company_id
-    categories = Category.query.filter_by(company_id=current_user.company_id).all()
-    bank_accounts = BankAccount.query.filter_by(company_id=current_user.company_id).all()
+    # Get categories and bank accounts for filters - ใช้ company_id แทน user_id
+    categories = Category.query.filter_by(company_id=company_id).all()
+    bank_accounts = BankAccount.query.filter_by(company_id=company_id).all()
 
     return render_template('main/reports.html',
                            transactions=transactions,
@@ -250,6 +316,14 @@ def reports():
 
 def get_monthly_data():
     """Get last 6 months data for chart - COMPLETED transactions only"""
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        return []  # ถ้าไม่มีบริษัทที่ active ให้ส่งคืนลิสต์ว่าง
+
+    company_id = user_company.company_id
+
     data = []
     today = datetime.now()
 
@@ -260,12 +334,12 @@ def get_monthly_data():
 
         # เปลี่ยนจาก user_id เป็น company_id
         income = db.session.query(func.sum(Transaction.amount)) \
-                     .filter_by(company_id=current_user.company_id, type='income', status='completed') \
+                     .filter_by(company_id=company_id, type='income', status='completed') \
                      .filter(Transaction.transaction_date.between(month_start, month_end)) \
                      .scalar() or 0
 
         expense = db.session.query(func.sum(Transaction.amount)) \
-                      .filter_by(company_id=current_user.company_id, type='expense', status='completed') \
+                      .filter_by(company_id=company_id, type='expense', status='completed') \
                       .filter(Transaction.transaction_date.between(month_start, month_end)) \
                       .scalar() or 0
 

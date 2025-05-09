@@ -1,11 +1,31 @@
+# app/services/category_matcher.py
 import re
-from app.models import Category
+from app.models import Category, UserCompany
+from flask_login import current_user
 
 
 class CategoryMatcher:
     def __init__(self, user_id):
         self.user_id = user_id
-        self.categories = Category.query.filter_by(user_id=user_id).all()
+        self.company_id = self._get_active_company_id()
+
+        # ดึงหมวดหมู่จากบริษัทปัจจุบัน
+        if self.company_id:
+            self.categories = Category.query.filter_by(user_id=user_id, company_id=self.company_id).all()
+        else:
+            # ถ้าไม่มี company_id ใช้แค่ user_id
+            self.categories = Category.query.filter_by(user_id=user_id).all()
+
+    def _get_active_company_id(self):
+        """ดึง company_id ของบริษัทที่ active"""
+        try:
+            user_company = UserCompany.query.filter_by(
+                user_id=self.user_id,
+                active_company=True
+            ).first()
+            return user_company.company_id if user_company else None
+        except Exception:
+            return None
 
     def match_category(self, description, transaction_type):
         """Match transaction description to category"""

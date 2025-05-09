@@ -171,6 +171,8 @@
 }
 </style>
 
+<!-- เพิ่ม JavaScript นี้ไว้ที่ด้านล่างของไฟล์ transactions/form.html ก่อนปิด {% endblock %} -->
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Auto Category Suggestion
@@ -179,6 +181,90 @@ document.addEventListener('DOMContentLoaded', function() {
     const categorySuggestion = document.getElementById('categorySuggestion');
     const suggestedCategory = document.getElementById('suggestedCategory');
     let categories = [];
+
+    // สถานะและบัญชีธนาคาร - สำหรับตรวจสอบความถูกต้อง
+    const statusSelect = document.getElementById('status');
+    const bankAccountSelect = document.getElementById('bank_account_id');
+
+    // ตรวจสอบการเลือกบัญชีธนาคารเมื่อสถานะเป็น "สำเร็จแล้ว"
+    statusSelect.addEventListener('change', function() {
+        checkBankAccountRequired();
+    });
+
+    // ตรวจสอบทันทีเมื่อโหลดหน้า
+    checkBankAccountRequired();
+
+    // ฟังก์ชันตรวจสอบว่าต้องเลือกบัญชีธนาคารหรือไม่
+    function checkBankAccountRequired() {
+        const statusValue = statusSelect.value;
+
+        if (statusValue === 'completed') {
+            bankAccountSelect.setAttribute('required', 'required');
+            // เพิ่มคลาสแสดงว่าจำเป็นต้องกรอก
+            bankAccountSelect.classList.add('border-danger');
+
+            // เพิ่มข้อความแจ้งเตือน
+            let warningElement = document.getElementById('bank-account-warning');
+            if (!warningElement) {
+                warningElement = document.createElement('div');
+                warningElement.id = 'bank-account-warning';
+                warningElement.className = 'text-danger small mt-1';
+                warningElement.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>จำเป็นต้องเลือกบัญชีธนาคารสำหรับรายการที่สำเร็จแล้ว';
+                bankAccountSelect.parentNode.appendChild(warningElement);
+            }
+
+            // ตรวจสอบว่าเลือกบัญชีธนาคารหรือยัง
+            if (bankAccountSelect.value == '0') {
+                bankAccountSelect.classList.add('is-invalid');
+                warningElement.style.display = 'block';
+            } else {
+                bankAccountSelect.classList.remove('is-invalid');
+                warningElement.style.display = 'none';
+            }
+        } else {
+            bankAccountSelect.removeAttribute('required');
+            bankAccountSelect.classList.remove('border-danger');
+            bankAccountSelect.classList.remove('is-invalid');
+
+            // ซ่อนข้อความแจ้งเตือน
+            const warningElement = document.getElementById('bank-account-warning');
+            if (warningElement) {
+                warningElement.style.display = 'none';
+            }
+        }
+    }
+
+    // ตรวจสอบเมื่อมีการเลือกบัญชีธนาคาร
+    bankAccountSelect.addEventListener('change', function() {
+        if (statusSelect.value === 'completed' && this.value == '0') {
+            this.classList.add('is-invalid');
+            const warningElement = document.getElementById('bank-account-warning');
+            if (warningElement) {
+                warningElement.style.display = 'block';
+            }
+        } else {
+            this.classList.remove('is-invalid');
+            const warningElement = document.getElementById('bank-account-warning');
+            if (warningElement) {
+                warningElement.style.display = 'none';
+            }
+        }
+    });
+
+    // ตรวจสอบก่อนการ submit form
+    document.getElementById('transactionForm').addEventListener('submit', function(e) {
+        if (statusSelect.value === 'completed' && bankAccountSelect.value == '0') {
+            e.preventDefault();
+            alert('กรุณาเลือกบัญชีธนาคารสำหรับรายการที่สำเร็จแล้ว');
+            bankAccountSelect.focus();
+            bankAccountSelect.classList.add('is-invalid');
+            const warningElement = document.getElementById('bank-account-warning');
+            if (warningElement) {
+                warningElement.style.display = 'block';
+            }
+            return false;
+        }
+    });
 
     // Fetch categories with keywords
     function loadCategories() {

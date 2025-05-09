@@ -57,56 +57,81 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-lg-4">
-            <div class="card dashboard-card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">รายรับ (สำเร็จ)</h6>
-                            <h3 class="mb-0" id="totalIncome">฿{{ "{:,.2f}".format(total_income) }}</h3>
-                            <small class="text-white-75">รอดำเนินการ: ฿{{ "{:,.2f}".format(all_pending_income) }}</small>
-                        </div>
-                        <div class="card-icon">
-                            <i class="fas fa-arrow-up"></i>
-                        </div>
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card dashboard-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">รายรับ (สำเร็จ)</h6>
+                        <h3 class="mb-0" id="totalIncome">฿{{ "{:,.2f}".format(total_income) }}</h3>
+                        <small class="text-white-75">รอดำเนินการ: ฿{{ "{:,.2f}".format(all_pending_income) }}</small>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-4">
-            <div class="card dashboard-card bg-danger text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">รายจ่าย (สำเร็จ)</h6>
-                            <h3 class="mb-0" id="totalExpense">฿{{ "{:,.2f}".format(total_expense) }}</h3>
-                            <small class="text-white-75">รอดำเนินการ: ฿{{ "{:,.2f}".format(all_pending_expense) }}</small>
-                        </div>
-                        <div class="card-icon">
-                            <i class="fas fa-arrow-down"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-lg-4">
-            <div id="profitLossCard" class="card dashboard-card {{ 'bg-success' if balance >= 0 else 'bg-danger' }} text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">กำไร - ขาดทุน</h6>
-                            <h3 class="mb-0" id="profitLoss">฿{{ "{:,.2f}".format(balance) }}</h3>
-                            <small class="text-white-75">รายรับ - รายจ่าย (สำเร็จ)</small>
-                        </div>
-                        <div class="card-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
+                    <div class="card-icon">
+                        <i class="fas fa-arrow-up"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card dashboard-card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">รายจ่าย (สำเร็จ)</h6>
+                        <h3 class="mb-0" id="totalExpense">฿{{ "{:,.2f}".format(total_expense) }}</h3>
+                        <small class="text-white-75">รอดำเนินการ: ฿{{ "{:,.2f}".format(all_pending_expense) }}</small>
+                    </div>
+                    <div class="card-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div id="profitLossCard" class="card dashboard-card {{ 'bg-success' if balance >= 0 else 'bg-danger' }} text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">กำไร - ขาดทุน</h6>
+                        <h3 class="mb-0" id="profitLoss">฿{{ "{:,.2f}".format(balance) }}</h3>
+                        <small class="text-white-75">รายรับ - รายจ่าย (สำเร็จ)</small>
+                    </div>
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ส่วนสำหรับแสดงข้อมูลเฉพาะเดือนปัจจุบัน (เพิ่มเติม) -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">สรุปเดือนปัจจุบัน</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+                <h6 class="text-muted">รายรับเดือนนี้</h6>
+                <h4 class="text-success">฿{{ "{:,.2f}".format(total_income_current_month) }}</h4>
+            </div>
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+                <h6 class="text-muted">รายจ่ายเดือนนี้</h6>
+                <h4 class="text-danger">฿{{ "{:,.2f}".format(total_expense_current_month) }}</h4>
+            </div>
+            <div class="col-md-4 text-center">
+                <h6 class="text-muted">ยอดสุทธิเดือนนี้</h6>
+                <h4 class="{{ 'text-success' if balance_current_month >= 0 else 'text-danger' }}">
+                    ฿{{ "{:,.2f}".format(balance_current_month) }}
+                </h4>
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- Recent Transactions -->
     <div class="card mb-4">
@@ -365,6 +390,9 @@ $(document).ready(function() {
         } else if (filter === 'custom_selected') {
             // ถ้าเลือก custom_selected ให้แสดง DateRangePicker เพื่อแก้ไข
             $('#hiddenDateRangePicker').data('daterangepicker').show();
+        } else if (filter === 'all') {
+            // เพิ่มเงื่อนไขสำหรับการดูข้อมูลทั้งหมด
+            fetchDashboardData('all');
         } else {
             fetchDashboardData(filter);
         }
@@ -382,6 +410,15 @@ $(document).ready(function() {
             fetchDashboardData('this_month');
         }
     });
+
+    // Add 'all' option to the dateRangeFilter
+    if (!$('#dateRangeFilter option[value="all"]').length) {
+        $('#dateRangeFilter').append('<option value="all">ทั้งหมด</option>');
+    }
+
+    // Automatically select 'all' when page loads
+    $('#dateRangeFilter').val('all');
+    fetchDashboardData('all');
 });
 
 function fetchDashboardData(filter, startDate = null, endDate = null) {
@@ -410,12 +447,32 @@ function formatNumber(number) {
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
 }
 
+// แก้ไขฟังก์ชัน updateTransactionStatus และ doUpdateStatus
+
 function updateTransactionStatus(transactionId, newStatus, needBankAccount) {
     currentTransactionId = transactionId;
     currentStatus = newStatus;
 
+    // ถ้าสถานะเป็น completed และยังไม่มีบัญชีธนาคาร
     if (newStatus === 'completed' && needBankAccount) {
         const modal = new bootstrap.Modal(document.getElementById('bankAccountModal'));
+
+        // ทำให้แน่ใจว่า modal จะถูกเคลียร์ทุกครั้งก่อนแสดง
+        const modalBankAccountSelect = document.getElementById('modalBankAccountSelect');
+        modalBankAccountSelect.value = '';
+
+        // เพิ่มข้อความเตือนว่าจำเป็นต้องเลือกบัญชีธนาคาร
+        const modalTitle = document.getElementById('bankAccountModalLabel');
+        if (modalTitle) {
+            modalTitle.innerHTML = '<i class="fas fa-exclamation-circle text-danger me-2"></i>กรุณาเลือกบัญชีธนาคาร';
+        }
+
+        // เพิ่มคำอธิบายให้ชัดเจน
+        const modalDescription = document.querySelector('#bankAccountModal .modal-body p');
+        if (modalDescription) {
+            modalDescription.innerHTML = '<strong class="text-danger">จำเป็นต้องเลือกบัญชีธนาคาร</strong> สำหรับรายการที่สำเร็จแล้ว เพื่อบันทึกข้อมูลทางการเงินอย่างถูกต้อง';
+        }
+
         modal.show();
     } else {
         doUpdateStatus(transactionId, newStatus, null);
@@ -426,7 +483,8 @@ document.getElementById('confirmBankAccountBtn').addEventListener('click', funct
     const bankAccountId = document.getElementById('modalBankAccountSelect').value;
 
     if (!bankAccountId) {
-        alert('กรุณาเลือกบัญชีธนาคาร');
+        // เพิ่มการแจ้งเตือนเมื่อไม่ได้เลือกบัญชีธนาคาร
+        alert('กรุณาเลือกบัญชีธนาคารสำหรับรายการที่สำเร็จแล้ว');
         return;
     }
 
@@ -458,8 +516,23 @@ function doUpdateStatus(transactionId, newStatus, bankAccountId) {
                 location.reload();
             }, 1500);
         } else {
-            showAlert('danger', 'เกิดข้อผิดพลาด: ' + data.message);
-            location.reload();
+            // ถ้าต้องการบัญชีธนาคาร ให้แสดง modal เลือกบัญชีธนาคาร
+            if (data.needBankAccount) {
+                const modal = new bootstrap.Modal(document.getElementById('bankAccountModal'));
+
+                // เพิ่มข้อความเตือนว่าจำเป็นต้องเลือกบัญชีธนาคาร
+                const modalTitle = document.getElementById('bankAccountModalLabel');
+                if (modalTitle) {
+                    modalTitle.innerHTML = '<i class="fas fa-exclamation-circle text-danger me-2"></i>กรุณาเลือกบัญชีธนาคาร';
+                }
+
+                modal.show();
+            } else {
+                showAlert('danger', 'เกิดข้อผิดพลาด: ' + data.message);
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            }
         }
     })
     .catch(error => {

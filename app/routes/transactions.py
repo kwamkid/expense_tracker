@@ -11,6 +11,7 @@ transactions_bp = Blueprint('transactions', __name__, url_prefix='/transactions'
 bangkok_tz = pytz.timezone('Asia/Bangkok')
 
 
+# app/routes/transactions.py - index
 @transactions_bp.route('/')
 @login_required
 def index():
@@ -130,6 +131,11 @@ def add():
                                                               company_id=company_id).all()]
 
     if form.validate_on_submit():
+        # ตรวจสอบว่าถ้าสถานะเป็น 'completed' จะต้องมีการเลือกบัญชีธนาคาร
+        if form.status.data == 'completed' and (form.bank_account_id.data == 0 or form.bank_account_id.data is None):
+            flash('กรุณาเลือกบัญชีธนาคารสำหรับรายการที่สำเร็จแล้ว', 'error')
+            return render_template('transactions/form.html', form=form, title='เพิ่มธุรกรรม')
+
         transaction = Transaction(
             amount=form.amount.data,
             description=form.description.data,
@@ -196,6 +202,11 @@ def edit(id):
                                                               company_id=company_id).all()]
 
     if form.validate_on_submit():
+        # ตรวจสอบว่าถ้าสถานะเป็น 'completed' จะต้องมีการเลือกบัญชีธนาคาร
+        if form.status.data == 'completed' and (form.bank_account_id.data == 0 or form.bank_account_id.data is None):
+            flash('กรุณาเลือกบัญชีธนาคารสำหรับรายการที่สำเร็จแล้ว', 'error')
+            return render_template('transactions/form.html', form=form, title='แก้ไขธุรกรรม')
+
         old_status = transaction.status
         old_bank_account_id = transaction.bank_account_id
 
@@ -304,6 +315,10 @@ def update_status(id):
 
     if new_status not in ['pending', 'completed', 'cancelled']:
         return jsonify({'success': False, 'message': 'สถานะไม่ถูกต้อง'}), 400
+
+    # ตรวจสอบว่าถ้าสถานะเป็น 'completed' จะต้องมีการเลือกบัญชีธนาคาร
+    if new_status == 'completed' and not bank_account_id and not transaction.bank_account_id:
+        return jsonify({'success': False, 'message': 'กรุณาเลือกบัญชีธนาคารสำหรับรายการที่สำเร็จแล้ว', 'needBankAccount': True}), 400
 
     # ถ้ามีการส่ง bank_account_id มา ให้อัพเดทด้วย
     if bank_account_id:
