@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from app.models import db, BankAccount, Transaction
+from app.models import db, BankAccount, Transaction, UserCompany
 from app.forms import BankAccountForm
 from app.services.balance_service import BalanceService
 
@@ -10,13 +10,32 @@ bank_accounts_bp = Blueprint('bank_accounts', __name__, url_prefix='/bank_accoun
 @bank_accounts_bp.route('/')
 @login_required
 def index():
-    bank_accounts = BankAccount.query.filter_by(user_id=current_user.id).all()
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
+    # แก้ไขการดึงบัญชีธนาคารให้ดึงเฉพาะในบริษัทปัจจุบัน
+    bank_accounts = BankAccount.query.filter_by(user_id=current_user.id, company_id=company_id).all()
     return render_template('bank_accounts/index.html', bank_accounts=bank_accounts)
 
 
 @bank_accounts_bp.route('/add', methods=['GET', 'POST'])
 @login_required
 def add():
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
     form = BankAccountForm()
 
     if form.validate_on_submit():
@@ -27,7 +46,8 @@ def add():
             initial_balance=form.initial_balance.data or 0,  # ใช้ 0 ถ้าไม่ได้กรอก
             current_balance=form.initial_balance.data or 0,  # เริ่มต้นเท่ากับ initial_balance
             is_active=form.is_active.data,
-            user_id=current_user.id
+            user_id=current_user.id,
+            company_id=company_id  # เพิ่มการใส่ company_id ตรงนี้
         )
         db.session.add(bank_account)
         db.session.commit()
@@ -41,9 +61,19 @@ def add():
 @bank_accounts_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
     bank_account = BankAccount.query.get_or_404(id)
 
-    if bank_account.user_id != current_user.id:
+    # ตรวจสอบทั้ง user_id และ company_id
+    if bank_account.user_id != current_user.id or bank_account.company_id != company_id:
         flash('คุณไม่มีสิทธิ์แก้ไขบัญชีนี้', 'error')
         return redirect(url_for('bank_accounts.index'))
 
@@ -88,9 +118,19 @@ def edit(id):
 @bank_accounts_bp.route('/delete/<int:id>')
 @login_required
 def delete(id):
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
     bank_account = BankAccount.query.get_or_404(id)
 
-    if bank_account.user_id != current_user.id:
+    # ตรวจสอบทั้ง user_id และ company_id
+    if bank_account.user_id != current_user.id or bank_account.company_id != company_id:
         flash('คุณไม่มีสิทธิ์ลบบัญชีนี้', 'error')
         return redirect(url_for('bank_accounts.index'))
 
@@ -111,9 +151,19 @@ def delete(id):
 @login_required
 def recalculate(id):
     """คำนวณยอดคงเหลือใหม่สำหรับบัญชีที่เลือก"""
+    # ดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
     bank_account = BankAccount.query.get_or_404(id)
 
-    if bank_account.user_id != current_user.id:
+    # ตรวจสอบทั้ง user_id และ company_id
+    if bank_account.user_id != current_user.id or bank_account.company_id != company_id:
         flash('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error')
         return redirect(url_for('bank_accounts.index'))
 

@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -19,6 +18,22 @@
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
     <style>
+        /* Sidebar general styles */
+        #sidebar {
+            min-width: 250px;
+            max-width: 250px;
+            background: #343a40;
+            color: #fff;
+            transition: all 0.3s;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar.active {
+            margin-left: -250px;
+        }
+
         /* Override sidebar active styles */
         #sidebar ul li > a {
             border-left: 4px solid transparent;
@@ -42,13 +57,313 @@
             border-left: 4px solid #FF7F50;
         }
 
-        /* Sidebar header logo */
-        #sidebar .sidebar-header .logo-img {
-            max-width: 150px;
-            max-height: 100px;
-            object-fit: contain;
+        /* Sidebar header with fixed height for logo circle */
+        #sidebar .sidebar-header {
+            padding: 20px 0;
+            background: #343a40;
+            text-align: center;
+            border-bottom: 1px solid #474747;
+            height: 120px; /* กำหนดความสูงคงที่ */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Logo container */
+        .logo-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Circle logo with fixed size */
+        .logo-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #EC523E;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Image inside circle - cover entire area */
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* ให้ภาพเต็มพื้นที่และ crop ส่วนเกิน */
+            object-position: center;
+        }
+
+        /* Placeholder for when no logo is available */
+        .logo-placeholder {
+            background: linear-gradient(135deg, #EC523E, #d64632);
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* ถ้าไม่มีรูปโลโก้ ใช้ตัวอักษรแทน */
+        .logo-placeholder span {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        /* Hover effect */
+        .logo-circle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Company Switcher Section - ส่วนใหม่แยกออกมา */
+        .company-switcher-section {
+            padding: 12px 15px;
+            background-color: #2c3135;
+            border-bottom: 1px solid #474747;
+        }
+
+        /* Company Switcher Button Styles */
+        .company-switcher {
+    position: relative;
+}
+
+        .btn-switcher {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            text-align: left;
+            border-radius: 6px;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-switcher:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ส่วนแสดงข้อมูลบริษัท */
+        .company-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .company-label {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .company-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        /* Icon */
+        .btn-switcher .fas {
+            font-size: 0.85rem;
+            margin-left: 8px;
+        }
+
+        /* Company Switcher Menu */
+    .company-switcher-menu {
+    width: 250px; /* กำหนดความกว้างที่แน่นอน */
+    max-width: 100%; /* แต่ไม่เกินความกว้างของพื้นที่ */
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-top: 5px;
+    left: auto; /* ยกเลิกการชิดซ้าย */
+    right: 0; /* ให้ดรอปดาวน์อยู่ทางด้านขวา */
+}
+
+/* ส่วนเนื้อหาภายในเมนู */
+.company-switcher-menu .dropdown-item {
+    padding: 10px 15px;
+    white-space: normal;
+    word-break: break-word;
+    font-size: 0.95rem;
+}
+
+        .company-switcher-menu .dropdown-item.active {
+            background-color: #EC523E;
+            color: white;
+        }
+
+        .company-switcher-menu .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .company-switcher-menu .dropdown-item.active:hover {
+            background-color: #d64632;
+        }
+
+        /* Sidebar Menu Styles */
+        #sidebar ul.components {
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        #sidebar ul li a {
+            padding: 10px 20px;
+            font-size: 16px;
             display: block;
-            margin: 0 auto;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        #sidebar ul li a:hover {
+            color: #fff;
+            background: #495057;
+        }
+
+        #sidebar ul li.active > a {
+            color: #fff;
+            background: var(--primary-color);
+        }
+
+        #sidebar ul li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Submenu Styles */
+        #sidebar ul ul a {
+            font-size: 15px !important;
+            padding-left: 40px !important;
+            background: #2c3135;
+        }
+
+        #sidebar ul ul li a:hover {
+            background: #242729;
+        }
+
+        /* Ripple effect */
+        .ripple {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Content area */
+        #content {
+            width: 100%;
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+
+        /* Topbar */
+        .topbar {
+            padding: 10px 15px;
+            background: var(--primary-color);
+            border-bottom: 1px solid var(--primary-hover);
+            margin-bottom: 20px;
+        }
+
+        /* Topbar elements styling */
+        .topbar .btn {
+            color: white !important;
+        }
+
+        .topbar .nav-link {
+            color: white !important;
+        }
+
+        .topbar .dropdown-toggle {
+            color: black !important;
+        }
+
+        .topbar .dropdown-toggle::after {
+            border-top-color: black;
+        }
+
+        /* Sidebar toggle button */
+        #sidebarCollapse {
+            background: none;
+            border: none;
+            color: var(--primary-color)!important;
+            padding: 0;
+            line-height: 1;
+        }
+
+        #sidebarCollapse:hover {
+            color: var(--primary-hover);
+            opacity: 0.8;
+        }
+
+        #sidebarCollapse:focus {
+            box-shadow: none;
+            outline: none;
+        }
+
+        .profile-img {
+            width: 35px;
+            height: 35px;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            #sidebar {
+                margin-left: -250px;
+            }
+
+            #sidebar.active {
+                margin-left: 0;
+            }
+
+            .company-switcher-section {
+                padding: 10px;
+            }
+
+            .btn-switcher {
+                padding: 8px 12px;
+            }
+
+            .company-name {
+                max-width: 140px;
+            }
+
+            .company-switcher-menu {
+        width: 220px; /* ลดขนาดลงเล็กน้อยสำหรับ mobile */
+        right: auto; /* ยกเลิก right ใน mobile */
+        left: 0;
+    }
         }
     </style>
 
@@ -59,101 +374,130 @@
     <div class="wrapper">
         <!-- Sidebar -->
         <nav id="sidebar">
+            <!-- ส่วนโลโก้วงกลมขนาดคงที่ -->
             <div class="sidebar-header">
-                {% if get_active_company() and get_active_company().logo_path %}
-                <img src="{{ url_for('static', filename='uploads/logo/' + get_active_company().logo_path) }}" class="logo-img" alt="Logo">
-                {% elif current_user.logo_path %}
-                <img src="{{ url_for('static', filename='uploads/logo/' + current_user.logo_path) }}" class="logo-img" alt="Logo">
-                {% else %}
-                <h3>{{ get_active_company().name if get_active_company() else 'Expense Tracker' }}</h3>
-                {% endif %}
+                <div class="logo-container">
+                    {% if get_active_company() and get_active_company().logo_path %}
+                    <div class="logo-circle">
+                        <img src="{{ url_for('static', filename='uploads/logo/' + get_active_company().logo_path) }}" alt="Logo">
+                    </div>
+                    {% elif current_user.logo_path %}
+                    <div class="logo-circle">
+                        <img src="{{ url_for('static', filename='uploads/logo/' + current_user.logo_path) }}" alt="Logo">
+                    </div>
+                    {% else %}
+                    <div class="logo-circle logo-placeholder">
+                        <span>{{ (get_active_company().name[0:2] if get_active_company() and get_active_company().name else 'ET') | upper }}</span>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
 
-            <!-- ส่วนของ Sidebar Menu ใน base.html -->
-<ul class="list-unstyled components">
-    <li class="{{ 'active' if request.endpoint == 'main.dashboard' else '' }}">
-        <a href="{{ url_for('main.dashboard') }}">
-            <i class="fas fa-tachometer-alt"></i> Dashboard
-        </a>
-    </li>
-    <li>
-        <a href="#transactionsSubMenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if request.endpoint.startswith('transactions') or request.endpoint.startswith('imports') else 'false' }}" class="dropdown-toggle">
-            <i class="fas fa-exchange-alt"></i> ธุรกรรม
-        </a>
-        <ul class="collapse {{ 'show' if request.endpoint.startswith('transactions') or request.endpoint.startswith('imports') else '' }} list-unstyled" id="transactionsSubMenu">
-            <li class="{{ 'active' if request.endpoint == 'transactions.index' else '' }}">
-                <a href="{{ url_for('transactions.index') }}">
-                    <i class="fas fa-list"></i> รายการธุรกรรม
-                </a>
+           <!-- ส่วนปุ่มเปลี่ยนบริษัท - ปรับปรุงให้ dropdown menu มีขนาดเหมาะสม -->
+<div class="company-switcher-section">
+    <div class="company-switcher">
+        <button class="btn btn-switcher dropdown-toggle" type="button" id="companySwitcherBtn" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+            <div class="company-info">
+                <div class="company-label">บริษัทปัจจุบัน</div>
+                <div class="company-name">{{ get_active_company().name if get_active_company() else 'เลือกบริษัท' }}</div>
+            </div>
+            <i class="fas fa-exchange-alt"></i>
+        </button>
+        <!-- เพิ่ม data-bs-popper="none" เพื่อควบคุมตำแหน่งแสดงผล -->
+        <ul class="dropdown-menu company-switcher-menu" aria-labelledby="companySwitcherBtn" data-bs-popper="none">
+            {% for company in current_user.companies %}
+            <li>
+                <form method="POST" action="{{ url_for('auth.select_company') }}">
+                    <input type="hidden" name="company_id" value="{{ company.id }}">
+                    <button type="submit" class="dropdown-item {% if get_active_company() and get_active_company().id == company.id %}active{% endif %}">
+                        {{ company.name }}
+                    </button>
+                </form>
             </li>
-            <li class="{{ 'active' if request.endpoint == 'transactions.add' else '' }}">
-                <a href="{{ url_for('transactions.add') }}">
-                    <i class="fas fa-plus"></i> เพิ่มธุรกรรม
-                </a>
-            </li>
-            <li class="{{ 'active' if request.endpoint == 'imports.upload' else '' }}">
-                <a href="{{ url_for('imports.upload') }}">
-                    <i class="fas fa-file-import"></i> นำเข้าข้อมูล
-                </a>
-            </li>
-            <li class="{{ 'active' if request.endpoint == 'imports.history' else '' }}">
-                <a href="{{ url_for('imports.history') }}">
-                    <i class="fas fa-history"></i> ประวัติการนำเข้า
+            {% endfor %}
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item text-primary" href="{{ url_for('auth.select_company') }}">
+                    <i class="fas fa-plus-circle me-2"></i>เพิ่มบริษัทใหม่
                 </a>
             </li>
         </ul>
-    </li>
-    <li class="{{ 'active' if request.endpoint == 'main.reports' else '' }}">
-        <a href="{{ url_for('main.reports') }}">
-            <i class="fas fa-chart-bar"></i> รายงาน
-        </a>
-    </li>
-    <!-- ส่วนของเมนูตั้งค่า -->
-    <li>
-        <a href="#settingsSubMenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if request.endpoint and (request.endpoint.startswith('settings') or request.endpoint.startswith('bank_accounts')) and not (request.endpoint == 'bank_accounts.index') else 'false' }}" class="dropdown-toggle">
-            <i class="fas fa-cog"></i> ตั้งค่า
-        </a>
-        <ul class="collapse {{ 'show' if request.endpoint and (request.endpoint.startswith('settings') or request.endpoint.startswith('bank_accounts')) and not (request.endpoint == 'bank_accounts.index') else '' }} list-unstyled" id="settingsSubMenu">
-            <li class="{{ 'active' if request.endpoint == 'settings.company' else '' }}">
-                <a href="{{ url_for('settings.company') }}">
-                    <i class="fas fa-building"></i> ข้อมูลบริษัท
-                </a>
-            </li>
-            <li class="{{ 'active' if request.endpoint == 'settings.company_members' else '' }}">
-                <a href="{{ url_for('settings.company_members') }}">
-                    <i class="fas fa-users"></i> จัดการผู้ใช้
-                </a>
-            </li>
-            <li class="{{ 'active' if request.endpoint == 'settings.categories' else '' }}">
-                <a href="{{ url_for('settings.categories') }}">
-                    <i class="fas fa-tags"></i> หมวดหมู่
-                </a>
-            </li>
-             <li class="{{ 'active' if request.endpoint == 'bank_accounts.index' else '' }}">
-        <a href="{{ url_for('bank_accounts.index') }}">
-            <i class="fas fa-university"></i> บัญชีธนาคาร
-        </a>
-    </li>
-            <li class="{{ 'active' if request.endpoint == 'settings.clear_data' else '' }}">
-                <a href="{{ url_for('settings.clear_data') }}">
-                    <i class="fas fa-trash-alt"></i> ล้างข้อมูลทั้งหมด
-                </a>
-            </li>
-        </ul>
-    </li>
+    </div>
+</div>
 
-    <!-- เมนูบัญชีธนาคาร แยกออกมาต่างหาก -->
-
-
-    <!-- เพิ่มเมนูสำหรับเปลี่ยนบริษัท -->
-    {% if current_user.user_companies|length > 1 %}
-    <li class="{{ 'active' if request.endpoint == 'auth.select_company' else '' }}">
-        <a href="{{ url_for('auth.select_company') }}">
-            <i class="fas fa-exchange-alt"></i> เปลี่ยนบริษัท
-        </a>
-    </li>
-    {% endif %}
-</ul>
+            <!-- ส่วนของ Sidebar Menu -->
+            <ul class="list-unstyled components">
+                <li class="{{ 'active' if request.endpoint == 'main.dashboard' else '' }}">
+                    <a href="{{ url_for('main.dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="#transactionsSubMenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if request.endpoint.startswith('transactions') or request.endpoint.startswith('imports') else 'false' }}" class="dropdown-toggle">
+                        <i class="fas fa-exchange-alt"></i> ธุรกรรม
+                    </a>
+                    <ul class="collapse {{ 'show' if request.endpoint.startswith('transactions') or request.endpoint.startswith('imports') else '' }} list-unstyled" id="transactionsSubMenu">
+                        <li class="{{ 'active' if request.endpoint == 'transactions.index' else '' }}">
+                            <a href="{{ url_for('transactions.index') }}">
+                                <i class="fas fa-list"></i> รายการธุรกรรม
+                            </a>
+                        </li>
+                        <li class="{{ 'active' if request.endpoint == 'transactions.add' else '' }}">
+                            <a href="{{ url_for('transactions.add') }}">
+                                <i class="fas fa-plus"></i> เพิ่มธุรกรรม
+                            </a>
+                        </li>
+                        <li class="{{ 'active' if request.endpoint == 'imports.upload' else '' }}">
+                            <a href="{{ url_for('imports.upload') }}">
+                                <i class="fas fa-file-import"></i> นำเข้าข้อมูล
+                            </a>
+                        </li>
+                        <li class="{{ 'active' if request.endpoint == 'imports.history' else '' }}">
+                            <a href="{{ url_for('imports.history') }}">
+                                <i class="fas fa-history"></i> ประวัติการนำเข้า
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="{{ 'active' if request.endpoint == 'main.reports' else '' }}">
+                    <a href="{{ url_for('main.reports') }}">
+                        <i class="fas fa-chart-bar"></i> รายงาน
+                    </a>
+                </li>
+                <li class="{{ 'active' if request.endpoint == 'bank_accounts.index' else '' }}">
+                    <a href="{{ url_for('bank_accounts.index') }}">
+                        <i class="fas fa-university"></i> บัญชีธนาคาร
+                    </a>
+                </li>
+                <!-- ส่วนของเมนูตั้งค่า -->
+                <li>
+                    <a href="#settingsSubMenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if request.endpoint and (request.endpoint.startswith('settings') or request.endpoint.startswith('bank_accounts')) and not (request.endpoint == 'bank_accounts.index') else 'false' }}" class="dropdown-toggle">
+                        <i class="fas fa-cog"></i> ตั้งค่า
+                    </a>
+                    <ul class="collapse {{ 'show' if request.endpoint and (request.endpoint.startswith('settings') or request.endpoint.startswith('bank_accounts')) and not (request.endpoint == 'bank_accounts.index') else '' }} list-unstyled" id="settingsSubMenu">
+                        <li class="{{ 'active' if request.endpoint == 'settings.company' else '' }}">
+                            <a href="{{ url_for('settings.company') }}">
+                                <i class="fas fa-building"></i> ข้อมูลบริษัท
+                            </a>
+                        </li>
+                        <li class="{{ 'active' if request.endpoint == 'settings.company_members' else '' }}">
+                            <a href="{{ url_for('settings.company_members') }}">
+                                <i class="fas fa-users"></i> จัดการผู้ใช้
+                            </a>
+                        </li>
+                        <li class="{{ 'active' if request.endpoint == 'settings.categories' else '' }}">
+                            <a href="{{ url_for('settings.categories') }}">
+                                <i class="fas fa-tags"></i> หมวดหมู่
+                            </a>
+                        </li>
+                        <li class="{{ 'active' if request.endpoint == 'settings.clear_data' else '' }}">
+                            <a href="{{ url_for('settings.clear_data') }}">
+                                <i class="fas fa-trash-alt"></i> ล้างข้อมูลทั้งหมด
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </nav>
 
         <!-- Page Content -->
@@ -230,6 +574,55 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <script>
+    // สำหรับ Company Switcher
+    document.addEventListener('DOMContentLoaded', function() {
+        // ปรับขนาดชื่อบริษัทให้พอดีกับปุ่ม
+        function adjustCompanyNameLength() {
+            const companyName = document.querySelector('.company-name');
+            if (companyName) {
+                const buttonWidth = companyName.offsetWidth;
+
+                // ถ้าเป็นมือถือ
+                if (window.innerWidth <= 768 && companyName.textContent.length > 15) {
+                    companyName.textContent = companyName.textContent.substring(0, 15) + '...';
+                }
+            }
+        }
+
+        // เรียกใช้งานเมื่อโหลดเพจ
+        adjustCompanyNameLength();
+
+        // เรียกใช้งานเมื่อปรับขนาดหน้าจอ
+        window.addEventListener('resize', adjustCompanyNameLength);
+
+        // Ripple effect เมื่อคลิกปุ่ม
+        const switcher = document.querySelector('.btn-switcher');
+        if (switcher) {
+            switcher.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                this.appendChild(ripple);
+
+                const x = e.clientX - e.target.getBoundingClientRect().left;
+                const y = e.clientY - e.target.getBoundingClientRect().top;
+
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        }
+
+        // Sidebar toggle functionality
+        $('#sidebarCollapse').on('click', function () {
+            $('#sidebar').toggleClass('active');
+        });
+    });
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>
