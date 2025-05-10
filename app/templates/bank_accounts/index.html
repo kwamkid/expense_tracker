@@ -10,6 +10,17 @@
     </a>
 </div>
 
+<!-- เพิ่มคำอธิบายเกี่ยวกับการใช้บัญชีธนาคารร่วมกัน -->
+<div class="alert alert-info mb-4">
+    <h6 class="alert-heading d-flex align-items-center">
+        <i class="fas fa-info-circle me-2"></i>บัญชีธนาคารของบริษัท {{ get_active_company().name }}
+    </h6>
+    <p class="mb-0">
+        บัญชีธนาคารทั้งหมดในรายการนี้ใช้ร่วมกันในบริษัท แสดงข้อมูลบัญชีธนาคารทั้งหมดที่สมาชิกของบริษัทสร้างไว้
+        สมาชิกทุกคนในบริษัทสามารถเข้าถึงและเชื่อมโยงธุรกรรมกับบัญชีเหล่านี้ได้
+    </p>
+</div>
+
 <div class="row">
     {% for account in bank_accounts %}
     <div class="col-md-4 mb-4">
@@ -54,7 +65,7 @@
     {% else %}
     <div class="col-12">
         <div class="alert alert-info">
-            ยังไม่มีบัญชีธนาคาร <a href="{{ url_for('bank_accounts.add') }}">เพิ่มบัญชีใหม่</a>
+            ยังไม่มีบัญชีธนาคารในบริษัทนี้ <a href="{{ url_for('bank_accounts.add') }}">เพิ่มบัญชีใหม่</a>
         </div>
     </div>
     {% endfor %}

@@ -7,6 +7,12 @@
     <div class="col-md-8">
         <h1 class="mb-4">{{ title }}</h1>
 
+        <!-- เพิ่มแถบคำอธิบายเกี่ยวกับการใช้บัญชีธนาคารร่วมกันในบริษัท -->
+        <div class="alert alert-info mb-4">
+            <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>หมายเหตุเกี่ยวกับบัญชีธนาคาร</h6>
+            <p class="mb-0">บัญชีธนาคารทั้งหมดจะถูกใช้ร่วมกันโดยทุกคนในบริษัท <strong>{{ get_active_company().name }}</strong> สมาชิกทุกคนจะสามารถเห็นและใช้บัญชีธนาคารเหล่านี้ได้</p>
+        </div>
+
         <div class="card">
             <div class="card-body">
                 <form method="POST" id="bankAccountForm">

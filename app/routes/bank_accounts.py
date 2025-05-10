@@ -19,8 +19,8 @@ def index():
 
     company_id = user_company.company_id
 
-    # แก้ไขการดึงบัญชีธนาคารให้ดึงเฉพาะในบริษัทปัจจุบัน
-    bank_accounts = BankAccount.query.filter_by(user_id=current_user.id, company_id=company_id).all()
+    # แก้ไขการดึงบัญชีธนาคารให้ดึงตาม company_id แทน user_id
+    bank_accounts = BankAccount.query.filter_by(company_id=company_id).all()
     return render_template('bank_accounts/index.html', bank_accounts=bank_accounts)
 
 
@@ -46,8 +46,8 @@ def add():
             initial_balance=form.initial_balance.data or 0,  # ใช้ 0 ถ้าไม่ได้กรอก
             current_balance=form.initial_balance.data or 0,  # เริ่มต้นเท่ากับ initial_balance
             is_active=form.is_active.data,
-            user_id=current_user.id,
-            company_id=company_id  # เพิ่มการใส่ company_id ตรงนี้
+            user_id=current_user.id,  # เก็บ user_id เพื่อบันทึกว่าใครเป็นคนสร้าง
+            company_id=company_id  # ใช้ company_id จากบริษัทที่ active
         )
         db.session.add(bank_account)
         db.session.commit()
@@ -72,9 +72,9 @@ def edit(id):
 
     bank_account = BankAccount.query.get_or_404(id)
 
-    # ตรวจสอบทั้ง user_id และ company_id
-    if bank_account.user_id != current_user.id or bank_account.company_id != company_id:
-        flash('คุณไม่มีสิทธิ์แก้ไขบัญชีนี้', 'error')
+    # ตรวจสอบว่าบัญชีนี้อยู่ในบริษัทปัจจุบันหรือไม่ (เปลี่ยนจาก user_id เป็น company_id)
+    if bank_account.company_id != company_id:
+        flash('คุณไม่มีสิทธิ์แก้ไขบัญชีนี้ เนื่องจากบัญชีนี้ไม่ได้อยู่ในบริษัทปัจจุบัน', 'error')
         return redirect(url_for('bank_accounts.index'))
 
     form = BankAccountForm(obj=bank_account)
@@ -129,9 +129,9 @@ def delete(id):
 
     bank_account = BankAccount.query.get_or_404(id)
 
-    # ตรวจสอบทั้ง user_id และ company_id
-    if bank_account.user_id != current_user.id or bank_account.company_id != company_id:
-        flash('คุณไม่มีสิทธิ์ลบบัญชีนี้', 'error')
+    # ตรวจสอบว่าบัญชีนี้อยู่ในบริษัทปัจจุบันหรือไม่ (เปลี่ยนจาก user_id เป็น company_id)
+    if bank_account.company_id != company_id:
+        flash('คุณไม่มีสิทธิ์ลบบัญชีนี้ เนื่องจากบัญชีนี้ไม่ได้อยู่ในบริษัทปัจจุบัน', 'error')
         return redirect(url_for('bank_accounts.index'))
 
     # ตรวจสอบว่ามี transaction ที่ใช้บัญชีนี้หรือไม่
@@ -162,9 +162,9 @@ def recalculate(id):
 
     bank_account = BankAccount.query.get_or_404(id)
 
-    # ตรวจสอบทั้ง user_id และ company_id
-    if bank_account.user_id != current_user.id or bank_account.company_id != company_id:
-        flash('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error')
+    # ตรวจสอบว่าบัญชีนี้อยู่ในบริษัทปัจจุบันหรือไม่ (เปลี่ยนจาก user_id เป็น company_id)
+    if bank_account.company_id != company_id:
+        flash('คุณไม่มีสิทธิ์ดำเนินการนี้ เนื่องจากบัญชีนี้ไม่ได้อยู่ในบริษัทปัจจุบัน', 'error')
         return redirect(url_for('bank_accounts.index'))
 
     BalanceService.update_bank_balance(id)

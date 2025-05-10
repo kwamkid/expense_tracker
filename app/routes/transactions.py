@@ -342,6 +342,89 @@ def update_status(id):
         return jsonify({'success': False, 'message': f'เกิดข้อผิดพลาด: {str(e)}'}), 500
 
 
+# ตัวอย่างส่วนของโค้ดที่ต้องแก้ไขใน app/routes/transactions.py
+
+@transactions_bp.route('/add', methods=['GET', 'POST'])
+@login_required
+def add():
+    # ตรวจสอบและดึงบริษัทที่ active
+    user_company = UserCompany.query.filter_by(user_id=current_user.id, active_company=True).first()
+
+    if not user_company:
+        flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่ กรุณาเลือกบริษัท', 'warning')
+        return redirect(url_for('auth.select_company'))
+
+    company_id = user_company.company_id
+
+    # ตรวจสอบว่ามีหมวดหมู่ในบริษัทนี้หรือไม่
+    categories = Category.query.filter_by(company_id=company_id).all()
+    if len(categories) == 0:
+        # ถ้าไม่มีหมวดหมู่ ให้ดึงข้อมูลจาก user_id แล้วย้ายไปยัง company_id
+        orphan_categories = Category.query.filter_by(user_id=current_user.id).all()
+        if orphan_categories:
+            # ย้ายหมวดหมู่ให้เชื่อมโยงกับบริษัทปัจจุบัน
+            for category in orphan_categories:
+                category.company_id = company_id
+            db.session.commit()
+            flash('พบหมวดหมู่ที่ยังไม่มีการเชื่อมโยงกับบริษัท ระบบได้ทำการย้ายข้อมูลให้อัตโนมัติแล้ว', 'success')
+            categories = Category.query.filter_by(company_id=company_id).all()
+        else:
+            # ถ้าไม่มีหมวดหมู่เลย ให้สร้างหมวดหมู่เริ่มต้น
+            create_default_categories(current_user.id, company_id)
+            flash('ระบบได้สร้างหมวดหมู่เริ่มต้นให้แล้ว', 'success')
+            categories = Category.query.filter_by(company_id=company_id).all()
+
+    form = TransactionForm()
+
+    # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลหมวดหมู่
+    form.category_id.choices = [(c.id, c.name) for c in categories]
+
+    # แก้ไขเพื่อใช้ company_id ในการดึงข้อมูลบัญชีธนาคาร (ไม่ใช้ user_id)
+    form.bank_account_id.choices = [(0, 'เลือกบัญชี')] + [(b.id, f"{b.bank_name} - {b.account_number}")
+                                                        for b in
+                                                        BankAccount.query.filter_by(
+                                                            company_id=company_id).all()]
+
+    if form.validate_on_submit():
+        # ตรวจสอบว่าถ้าสถานะเป็น 'completed' จะต้องมีการเลือกบัญชีธนาคาร
+        if form.status.data == 'completed' and (form.bank_account_id.data == 0 or form.bank_account_id.data is None):
+            flash('กรุณาเลือกบัญชีธนาคารสำหรับรายการที่สำเร็จแล้ว', 'error')
+            return render_template('transactions/form.html', form=form, title='เพิ่มธุรกรรม')
+
+        transaction = Transaction(
+            amount=form.amount.data,
+            description=form.description.data,
+            transaction_date=form.transaction_date.data,
+            transaction_time=form.transaction_time.data,
+            type=form.type.data,
+            category_id=form.category_id.data,
+            bank_account_id=form.bank_account_id.data if form.bank_account_id.data != 0 else None,
+            status=form.status.data,
+            user_id=current_user.id,
+            company_id=company_id  # เพิ่มบรรทัดนี้เพื่อกำหนด company_id
+        )
+
+        # ถ้าสถานะเป็น completed ให้บันทึก completed_date
+        if form.status.data == 'completed':
+            transaction.completed_date = datetime.now(bangkok_tz)
+
+        db.session.add(transaction)
+        db.session.commit()
+
+        # อัพเดทยอดเงินถ้าสถานะเป็น completed และมีบัญชีธนาคาร
+        if transaction.status == 'completed' and transaction.bank_account_id:
+            try:
+                BalanceService.update_bank_balance(transaction.bank_account_id)
+            except Exception as e:
+                print(f"Error updating bank balance: {e}")
+                flash('เพิ่มธุรกรรมสำเร็จแต่มีปัญหาในการอัพเดทยอดเงิน', 'warning')
+
+        flash(f'เพิ่ม{form.type.data == "income" and "รายรับ" or "รายจ่าย"}เรียบร้อยแล้ว', 'success')
+        return redirect(url_for('transactions.index'))
+
+    return render_template('transactions/form.html', form=form, title='เพิ่มธุรกรรม')
+
+
 @transactions_bp.route('/api/categories')
 @login_required
 def get_categories():

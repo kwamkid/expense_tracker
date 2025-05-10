@@ -14,7 +14,7 @@ class BalanceService:
             return False
 
         # คำนวณยอดรวมจาก transaction ที่ completed
-        # ต้องเพิ่มการตรวจสอบ company_id ด้วย
+        # ตรวจสอบ company_id เพื่อให้แน่ใจว่าเป็นธุรกรรมในบริษัทเดียวกัน
         completed_transactions = Transaction.query.filter_by(
             bank_account_id=bank_account_id,
             status='completed',
@@ -52,13 +52,10 @@ class BalanceService:
         return True
 
     @staticmethod
-    def recalculate_all_balances(user_id, company_id=None):
-        """คำนวณยอดคงเหลือใหม่ทั้งหมดสำหรับผู้ใช้ในบริษัทที่ระบุ"""
-        # ถ้ามีการระบุ company_id
-        if company_id:
-            bank_accounts = BankAccount.query.filter_by(user_id=user_id, company_id=company_id).all()
-        else:
-            bank_accounts = BankAccount.query.filter_by(user_id=user_id).all()
+    def recalculate_all_balances(company_id):
+        """คำนวณยอดคงเหลือใหม่ทั้งหมดสำหรับบริษัทที่ระบุ"""
+        # ดึงบัญชีธนาคารทั้งหมดในบริษัท
+        bank_accounts = BankAccount.query.filter_by(company_id=company_id).all()
 
         for account in bank_accounts:
             BalanceService.update_bank_balance(account.id)

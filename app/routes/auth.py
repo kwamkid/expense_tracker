@@ -315,16 +315,19 @@ def create_default_categories(user_id, company_id=None):
 
 
 def create_default_bank_account(user_id, company_id=None):
-    """สร้างบัญชีธนาคาร default สำหรับผู้ใช้ใหม่"""
+    """สร้างบัญชีธนาคาร default สำหรับบริษัทใหม่"""
+    if not company_id:
+        return  # ต้องระบุ company_id เสมอ
+
     default_account = BankAccount(
-        bank_name='ธนาคารหลัก',
-        account_number='XXXX',
+        bank_name='ธนาคารไทยแลนด์',
+        account_number='123456789',
         account_name='บัญชีหลัก',
         initial_balance=0,
         current_balance=0,
         is_active=True,
-        user_id=user_id,
-        company_id=company_id
+        user_id=user_id,  # เก็บ user_id ไว้เพื่อระบุว่าใครเป็นคนสร้าง
+        company_id=company_id  # บัญชีนี้ผูกกับบริษัท (ไม่ใช่ผู้ใช้)
     )
     db.session.add(default_account)
     db.session.commit()

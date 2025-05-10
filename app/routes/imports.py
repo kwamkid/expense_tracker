@@ -69,6 +69,14 @@ def upload():
                     os.remove(filepath)
                 return redirect(request.url)
 
+            # ตรวจสอบว่าบัญชีธนาคารที่เลือกอยู่ในบริษัทปัจจุบันหรือไม่
+            bank_account = BankAccount.query.get(bank_account_id)
+            if not bank_account or bank_account.company_id != company_id:
+                flash('บัญชีธนาคารที่เลือกไม่ถูกต้องหรือไม่ได้อยู่ในบริษัทปัจจุบัน', 'error')
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                return redirect(request.url)
+
             import_service = BankImportService(bank_type)
 
             try:
@@ -76,10 +84,11 @@ def upload():
                 transactions_data = import_service.parse_file(filepath)
                 print(f"Successfully parsed {len(transactions_data)} transactions")
 
-                # ตรวจสอบรายการซ้ำสำหรับแต่ละรายการ
+                # ตรวจสอบรายการซ้ำสำหรับแต่ละรายการ (แก้ให้ใช้ company_id)
                 for item in transactions_data:
                     is_duplicate = check_duplicate_transaction(
                         current_user.id,
+                        company_id,  # เพิ่ม company_id เพื่อตรวจสอบเฉพาะในบริษัทปัจจุบัน
                         item['date'],
                         item['amount'],
                         item['description']
@@ -135,14 +144,14 @@ def upload():
 
     company_id = user_company.company_id
 
-    # ดึงบัญชีธนาคารเฉพาะของบริษัทปัจจุบัน
+    # ดึงบัญชีธนาคารเฉพาะของบริษัทปัจจุบัน (ไม่ใช้ user_id)
     bank_accounts = BankAccount.query.filter_by(
-        user_id=current_user.id,
         company_id=company_id,
         is_active=True
     ).all()
 
     return render_template('imports/upload.html', bank_accounts=bank_accounts)
+
 
 
 @imports_bp.route('/preview', methods=['GET', 'POST'])
@@ -417,27 +426,16 @@ def delete_import(batch_id):
     return redirect(url_for('imports.history'))
 
 
-def check_duplicate_transaction(user_id, date, amount, description):
+# แก้ไขฟังก์ชัน check_duplicate_transaction ให้ตรวจสอบตาม company_id
+def check_duplicate_transaction(user_id, company_id, date, amount, description):
     """ตรวจสอบว่ามีรายการซ้ำหรือไม่"""
-    # ดึงบริษัทที่ active จาก UserCompany
-    user_company = UserCompany.query.filter_by(
-        user_id=user_id,
-        active_company=True
-    ).first()
-
-    company_id = user_company.company_id if user_company else None
-
     # ค้นหารายการที่มีวันที่, จำนวนเงิน และรายละเอียดเหมือนกัน
-    # ให้ค้นหาเฉพาะธุรกรรมในบริษัทปัจจุบัน
+    # ตรวจสอบเฉพาะในบริษัทปัจจุบัน
     query = Transaction.query.filter_by(
-        user_id=user_id,
+        company_id=company_id,  # ใช้ company_id แทน user_id
         transaction_date=date,
         amount=amount
     )
-
-    # ถ้ามี company_id ให้เพิ่มเงื่อนไขในการค้นหา
-    if company_id:
-        query = query.filter_by(company_id=company_id)
 
     existing = query.all()
 

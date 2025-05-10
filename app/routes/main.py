@@ -79,7 +79,7 @@ def dashboard():
         .limit(10) \
         .all()
 
-    # Get bank accounts
+    # Get bank accounts - แก้ไขให้ดึงตาม company_id แทน user_id
     bank_accounts = BankAccount.query.filter_by(company_id=company_id, is_active=True).all()
 
     # Get categories for this company
@@ -97,6 +97,7 @@ def dashboard():
                            recent_transactions=recent_transactions,
                            bank_accounts=bank_accounts,
                            categories=categories)
+
 
 
 @main_bp.route('/api/dashboard-data')
@@ -237,7 +238,7 @@ def reports():
     total_expense = sum(t.amount for t in transactions if t.type == 'expense')
     net_profit = total_income - total_expense
 
-    # Category breakdown - ใช้ company_id แทน user_id
+    # Category breakdown - ใช้ company_id
     category_breakdown = db.session.query(
         Category.name,
         Category.type,
@@ -252,7 +253,7 @@ def reports():
 
     category_breakdown = category_breakdown.group_by(Category.id).all()
 
-    # Bank account breakdown - ใช้ company_id แทน user_id
+    # Bank account breakdown - ใช้ company_id
     bank_breakdown = db.session.query(
         BankAccount.bank_name,
         BankAccount.account_number,
@@ -274,7 +275,7 @@ def reports():
 
     bank_breakdown = bank_breakdown.group_by(BankAccount.id).all()
 
-    # Daily summary - ใช้ company_id แทน user_id
+    # Daily summary - ใช้ company_id
     daily_summary = db.session.query(
         Transaction.transaction_date,
         func.sum(case(
@@ -294,8 +295,10 @@ def reports():
     daily_summary = daily_summary.group_by(Transaction.transaction_date) \
         .order_by(Transaction.transaction_date).all()
 
-    # Get categories and bank accounts for filters - ใช้ company_id แทน user_id
+    # Get categories and bank accounts for filters - ใช้ company_id
     categories = Category.query.filter_by(company_id=company_id).all()
+
+    # แก้ไขจาก user_id เป็น company_id
     bank_accounts = BankAccount.query.filter_by(company_id=company_id).all()
 
     return render_template('main/reports.html',
