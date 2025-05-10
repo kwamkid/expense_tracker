@@ -38,4 +38,4 @@ htmlcov/
 
 # Uploads
 app/static/uploads/
-!app/static/uploads/.gitkeep
+!app/static/uploads/.gitkeep.env

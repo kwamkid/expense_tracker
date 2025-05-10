@@ -18,7 +18,7 @@ class Config:
     if os.environ.get('DATABASE_URL'):
         SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     else:
-        SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://agd_user:your_password@localhost/expense_tracker'
+        SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://agd_user:MKthailand47@localhost/expense_tracker'
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
