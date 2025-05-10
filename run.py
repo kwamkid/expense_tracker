@@ -1,4 +1,9 @@
 # run.py
+import pymysql
+
+# ทำให้ PyMySQL จำลองตัวเองเป็น MySQLdb
+pymysql.install_as_MySQLdb()
+
 from app import create_app
 from app.models import db
 import os
