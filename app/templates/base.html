@@ -28,10 +28,11 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         #sidebar.active {
-            margin-left: -250px;
+            margin-left: -250px !important;
         }
 
         /* Override sidebar active styles */
@@ -129,8 +130,8 @@
 
         /* Company Switcher Button Styles */
         .company-switcher {
-    position: relative;
-}
+            position: relative;
+        }
 
         .btn-switcher {
             width: 100%;
@@ -185,26 +186,26 @@
         }
 
         /* Company Switcher Menu */
-    .company-switcher-menu {
-    width: 250px; /* กำหนดความกว้างที่แน่นอน */
-    max-width: 100%; /* แต่ไม่เกินความกว้างของพื้นที่ */
-    max-height: 300px;
-    overflow-y: auto;
-    padding: 0;
-    border: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    margin-top: 5px;
-    left: auto; /* ยกเลิกการชิดซ้าย */
-    right: 0; /* ให้ดรอปดาวน์อยู่ทางด้านขวา */
-}
+        .company-switcher-menu {
+            width: 250px; /* กำหนดความกว้างที่แน่นอน */
+            max-width: 100%; /* แต่ไม่เกินความกว้างของพื้นที่ */
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 0;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-top: 5px;
+            left: auto; /* ยกเลิกการชิดซ้าย */
+            right: 0; /* ให้ดรอปดาวน์อยู่ทางด้านขวา */
+        }
 
-/* ส่วนเนื้อหาภายในเมนู */
-.company-switcher-menu .dropdown-item {
-    padding: 10px 15px;
-    white-space: normal;
-    word-break: break-word;
-    font-size: 0.95rem;
-}
+        /* ส่วนเนื้อหาภายในเมนู */
+        .company-switcher-menu .dropdown-item {
+            padding: 10px 15px;
+            white-space: normal;
+            word-break: break-word;
+            font-size: 0.95rem;
+        }
 
         .company-switcher-menu .dropdown-item.active {
             background-color: #EC523E;
@@ -318,6 +319,11 @@
             color: var(--primary-color)!important;
             padding: 0;
             line-height: 1;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #sidebarCollapse:hover {
@@ -337,14 +343,48 @@
             border: 2px solid white;
         }
 
-        /* Mobile Responsiveness */
+        /* Mobile Responsiveness - ปรับปรุงใหม่ */
         @media (max-width: 768px) {
             #sidebar {
                 margin-left: -250px;
+                position: fixed !important;
+                z-index: 1050;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                box-shadow: none;
+                transition: all 0.3s;
             }
 
             #sidebar.active {
+                margin-left: 0 !important;
+                box-shadow: 3px 0 10px rgba(0,0,0,0.2);
+            }
+
+            #content {
+                width: 100%;
                 margin-left: 0;
+            }
+
+            /* ปรับแต่ง topbar ให้แสดงผลถูกต้อง */
+            .topbar {
+                position: relative;
+                z-index: 1030;
+            }
+
+            /* ปรับแต่ง hamburger button ให้ชัดเจน */
+            #sidebarCollapse {
+                font-size: 1.5rem;
+                padding: 0.25rem 0.5rem;
+                cursor: pointer;
+                color: var(--primary-color) !important;
+                z-index: 1060;
+                display: block;
+            }
+
+            /* ปรับขนาดห่างระหว่าง hamburger และองค์ประกอบอื่น */
+            .navbar .container-fluid {
+                padding-left: 0.5rem;
             }
 
             .company-switcher-section {
@@ -360,10 +400,27 @@
             }
 
             .company-switcher-menu {
-        width: 220px; /* ลดขนาดลงเล็กน้อยสำหรับ mobile */
-        right: auto; /* ยกเลิก right ใน mobile */
-        left: 0;
-    }
+                width: 220px; /* ลดขนาดลงเล็กน้อยสำหรับ mobile */
+                right: auto;
+                left: 0;
+            }
+
+            /* สร้าง overlay สำหรับ mobile */
+            #sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1040;
+            }
+
+            /* แสดง overlay เมื่อ sidebar active */
+            body.sidebar-active #sidebar-overlay {
+                display: block;
+            }
         }
     </style>
 
@@ -371,7 +428,7 @@
 </head>
 <body>
     {% if current_user.is_authenticated and not is_select_company_page %}
-    <div class="wrapper">
+    <div class="wrapper d-flex">
         <!-- Sidebar -->
         <nav id="sidebar">
             <!-- ส่วนโลโก้วงกลมขนาดคงที่ -->
@@ -394,36 +451,36 @@
             </div>
 
            <!-- ส่วนปุ่มเปลี่ยนบริษัท - ปรับปรุงให้ dropdown menu มีขนาดเหมาะสม -->
-<div class="company-switcher-section">
-    <div class="company-switcher">
-        <button class="btn btn-switcher dropdown-toggle" type="button" id="companySwitcherBtn" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-            <div class="company-info">
-                <div class="company-label">บริษัทปัจจุบัน</div>
-                <div class="company-name">{{ get_active_company().name if get_active_company() else 'เลือกบริษัท' }}</div>
-            </div>
-            <i class="fas fa-exchange-alt"></i>
-        </button>
-        <!-- เพิ่ม data-bs-popper="none" เพื่อควบคุมตำแหน่งแสดงผล -->
-        <ul class="dropdown-menu company-switcher-menu" aria-labelledby="companySwitcherBtn" data-bs-popper="none">
-            {% for company in current_user.companies %}
-            <li>
-                <form method="POST" action="{{ url_for('auth.select_company') }}">
-                    <input type="hidden" name="company_id" value="{{ company.id }}">
-                    <button type="submit" class="dropdown-item {% if get_active_company() and get_active_company().id == company.id %}active{% endif %}">
-                        {{ company.name }}
+            <div class="company-switcher-section">
+                <div class="company-switcher">
+                    <button class="btn btn-switcher dropdown-toggle" type="button" id="companySwitcherBtn" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                        <div class="company-info">
+                            <div class="company-label">บริษัทปัจจุบัน</div>
+                            <div class="company-name">{{ get_active_company().name if get_active_company() else 'เลือกบริษัท' }}</div>
+                        </div>
+                        <i class="fas fa-exchange-alt"></i>
                     </button>
-                </form>
-            </li>
-            {% endfor %}
-            <li><hr class="dropdown-divider"></li>
-            <li>
-                <a class="dropdown-item text-primary" href="{{ url_for('auth.select_company') }}">
-                    <i class="fas fa-plus-circle me-2"></i>เพิ่มบริษัทใหม่
-                </a>
-            </li>
-        </ul>
-    </div>
-</div>
+                    <!-- เพิ่ม data-bs-popper="none" เพื่อควบคุมตำแหน่งแสดงผล -->
+                    <ul class="dropdown-menu company-switcher-menu" aria-labelledby="companySwitcherBtn" data-bs-popper="none">
+                        {% for company in current_user.companies %}
+                        <li>
+                            <form method="POST" action="{{ url_for('auth.select_company') }}">
+                                <input type="hidden" name="company_id" value="{{ company.id }}">
+                                <button type="submit" class="dropdown-item {% if get_active_company() and get_active_company().id == company.id %}active{% endif %}">
+                                    {{ company.name }}
+                                </button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-primary" href="{{ url_for('auth.select_company') }}">
+                                <i class="fas fa-plus-circle me-2"></i>เพิ่มบริษัทใหม่
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
             <!-- ส่วนของ Sidebar Menu -->
             <ul class="list-unstyled components">
@@ -500,12 +557,15 @@
             </ul>
         </nav>
 
+        <!-- Overlay ที่แสดงพร้อมกับ sidebar ในโหมด mobile -->
+        <div id="sidebar-overlay"></div>
+
         <!-- Page Content -->
         <div id="content">
             <!-- Top Bar -->
             <nav class="navbar navbar-expand-lg navbar-light bg-light topbar">
                 <div class="container-fluid">
-                    <button type="button" id="sidebarCollapse" class="btn btn-link text-primary p-0">
+                    <button type="button" id="sidebarCollapse" class="btn">
                         <i class="fas fa-bars fa-lg"></i>
                     </button>
 
@@ -572,18 +632,106 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
+    <!-- Custom JS - แทนที่ main.js -->
     <script>
-    // สำหรับ Company Switcher
     document.addEventListener('DOMContentLoaded', function() {
-        // ปรับขนาดชื่อบริษัทให้พอดีกับปุ่ม
+        // ========== Sidebar Toggle ==========
+        const sidebarCollapseBtn = document.getElementById('sidebarCollapse');
+        const sidebarElement = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+        // สร้าง overlay ถ้ายังไม่มี
+function createOverlayIfNeeded() {
+    if (!document.getElementById('sidebar-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.id = 'sidebar-overlay';
+        overlay.style.display = 'none';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        overlay.style.zIndex = '1040';
+        document.body.appendChild(overlay);
+
+        // เพิ่ม event listener สำหรับการคลิกที่ overlay
+        overlay.addEventListener('click', function() {
+            toggleSidebar();
+        });
+    }
+    return document.getElementById('sidebar-overlay');
+}
+
+        // อัพเดท overlay
+        const overlay = createOverlayIfNeeded();
+        // เพิ่มโค้ดนี้หลังจากสร้าง overlay
+
+// จากนั้นเพิ่ม event listener อีกครั้งตรงๆ เพื่อให้แน่ใจ
+if (overlay) {
+    overlay.addEventListener('click', function() {
+        console.log('Overlay clicked');
+        if (sidebarElement && sidebarElement.classList.contains('active')) {
+            sidebarElement.classList.remove('active');
+            this.style.display = 'none';
+            document.body.classList.remove('sidebar-active');
+        }
+    });
+}
+
+        // ฟังก์ชันเปิด/ปิด sidebar
+        function toggleSidebar() {
+            console.log('toggleSidebar called');
+            if (sidebarElement) {
+                sidebarElement.classList.toggle('active');
+
+                // จัดการ overlay
+                if (window.innerWidth <= 768) {
+                    if (sidebarElement.classList.contains('active')) {
+                        overlay.style.display = 'block';
+                        document.body.classList.add('sidebar-active');
+                    } else {
+                        overlay.style.display = 'none';
+                        document.body.classList.remove('sidebar-active');
+                    }
+                }
+
+                console.log('Sidebar toggled, active =', sidebarElement.classList.contains('active'));
+            }
+        }
+
+        // เพิ่ม event listener สำหรับปุ่ม toggle
+        if (sidebarCollapseBtn) {
+            // ลบ event listener เดิมเพื่อป้องกันการซ้ำซ้อน
+            const newSidebarCollapseBtn = sidebarCollapseBtn.cloneNode(true);
+            sidebarCollapseBtn.parentNode.replaceChild(newSidebarCollapseBtn, sidebarCollapseBtn);
+
+            // เพิ่ม event listener ใหม่
+            newSidebarCollapseBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSidebar();
+            });
+
+            console.log('Event listener added to sidebar toggle button');
+        }
+
+        // อัพเดท sidebar state เมื่อขนาดหน้าจอเปลี่ยน
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                if (overlay) overlay.style.display = 'none';
+                document.body.classList.remove('sidebar-active');
+            } else if (sidebarElement && sidebarElement.classList.contains('active')) {
+                if (overlay) overlay.style.display = 'block';
+                document.body.classList.add('sidebar-active');
+            }
+        });
+
+        // ========== Company Name Adjustment ==========
         function adjustCompanyNameLength() {
             const companyName = document.querySelector('.company-name');
             if (companyName) {
-                const buttonWidth = companyName.offsetWidth;
-
                 // ถ้าเป็นมือถือ
                 if (window.innerWidth <= 768 && companyName.textContent.length > 15) {
                     companyName.textContent = companyName.textContent.substring(0, 15) + '...';
@@ -597,7 +745,7 @@
         // เรียกใช้งานเมื่อปรับขนาดหน้าจอ
         window.addEventListener('resize', adjustCompanyNameLength);
 
-        // Ripple effect เมื่อคลิกปุ่ม
+        // ========== Ripple Effect ==========
         const switcher = document.querySelector('.btn-switcher');
         if (switcher) {
             switcher.addEventListener('click', function(e) {
@@ -617,10 +765,15 @@
             });
         }
 
-        // Sidebar toggle functionality
-        $('#sidebarCollapse').on('click', function () {
-            $('#sidebar').toggleClass('active');
-        });
+        // Debug - แสดงข้อมูลเพื่อตรวจสอบปัญหา
+        console.log('Sidebar button exists:', sidebarCollapseBtn !== null);
+        console.log('Sidebar exists:', sidebarElement !== null);
+
+        if (sidebarCollapseBtn) {
+            console.log('Button dimensions:', sidebarCollapseBtn.offsetWidth, 'x', sidebarCollapseBtn.offsetHeight);
+            console.log('Button visible:', sidebarCollapseBtn.offsetParent !== null);
+            console.log('Button z-index:', window.getComputedStyle(sidebarCollapseBtn).zIndex);
+        }
     });
     </script>
 
