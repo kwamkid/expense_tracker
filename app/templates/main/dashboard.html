@@ -117,15 +117,15 @@
         <div class="row">
             <div class="col-md-4 text-center mb-3 mb-md-0">
                 <h6 class="text-muted">รายรับเดือนนี้</h6>
-                <h4 class="text-success">฿{{ "{:,.2f}".format(total_income_current_month) }}</h4>
+                <h4 id="current-month-income" class="text-success">฿{{ "{:,.2f}".format(total_income_current_month) }}</h4>
             </div>
             <div class="col-md-4 text-center mb-3 mb-md-0">
                 <h6 class="text-muted">รายจ่ายเดือนนี้</h6>
-                <h4 class="text-danger">฿{{ "{:,.2f}".format(total_expense_current_month) }}</h4>
+                <h4 id="current-month-expense" class="text-danger">฿{{ "{:,.2f}".format(total_expense_current_month) }}</h4>
             </div>
             <div class="col-md-4 text-center">
                 <h6 class="text-muted">ยอดสุทธิเดือนนี้</h6>
-                <h4 class="{{ 'text-success' if balance_current_month >= 0 else 'text-danger' }}">
+                <h4 id="current-month-net" class="{{ 'text-success' if balance_current_month >= 0 else 'text-danger' }}">
                     ฿{{ "{:,.2f}".format(balance_current_month) }}
                 </h4>
             </div>
@@ -416,20 +416,58 @@ $(document).ready(function() {
         $('#dateRangeFilter').append('<option value="all">ทั้งหมด</option>');
     }
 
+    // ส่วนที่เพิ่มใหม่ - อัพเดทข้อมูลส่วนของสรุปเดือนปัจจุบัน
+    updateCurrentMonthSummary();
+
     // Automatically select 'all' when page loads
     $('#dateRangeFilter').val('all');
     fetchDashboardData('all');
 });
 
+// เพิ่มฟังก์ชันใหม่สำหรับอัพเดทส่วนสรุปเดือนปัจจุบัน
+function updateCurrentMonthSummary() {
+    console.log("Updating current month summary");
+
+    // ใช้ข้อมูลที่ส่งมาจาก backend ผ่าน template variables
+    const currentIncomeElement = document.querySelector('#current-month-income');
+    const currentExpenseElement = document.querySelector('#current-month-expense');
+    const currentNetElement = document.querySelector('#current-month-net');
+
+    if (currentIncomeElement && currentExpenseElement && currentNetElement) {
+        // ใช้ค่าที่มาจาก server-side
+        const currentIncome = {{ total_income_current_month }};
+        const currentExpense = {{ total_expense_current_month }};
+        const currentNet = {{ balance_current_month }};
+
+        console.log("Current month data from server:", currentIncome, currentExpense, currentNet);
+
+        currentIncomeElement.textContent = '฿' + formatNumber(currentIncome);
+        currentExpenseElement.textContent = '฿' + formatNumber(currentExpense);
+        currentNetElement.textContent = '฿' + formatNumber(currentNet);
+
+        // กำหนดสีตามค่าบวก/ลบ
+        currentNetElement.classList.remove('text-success', 'text-danger');
+        currentNetElement.classList.add(currentNet >= 0 ? 'text-success' : 'text-danger');
+    } else {
+        console.warn("Could not find current month summary elements");
+    }
+}
+
 function fetchDashboardData(filter, startDate = null, endDate = null) {
+    console.log("fetchDashboardData called with filter:", filter, "startDate:", startDate, "endDate:", endDate);
+
     let url = `/api/dashboard-data?filter=${filter}`;
     if (filter === 'custom' && startDate && endDate) {
         url += `&start_date=${startDate}&end_date=${endDate}`;
     }
 
+    console.log("Calling API URL:", url);
+
     fetch(url)
         .then(response => response.json())
         .then(data => {
+            console.log("API response data:", data);
+
             // Update summary cards
             document.getElementById('totalIncome').textContent = '฿' + formatNumber(data.total_income);
             document.getElementById('totalExpense').textContent = '฿' + formatNumber(data.total_expense);
@@ -439,6 +477,24 @@ function fetchDashboardData(filter, startDate = null, endDate = null) {
             const profitLossCard = document.getElementById('profitLossCard');
             profitLossCard.classList.remove('bg-success', 'bg-danger');
             profitLossCard.classList.add(data.profit_loss >= 0 ? 'bg-success' : 'bg-danger');
+
+            // ถ้าเป็นเดือนปัจจุบัน ให้อัพเดทส่วนของสรุปเดือนปัจจุบันด้วย
+            if (filter === 'this_month') {
+                // อัพเดทส่วนของสรุปเดือนปัจจุบัน
+                const currentIncomeElement = document.querySelector('#current-month-income');
+                const currentExpenseElement = document.querySelector('#current-month-expense');
+                const currentNetElement = document.querySelector('#current-month-net');
+
+                if (currentIncomeElement && currentExpenseElement && currentNetElement) {
+                    currentIncomeElement.textContent = '฿' + formatNumber(data.total_income);
+                    currentExpenseElement.textContent = '฿' + formatNumber(data.total_expense);
+                    currentNetElement.textContent = '฿' + formatNumber(data.profit_loss);
+
+                    // กำหนดสีตามค่าบวก/ลบ
+                    currentNetElement.classList.remove('text-success', 'text-danger');
+                    currentNetElement.classList.add(data.profit_loss >= 0 ? 'text-success' : 'text-danger');
+                }
+            }
         })
         .catch(error => console.error('Error fetching dashboard data:', error));
 }
