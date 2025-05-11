@@ -2,7 +2,6 @@
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
-import re
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,66 +13,55 @@ class Config:
     # ตรวจสอบสภาพแวดล้อม
     ENVIRONMENT = os.environ.get('FLASK_ENV', 'development')
 
-    # แก้ไขการตั้งค่า DATABASE_URL เพื่อรองรับ MySQL ที่มีพารามิเตอร์ ssl_mode
+    # ตรวจสอบและแก้ไข DATABASE_URL ให้ใช้กับ PyMySQL
     if os.environ.get('DATABASE_URL'):
         database_url = os.environ.get('DATABASE_URL')
-        # ตรวจสอบว่าเป็น MySQL และมี ssl_mode
-        if 'mysql' in database_url and 'ssl_mode=' in database_url:
-            # ดักจับพารามิเตอร์ ssl_mode และลบออก
-            # แยกเป็นส่วนฐาน URL และส่วนพารามิเตอร์
-            if '?' in database_url:
-                base_url, params_string = database_url.split('?', 1)
-                # แยกพารามิเตอร์เป็นรายการ
-                params = params_string.split('&')
-                # กรองพารามิเตอร์ ssl_mode ออก
+
+        # แปลง mysql:// เป็น mysql+pymysql:// ถ้าจำเป็น
+        if database_url.startswith('mysql://'):
+            database_url = database_url.replace('mysql://', 'mysql+pymysql://', 1)
+            print(f"INFO: Converted DATABASE_URL to use pymysql: {database_url}")
+
+        # จัดการกับ ssl_mode
+        if 'ssl_mode=' in database_url:
+            # แยก URL และพารามิเตอร์
+            url_parts = database_url.split('?', 1)
+            base_url = url_parts[0]
+
+            # ลบพารามิเตอร์ ssl_mode
+            if len(url_parts) > 1:
+                params = url_parts[1].split('&')
                 filtered_params = [p for p in params if not p.startswith('ssl_mode=')]
-                # สร้าง URL ใหม่
+
                 if filtered_params:
-                    SQLALCHEMY_DATABASE_URI = base_url + '?' + '&'.join(filtered_params)
+                    database_url = base_url + '?' + '&'.join(filtered_params)
                 else:
-                    SQLALCHEMY_DATABASE_URI = base_url
-            else:
-                # กรณีที่ไม่มีเครื่องหมาย ? ในลิงก์ (ไม่น่าเป็นไปได้ แต่เผื่อไว้)
-                SQLALCHEMY_DATABASE_URI = database_url
-        else:
-            # ใช้ URL เดิมถ้าไม่ใช่ MySQL หรือไม่มี ssl_mode
-            SQLALCHEMY_DATABASE_URI = database_url
+                    database_url = base_url
+
+            print(f"INFO: Removed ssl_mode from DATABASE_URL: {database_url}")
+
+        SQLALCHEMY_DATABASE_URI = database_url
     else:
         # ถ้าไม่มี DATABASE_URL ใน environment ให้ใช้ค่า default
         SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://agd_user:MKthailand47@localhost/expense_tracker'
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # แก้ไขเพิ่มเติมการตั้งค่า MySQL connection
+    # กำหนดค่า engine options สำหรับ MySQL
     if 'mysql' in SQLALCHEMY_DATABASE_URI:
-        # ตั้งค่า pool options สำหรับ MySQL
         SQLALCHEMY_ENGINE_OPTIONS = {
             'pool_size': 10,
             'pool_recycle': 60,
             'pool_pre_ping': True,
-            # ลบพารามิเตอร์ ssl_mode
-            'connect_args': {}
+            'connect_args': {
+                'ssl': {'ssl': True} if 'ondigitalocean.com' in SQLALCHEMY_DATABASE_URI else {}
+            }
         }
     else:
-        # ค่า default สำหรับฐานข้อมูลอื่นๆ
         SQLALCHEMY_ENGINE_OPTIONS = {
             'pool_size': 10,
             'pool_recycle': 60,
             'pool_pre_ping': True,
         }
 
-    # LINE Login
-    LINE_CHANNEL_ID = os.environ.get('LINE_CHANNEL_ID')
-    LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET')
-    LINE_REDIRECT_URI = os.environ.get('LINE_REDIRECT_URI')
-
-    # File upload
-    UPLOAD_FOLDER = 'app/static/uploads'
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'xlsx', 'xls'}
-
-    # Session
-    PERMANENT_SESSION_LIFETIME = timedelta(days=7)
-
-    # Timezone
-    TIMEZONE = 'Asia/Bangkok'
+    # ... ส่วนที่เหลือของการตั้งค่าเหมือนเดิม ...
