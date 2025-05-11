@@ -64,8 +64,20 @@ class Config:
             'pool_pre_ping': True,
         }
 
-    # เพิ่มการตั้งค่า UPLOAD_FOLDER
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'app', 'static',
-                                 'uploads')
+    # LINE Login
+    LINE_CHANNEL_ID = os.environ.get('LINE_CHANNEL_ID')
+    LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET')
+    LINE_REDIRECT_URI = os.environ.get('LINE_REDIRECT_URI')
+
+    # File upload
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER',
+                                   os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'app',
+                                                'static', 'uploads'))
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'xlsx', 'xls'}
+
+    # Session
+    PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+
+    # Timezone
+    TIMEZONE = 'Asia/Bangkok'
