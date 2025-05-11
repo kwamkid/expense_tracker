@@ -18,6 +18,21 @@ def create_app(config_class=None):
 
     # Initialize extensions
     db.init_app(app)
+
+    try:
+        # ตรวจสอบการเชื่อมต่อฐานข้อมูล
+        db.engine.execute("SELECT 1")
+        app.logger.info("Database connection successful!")
+    except Exception as e:
+        app.logger.error(f"Database connection error: {e}")
+        # พยายามสร้างฐานข้อมูลอัตโนมัติ
+        try:
+            app.logger.info("Attempting to create database tables...")
+            db.create_all()
+            app.logger.info("Database tables created successfully!")
+        except Exception as create_err:
+            app.logger.error(f"Error creating database tables: {create_err}")
+
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
