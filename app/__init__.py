@@ -60,7 +60,16 @@ def create_app(config_class=None):
                     return redirect(url_for('auth.select_company'))
 
     # Create upload folders
-    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'logo'), exist_ok=True)
+    # os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'logo'), exist_ok=True)
+    # แก้ไขส่วนที่สร้างไดเรกทอรี
+    if 'UPLOAD_FOLDER' in app.config:
+        # ถ้ามีการกำหนดค่า UPLOAD_FOLDER
+        os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'logo'), exist_ok=True)
+    else:
+        # ถ้าไม่มีการกำหนดค่า UPLOAD_FOLDER ให้กำหนดค่าเริ่มต้น
+        app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
+        os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'logo'), exist_ok=True)
+        print(f"WARNING: UPLOAD_FOLDER not defined in config, using default: {app.config['UPLOAD_FOLDER']}")
 
     # Register blueprints
     from app.routes import auth_bp, main_bp, transactions_bp, imports_bp, settings_bp, bank_accounts_bp
