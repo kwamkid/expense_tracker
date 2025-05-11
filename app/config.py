@@ -51,11 +51,8 @@ class Config:
             'pool_size': 10,
             'pool_recycle': 60,
             'pool_pre_ping': True,
-            # ตั้งค่า SSL หากจำเป็น (ถ้าใช้ Digital Ocean MySQL)
-            'connect_args': {
-                # ถ้าใน URL ระบุ ssl=true หรือคล้ายๆ กัน
-                'ssl': {'ssl_mode': 'REQUIRED'} if 'ssl=true' in SQLALCHEMY_DATABASE_URI.lower() else {}
-            }
+            # ลบพารามิเตอร์ ssl_mode
+            'connect_args': {}
         }
     else:
         # ค่า default สำหรับฐานข้อมูลอื่นๆ
