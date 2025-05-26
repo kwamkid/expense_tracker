@@ -153,6 +153,8 @@ def upload():
     return render_template('imports/upload.html', bank_accounts=bank_accounts)
 
 
+# app/routes/imports.py - แก้ไขฟังก์ชัน preview() เพื่อจัดการ POST request
+
 @imports_bp.route('/preview', methods=['GET', 'POST'])
 @login_required
 def preview():
@@ -191,11 +193,132 @@ def preview():
         flash('ไม่พบข้อมูลการนำเข้า', 'error')
         return redirect(url_for('imports.upload'))
 
-    # POST processing code here...
+    # POST processing - เพิ่มส่วนนี้
     if request.method == 'POST':
-        # Your existing POST handling code
-        pass
+        # ดึงบริษัทที่ active
+        user_company = UserCompany.query.filter_by(
+            user_id=current_user.id,
+            active_company=True
+        ).first()
 
+        if not user_company:
+            flash('ไม่พบข้อมูลบริษัทที่ใช้งานอยู่', 'error')
+            return redirect(url_for('main.dashboard'))
+
+        company_id = user_company.company_id
+
+        # ดึงข้อมูลจาก session
+        batch_id = session.get('import_batch_id')
+        bank_type = session.get('bank_type')
+        bank_account_id = session.get('bank_account_id')
+        original_filename = session.get('original_filename', 'unknown.xlsx')
+
+        if not batch_id or not bank_type or not bank_account_id:
+            flash('ข้อมูลการนำเข้าไม่ครบถ้วน กรุณาเริ่มใหม่', 'error')
+            return redirect(url_for('imports.upload'))
+
+        # ตรวจสอบบัญชีธนาคาร
+        bank_account = BankAccount.query.get(bank_account_id)
+        if not bank_account or bank_account.company_id != company_id:
+            flash('บัญชีธนาคารไม่ถูกต้อง', 'error')
+            return redirect(url_for('imports.upload'))
+
+        # เริ่มการนำเข้าข้อมูล
+        try:
+            import_count = 0
+            total_amount = 0
+
+            for item in import_data:
+                # ตรวจสอบว่ารายการนี้ถูกเลือกหรือไม่
+                import_key = f"import_{item['index']}"
+
+                # ถ้าเป็นรายการซ้ำ ต้องมีการเลือก import_duplicate
+                if item.get('is_duplicate', False):
+                    duplicate_key = f"import_duplicate_{item['index']}"
+                    if duplicate_key not in request.form:
+                        continue  # ข้ามรายการซ้ำที่ไม่ได้เลือก
+                elif import_key not in request.form:
+                    continue  # ข้ามรายการที่ไม่ได้เลือก
+
+                # ดึงหมวดหมู่ที่เลือก
+                category_key = f"category_{item['index']}"
+                category_id = request.form.get(category_key)
+
+                if not category_id:
+                    continue  # ข้ามรายการที่ไม่มีหมวดหมู่
+
+                # ตรวจสอบหมวดหมู่ว่าอยู่ในบริษัทปัจจุบันหรือไม่
+                category = Category.query.get(category_id)
+                if not category or category.company_id != company_id:
+                    continue  # ข้ามรายการที่หมวดหมู่ไม่ถูกต้อง
+
+                # สร้างธุรกรรมใหม่
+                transaction = Transaction(
+                    amount=item['amount'],
+                    description=item.get('description', ''),
+                    transaction_date=item['date'],
+                    transaction_time=item.get('time'),
+                    type=item['type'],
+                    category_id=int(category_id),
+                    bank_account_id=int(bank_account_id),
+                    status='completed',  # รายการที่นำเข้าจากธนาคารจะเป็น completed
+                    completed_date=datetime.now(bangkok_tz),
+                    source='import',
+                    bank_reference=item.get('reference', ''),
+                    import_batch_id=batch_id,
+                    user_id=current_user.id,
+                    company_id=company_id
+                )
+
+                db.session.add(transaction)
+                import_count += 1
+                total_amount += item['amount']
+
+            # สร้างประวัติการนำเข้า
+            import_history = ImportHistory(
+                batch_id=batch_id,
+                filename=original_filename,
+                bank_type=bank_type,
+                transaction_count=import_count,
+                total_amount=total_amount,
+                status='completed',
+                user_id=current_user.id,
+                bank_account_id=int(bank_account_id),
+                company_id=company_id
+            )
+
+            db.session.add(import_history)
+            db.session.commit()
+
+            # อัพเดทยอดเงินในบัญชี
+            BalanceService.update_bank_balance(int(bank_account_id))
+
+            # ล้างข้อมูลใน session
+            session.pop('import_id', None)
+            session.pop('import_batch_id', None)
+            session.pop('bank_type', None)
+            session.pop('bank_account_id', None)
+            session.pop('original_filename', None)
+
+            # ลบไฟล์ชั่วคราว
+            try:
+                if os.path.exists(temp_data_file):
+                    os.remove(temp_data_file)
+            except Exception as e:
+                print(f"Error removing temp file: {e}")
+
+            flash(f'นำเข้าข้อมูลสำเร็จ {import_count} รายการ ยอดรวม ฿{total_amount:,.2f}', 'success')
+            return redirect(url_for('imports.history'))
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error importing transactions: {e}")
+            import traceback
+            print(traceback.format_exc())
+            flash(f'เกิดข้อผิดพลาดในการนำเข้าข้อมูล: {str(e)}', 'error')
+            return redirect(url_for('imports.upload'))
+
+    # GET request - แสดงหน้า preview
     # ดึงบริษัทที่ active
     user_company = UserCompany.query.filter_by(
         user_id=current_user.id,
