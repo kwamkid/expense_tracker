@@ -479,6 +479,8 @@ def dashboard_data_api():
 
 # แก้ไขใน app/routes/main.py - ฟังก์ชัน reports()
 
+# แก้ไขใน app/routes/main.py - ฟังก์ชัน reports()
+
 @main_bp.route('/reports')
 @login_required
 def reports():
@@ -499,15 +501,26 @@ def reports():
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
 
-    # ===== แก้ไข Status Filter =====
-    # ถ้า status_filter เป็นค่าว่าง ให้ตั้งเป็น None
+    # เพิ่ม pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', '20')
+
+    # จัดการ per_page
+    if per_page == 'all':
+        per_page = 999999  # จำนวนมากๆ เพื่อแสดงทั้งหมด
+    else:
+        per_page = int(per_page) if per_page.isdigit() else 20
+        # Validate per_page
+        if per_page not in [20, 50, 100]:
+            per_page = 20
+
+    # แก้ไข Status Filter
     if status_filter == '':
         status_filter = None
-    # ถ้าไม่มีการส่งมาเลย ให้ default เป็น 'completed'
     elif status_filter is None:
         status_filter = 'completed'
 
-    # ===== แก้ไข Category และ Bank Account Filter =====
+    # แก้ไข Category และ Bank Account Filter
     if category_id == '':
         category_id = None
     if bank_account_id == '':
@@ -516,7 +529,7 @@ def reports():
         transaction_type = None
 
     # Default date range - หาจากข้อมูลจริง
-    if not start_date or not end_date:
+    if not start_date or not end_date or start_date == '' or end_date == '':
         try:
             date_range = db.session.query(
                 func.min(Transaction.transaction_date).label('min_date'),
@@ -524,12 +537,9 @@ def reports():
             ).filter_by(company_id=company_id).first()
 
             if date_range.min_date and date_range.max_date:
-                if not start_date:
-                    start_date = date_range.min_date.strftime('%Y-%m-%d')
-                if not end_date:
-                    end_date = date_range.max_date.strftime('%Y-%m-%d')
+                start_date = date_range.min_date.strftime('%Y-%m-%d')
+                end_date = date_range.max_date.strftime('%Y-%m-%d')
             else:
-                # ถ้าไม่มีข้อมูล ใช้ปีปัจจุบัน
                 current_year = datetime.now().year
                 start_date = f"{current_year}-01-01"
                 end_date = datetime.now().strftime('%Y-%m-%d')
@@ -541,6 +551,7 @@ def reports():
 
     print(f"=== REPORTS DEBUG ===")
     print(f"Company ID: {company_id}")
+    print(f"Page: {page}, Per Page: {per_page}")
     print(f"Filter Parameters:")
     print(f"  - Transaction Type: {transaction_type}")
     print(f"  - Category ID: {category_id}")
@@ -549,95 +560,67 @@ def reports():
     print(f"  - Start Date: {start_date}")
     print(f"  - End Date: {end_date}")
 
-    # ทดสอบด้วย SQL ตรงๆ สำหรับ Reports
-    try:
-        # SQL สำหรับช่วงวันที่ที่กำหนด - แก้ไขให้รองรับ status_filter = None
-        sql_base = f"""
-        SELECT SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
-               SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense
-        FROM transaction 
-        WHERE company_id = {company_id}
-        AND transaction_date BETWEEN '{start_date}' AND '{end_date}'
-        """
-
-        # เพิ่ม status filter ถ้ามี
-        if status_filter:
-            sql_base += f" AND status = '{status_filter}'"
-
-        # เพิ่ม filter อื่นๆ ถ้ามี
-        if transaction_type:
-            sql_base += f" AND type = '{transaction_type}'"
-        if category_id:
-            sql_base += f" AND category_id = {category_id}"
-        if bank_account_id:
-            sql_base += f" AND bank_account_id = {bank_account_id}"
-
-        print(f"SQL Query: {sql_base}")
-
-        # รัน SQL
-        with db.engine.connect() as connection:
-            result = connection.execute(text(sql_base))
-            row = result.fetchone()
-            direct_filtered_income = row[0] or 0
-            direct_filtered_expense = row[1] or 0
-
-        print(f"Direct SQL Results:")
-        print(f"  - Filtered Income: {direct_filtered_income}")
-        print(f"  - Filtered Expense: {direct_filtered_expense}")
-
-    except Exception as e:
-        print(f"Error in direct SQL queries: {str(e)}")
-        direct_filtered_income = 0
-        direct_filtered_expense = 0
-
     # Build query - ใช้ company_id ในการค้นหา
     query = Transaction.query.filter_by(company_id=company_id)
 
-    base_query_count = query.count()
-    print(f"Base query count (company only): {base_query_count}")
-
     if transaction_type:
         query = query.filter_by(type=transaction_type)
-        print(f"After type filter: {query.count()}")
-
     if category_id:
         query = query.filter_by(category_id=category_id)
-        print(f"After category filter: {query.count()}")
-
-    if status_filter:  # ตรวจสอบว่าไม่เป็น None
+    if status_filter:
         query = query.filter_by(status=status_filter)
-        print(f"After status filter: {query.count()}")
-
     if bank_account_id:
         query = query.filter_by(bank_account_id=bank_account_id)
-        print(f"After bank account filter: {query.count()}")
 
     # Apply date range
     query = query.filter(Transaction.transaction_date.between(start_date, end_date))
-    print(f"After date range filter: {query.count()}")
 
-    transactions = query.order_by(Transaction.transaction_date.desc()).all()
+    # เพิ่ม order by ก่อน paginate
+    query = query.order_by(Transaction.transaction_date.desc(), Transaction.created_at.desc())
 
-    print(f"Final filtered transactions count: {len(transactions)}")
+    print(f"Total filtered transactions: {query.count()}")
 
-    # Calculate totals
-    total_income = sum(t.amount for t in transactions if t.type == 'income')
-    total_expense = sum(t.amount for t in transactions if t.type == 'expense')
+    # ถ้า per_page เป็น "all" ให้ดึงทั้งหมด
+    if request.args.get('per_page') == 'all':
+        transactions_list = query.all()
+
+        # สร้าง mock pagination object
+        class MockPagination:
+            def __init__(self, items):
+                self.items = items
+                self.total = len(items)
+                self.pages = 1
+                self.page = 1
+                self.per_page = len(items)
+                self.has_prev = False
+                self.has_next = False
+                self.prev_num = None
+                self.next_num = None
+
+        transactions = MockPagination(transactions_list)
+    else:
+        # Paginate results
+        transactions = query.paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
+
+    print(f"Paginated transactions count: {len(transactions.items)}")
+
+    # Calculate totals จากทั้งหมดที่กรองแล้ว (ไม่ใช่เฉพาะหน้าปัจจุบัน)
+    all_filtered_transactions = query.all()
+    total_income = sum(t.amount for t in all_filtered_transactions if t.type == 'income')
+    total_expense = sum(t.amount for t in all_filtered_transactions if t.type == 'expense')
     net_profit = total_income - total_expense
 
-    print(f"ORM Calculated Results:")
+    print(f"Total Results:")
     print(f"  - Total Income: {total_income}")
     print(f"  - Total Expense: {total_expense}")
     print(f"  - Net Profit: {net_profit}")
-
-    # เปรียบเทียบกับ SQL ตรงๆ
-    print(f"Comparison with Direct SQL:")
-    print(f"  - Income diff: {total_income - direct_filtered_income}")
-    print(f"  - Expense diff: {total_expense - direct_filtered_expense}")
-
     print("====================")
 
-    # Category breakdown - แก้ไข status filter
+    # Category breakdown - ใช้ company_id
     category_breakdown = db.session.query(
         Category.name,
         Category.type,
@@ -647,12 +630,12 @@ def reports():
         .filter(Transaction.company_id == company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
-    if status_filter:  # ตรวจสอบว่าไม่เป็น None
+    if status_filter:
         category_breakdown = category_breakdown.filter(Transaction.status == status_filter)
 
     category_breakdown = category_breakdown.group_by(Category.id).all()
 
-    # Bank account breakdown - แก้ไข status filter
+    # Bank account breakdown - ใช้ company_id
     bank_breakdown = db.session.query(
         BankAccount.bank_name,
         BankAccount.account_number,
@@ -669,12 +652,12 @@ def reports():
         .filter(Transaction.company_id == company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
-    if status_filter:  # ตรวจสอบว่าไม่เป็น None
+    if status_filter:
         bank_breakdown = bank_breakdown.filter(Transaction.status == status_filter)
 
     bank_breakdown = bank_breakdown.group_by(BankAccount.id).all()
 
-    # Daily summary - แก้ไข status filter
+    # Daily summary - ใช้ company_id
     daily_summary = db.session.query(
         Transaction.transaction_date,
         func.sum(case(
@@ -688,7 +671,7 @@ def reports():
     ).filter(Transaction.company_id == company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
-    if status_filter:  # ตรวจสอบว่าไม่เป็น None
+    if status_filter:
         daily_summary = daily_summary.filter(Transaction.status == status_filter)
 
     daily_summary = daily_summary.group_by(Transaction.transaction_date) \
@@ -699,7 +682,7 @@ def reports():
     bank_accounts = BankAccount.query.filter_by(company_id=company_id).all()
 
     return render_template('main/reports.html',
-                           transactions=transactions,
+                           transactions=transactions,  # ส่ง paginated object
                            categories=categories,
                            bank_accounts=bank_accounts,
                            category_breakdown=category_breakdown,
