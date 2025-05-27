@@ -31,6 +31,17 @@ def dashboard():
 
     company_id = user_company.company_id
 
+    # =================== DEBUG: เพิ่มการตรวจสอบ ===================
+    print(f"=== DASHBOARD DEBUG ===")
+    print(f"Company ID: {company_id}")
+
+    # ตรวจสอบจำนวน transactions ทั้งหมด
+    all_transactions = Transaction.query.filter_by(company_id=company_id).all()
+    print(f"Total transactions in company: {len(all_transactions)}")
+
+    completed_transactions = Transaction.query.filter_by(company_id=company_id, status='completed').all()
+    print(f"Completed transactions: {len(completed_transactions)}")
+
     # Get current month data (default)
     today = datetime.now().date()  # ใช้ date() เพื่อให้เป็น date object
     first_day = date(today.year, today.month, 1)  # ใช้ date object ตั้งแต่ต้น
@@ -109,13 +120,51 @@ def dashboard():
         total_expense_current_month = 0
 
     # คำนวณยอดทั้งหมดโดยไม่จำกัดวันที่ - สำหรับแสดงผลรวมทั้งหมด
-    total_income = db.session.query(func.sum(Transaction.amount)) \
-                       .filter_by(company_id=company_id, type='income', status='completed') \
-                       .scalar() or 0
+    try:
+        # SQL สำหรับยอดรวมทั้งหมด
+        sql_total_income = f"""
+        SELECT SUM(amount) FROM transaction 
+        WHERE company_id = {company_id} 
+        AND type = 'income' 
+        AND status = 'completed'
+        """
 
-    total_expense = db.session.query(func.sum(Transaction.amount)) \
-                        .filter_by(company_id=company_id, type='expense', status='completed') \
-                        .scalar() or 0
+        sql_total_expense = f"""
+        SELECT SUM(amount) FROM transaction 
+        WHERE company_id = {company_id} 
+        AND type = 'expense' 
+        AND status = 'completed'
+        """
+
+        with db.engine.connect() as connection:
+            total_income_result = connection.execute(text(sql_total_income))
+            total_income = total_income_result.scalar() or 0
+
+            total_expense_result = connection.execute(text(sql_total_expense))
+            total_expense = total_expense_result.scalar() or 0
+
+        # ลองใช้ SQLAlchemy ORM ด้วย
+        orm_total_income = db.session.query(func.sum(Transaction.amount)) \
+                               .filter_by(company_id=company_id, type='income', status='completed') \
+                               .scalar() or 0
+
+        orm_total_expense = db.session.query(func.sum(Transaction.amount)) \
+                                .filter_by(company_id=company_id, type='expense', status='completed') \
+                                .scalar() or 0
+
+        print(f"Direct SQL Total Income: {total_income}")
+        print(f"Direct SQL Total Expense: {total_expense}")
+        print(f"ORM Total Income: {orm_total_income}")
+        print(f"ORM Total Expense: {orm_total_expense}")
+
+        # ใช้ค่าที่มากกว่าเป็นหลัก
+        total_income = max(float(total_income), float(orm_total_income))
+        total_expense = max(float(total_expense), float(orm_total_expense))
+
+    except Exception as e:
+        print(f"Error calculating total amounts: {str(e)}")
+        total_income = 0
+        total_expense = 0
 
     # แปลงเป็น float
     total_income = float(total_income)
@@ -123,6 +172,13 @@ def dashboard():
 
     balance_current_month = total_income_current_month - total_expense_current_month
     balance = total_income - total_expense
+
+    print(f"Final Total Income: {total_income}")
+    print(f"Final Total Expense: {total_expense}")
+    print(f"Final Balance: {balance}")
+    print(f"Final Current Month Income: {total_income_current_month}")
+    print(f"Final Current Month Expense: {total_expense_current_month}")
+    print(f"Final Current Month Balance: {balance_current_month}")
 
     # Get ALL pending transactions (not just current month)
     all_pending_income = db.session.query(func.sum(Transaction.amount)) \
@@ -132,6 +188,44 @@ def dashboard():
     all_pending_expense = db.session.query(func.sum(Transaction.amount)) \
                               .filter_by(company_id=company_id, type='expense', status='pending') \
                               .scalar() or 0
+
+    print(f"Pending Income: {all_pending_income}")
+    print(f"Pending Expense: {all_pending_expense}")
+
+    # ตรวจสอบว่ามี transactions นอกช่วงวันที่เดือนปัจจุบันไหม
+    try:
+        transactions_outside_current_month = Transaction.query.filter_by(
+            company_id=company_id,
+            status='completed'
+        ).filter(
+            (Transaction.transaction_date < first_day) |
+            (Transaction.transaction_date > last_day)
+        ).count()
+
+        print(f"Transactions outside current month: {transactions_outside_current_month}")
+
+        # ดูยอดของ transactions นอกเดือนปัจจุบัน
+        outside_income = db.session.query(func.sum(Transaction.amount)) \
+                             .filter_by(company_id=company_id, type='income', status='completed') \
+                             .filter(
+            (Transaction.transaction_date < first_day) |
+            (Transaction.transaction_date > last_day)
+        ).scalar() or 0
+
+        outside_expense = db.session.query(func.sum(Transaction.amount)) \
+                              .filter_by(company_id=company_id, type='expense', status='completed') \
+                              .filter(
+            (Transaction.transaction_date < first_day) |
+            (Transaction.transaction_date > last_day)
+        ).scalar() or 0
+
+        print(f"Income outside current month: {outside_income}")
+        print(f"Expense outside current month: {outside_expense}")
+
+    except Exception as e:
+        print(f"Error checking transactions outside current month: {str(e)}")
+
+    print("======================")
 
     # Get recent transactions
     recent_transactions = Transaction.query \
@@ -383,6 +477,8 @@ def dashboard_data_api():
         })
 
 
+# แก้ไขใน app/routes/main.py - ฟังก์ชัน reports()
+
 @main_bp.route('/reports')
 @login_required
 def reports():
@@ -398,40 +494,150 @@ def reports():
     # Get filter parameters
     transaction_type = request.args.get('type')
     category_id = request.args.get('category')
-    status_filter = request.args.get('status', 'completed')  # default to completed
+    status_filter = request.args.get('status')
     bank_account_id = request.args.get('bank_account')
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
 
-    # Default date range (current month)
-    if not start_date:
-        start_date = datetime.now().replace(day=1).strftime('%Y-%m-%d')
-    if not end_date:
-        end_date = datetime.now().strftime('%Y-%m-%d')
+    # ===== แก้ไข Status Filter =====
+    # ถ้า status_filter เป็นค่าว่าง ให้ตั้งเป็น None
+    if status_filter == '':
+        status_filter = None
+    # ถ้าไม่มีการส่งมาเลย ให้ default เป็น 'completed'
+    elif status_filter is None:
+        status_filter = 'completed'
+
+    # ===== แก้ไข Category และ Bank Account Filter =====
+    if category_id == '':
+        category_id = None
+    if bank_account_id == '':
+        bank_account_id = None
+    if transaction_type == '':
+        transaction_type = None
+
+    # Default date range - หาจากข้อมูลจริง
+    if not start_date or not end_date:
+        try:
+            date_range = db.session.query(
+                func.min(Transaction.transaction_date).label('min_date'),
+                func.max(Transaction.transaction_date).label('max_date')
+            ).filter_by(company_id=company_id).first()
+
+            if date_range.min_date and date_range.max_date:
+                if not start_date:
+                    start_date = date_range.min_date.strftime('%Y-%m-%d')
+                if not end_date:
+                    end_date = date_range.max_date.strftime('%Y-%m-%d')
+            else:
+                # ถ้าไม่มีข้อมูล ใช้ปีปัจจุบัน
+                current_year = datetime.now().year
+                start_date = f"{current_year}-01-01"
+                end_date = datetime.now().strftime('%Y-%m-%d')
+        except Exception as e:
+            print(f"Error getting date range: {str(e)}")
+            current_year = datetime.now().year
+            start_date = f"{current_year}-01-01"
+            end_date = datetime.now().strftime('%Y-%m-%d')
+
+    print(f"=== REPORTS DEBUG ===")
+    print(f"Company ID: {company_id}")
+    print(f"Filter Parameters:")
+    print(f"  - Transaction Type: {transaction_type}")
+    print(f"  - Category ID: {category_id}")
+    print(f"  - Status Filter: {status_filter}")
+    print(f"  - Bank Account ID: {bank_account_id}")
+    print(f"  - Start Date: {start_date}")
+    print(f"  - End Date: {end_date}")
+
+    # ทดสอบด้วย SQL ตรงๆ สำหรับ Reports
+    try:
+        # SQL สำหรับช่วงวันที่ที่กำหนด - แก้ไขให้รองรับ status_filter = None
+        sql_base = f"""
+        SELECT SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
+               SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense
+        FROM transaction 
+        WHERE company_id = {company_id}
+        AND transaction_date BETWEEN '{start_date}' AND '{end_date}'
+        """
+
+        # เพิ่ม status filter ถ้ามี
+        if status_filter:
+            sql_base += f" AND status = '{status_filter}'"
+
+        # เพิ่ม filter อื่นๆ ถ้ามี
+        if transaction_type:
+            sql_base += f" AND type = '{transaction_type}'"
+        if category_id:
+            sql_base += f" AND category_id = {category_id}"
+        if bank_account_id:
+            sql_base += f" AND bank_account_id = {bank_account_id}"
+
+        print(f"SQL Query: {sql_base}")
+
+        # รัน SQL
+        with db.engine.connect() as connection:
+            result = connection.execute(text(sql_base))
+            row = result.fetchone()
+            direct_filtered_income = row[0] or 0
+            direct_filtered_expense = row[1] or 0
+
+        print(f"Direct SQL Results:")
+        print(f"  - Filtered Income: {direct_filtered_income}")
+        print(f"  - Filtered Expense: {direct_filtered_expense}")
+
+    except Exception as e:
+        print(f"Error in direct SQL queries: {str(e)}")
+        direct_filtered_income = 0
+        direct_filtered_expense = 0
 
     # Build query - ใช้ company_id ในการค้นหา
     query = Transaction.query.filter_by(company_id=company_id)
 
+    base_query_count = query.count()
+    print(f"Base query count (company only): {base_query_count}")
+
     if transaction_type:
         query = query.filter_by(type=transaction_type)
+        print(f"After type filter: {query.count()}")
+
     if category_id:
         query = query.filter_by(category_id=category_id)
-    if status_filter:
+        print(f"After category filter: {query.count()}")
+
+    if status_filter:  # ตรวจสอบว่าไม่เป็น None
         query = query.filter_by(status=status_filter)
+        print(f"After status filter: {query.count()}")
+
     if bank_account_id:
         query = query.filter_by(bank_account_id=bank_account_id)
+        print(f"After bank account filter: {query.count()}")
 
     # Apply date range
     query = query.filter(Transaction.transaction_date.between(start_date, end_date))
+    print(f"After date range filter: {query.count()}")
 
     transactions = query.order_by(Transaction.transaction_date.desc()).all()
+
+    print(f"Final filtered transactions count: {len(transactions)}")
 
     # Calculate totals
     total_income = sum(t.amount for t in transactions if t.type == 'income')
     total_expense = sum(t.amount for t in transactions if t.type == 'expense')
     net_profit = total_income - total_expense
 
-    # Category breakdown - ใช้ company_id
+    print(f"ORM Calculated Results:")
+    print(f"  - Total Income: {total_income}")
+    print(f"  - Total Expense: {total_expense}")
+    print(f"  - Net Profit: {net_profit}")
+
+    # เปรียบเทียบกับ SQL ตรงๆ
+    print(f"Comparison with Direct SQL:")
+    print(f"  - Income diff: {total_income - direct_filtered_income}")
+    print(f"  - Expense diff: {total_expense - direct_filtered_expense}")
+
+    print("====================")
+
+    # Category breakdown - แก้ไข status filter
     category_breakdown = db.session.query(
         Category.name,
         Category.type,
@@ -441,12 +647,12 @@ def reports():
         .filter(Transaction.company_id == company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
-    if status_filter:
+    if status_filter:  # ตรวจสอบว่าไม่เป็น None
         category_breakdown = category_breakdown.filter(Transaction.status == status_filter)
 
     category_breakdown = category_breakdown.group_by(Category.id).all()
 
-    # Bank account breakdown - ใช้ company_id
+    # Bank account breakdown - แก้ไข status filter
     bank_breakdown = db.session.query(
         BankAccount.bank_name,
         BankAccount.account_number,
@@ -463,12 +669,12 @@ def reports():
         .filter(Transaction.company_id == company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
-    if status_filter:
+    if status_filter:  # ตรวจสอบว่าไม่เป็น None
         bank_breakdown = bank_breakdown.filter(Transaction.status == status_filter)
 
     bank_breakdown = bank_breakdown.group_by(BankAccount.id).all()
 
-    # Daily summary - ใช้ company_id
+    # Daily summary - แก้ไข status filter
     daily_summary = db.session.query(
         Transaction.transaction_date,
         func.sum(case(
@@ -482,16 +688,14 @@ def reports():
     ).filter(Transaction.company_id == company_id) \
         .filter(Transaction.transaction_date.between(start_date, end_date))
 
-    if status_filter:
+    if status_filter:  # ตรวจสอบว่าไม่เป็น None
         daily_summary = daily_summary.filter(Transaction.status == status_filter)
 
     daily_summary = daily_summary.group_by(Transaction.transaction_date) \
         .order_by(Transaction.transaction_date).all()
 
-    # Get categories and bank accounts for filters - ใช้ company_id
+    # Get categories and bank accounts for filters
     categories = Category.query.filter_by(company_id=company_id).all()
-
-    # แก้ไขจาก user_id เป็น company_id
     bank_accounts = BankAccount.query.filter_by(company_id=company_id).all()
 
     return render_template('main/reports.html',
